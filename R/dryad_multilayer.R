@@ -405,6 +405,8 @@ colnames(module_data)[7] <- "size_of_module" #rename column
 lon_lat_data <- read_csv('./csvs/layers.csv') #create new data frame with just the layer data
 lon_lat_data <- lon_lat_data %>% select(c("layer_id","lat","Lon")) %>% na.omit()  #only select layer id and coordinates
 
+#write.csv(lon_lat_data, "csvs/lon_lat_data.csv", row.names = FALSE)
+
 module_data_with_loc <- merge(module_data, lon_lat_data, by= c("layer_id","layer_id")) #merge modules with module size with the coordinates
 
 #how many layers are within a module

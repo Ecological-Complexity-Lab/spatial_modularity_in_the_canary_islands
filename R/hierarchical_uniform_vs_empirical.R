@@ -473,7 +473,7 @@ edges_module2state_level_fixed <- multi_lvl_to_dendogram_fixed %>% select(module
 edges_module2state_level_fixed <- edges_module2state_level_fixed[!(edges_module2state_level_fixed$to %in% edges_sub2state_level_fixed$to),] ## if there is a sub module 
 #need to delete the corresponding edge in the module to state node
 
-edges_module2state_level_fixed$from <- paste(edges_module2state_level_fixed$from, "_", "m") #add sm to describe sub module
+edges_module2state_level_fixed$from <- paste(edges_module2state_level_fixed$from, "_", "m") #add m to describe module
 
 
 
