@@ -1,0 +1,18 @@
+[1] "/gpfs0/shai/projects/R4/R-4.2.0/lib64/R/library"
+R version 4.2.0 (2022-04-22)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Oracle Linux Server 8.6
+
+Matrix products: default
+BLAS:   /gpfs0/shai/projects/R4/R-4.2.0/lib64/R/lib/libRblas.so
+LAPACK: /gpfs0/shai/projects/R4/R-4.2.0/lib64/R/lib/libRlapack.so
+
+locale:
+[1] C
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+[1] compiler_4.2.0
+[1] "C"
