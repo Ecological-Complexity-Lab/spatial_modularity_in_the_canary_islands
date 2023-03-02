@@ -32,6 +32,37 @@ dryad_intralayer <- read.csv("./csvs/intralayer_file.csv")
 dryad_interlayer <- read.csv("./csvs/interlayer_file.csv") #already has inverted within
 #print(dryad_interlayer)
 
+##---- layers as islands and not sites -------------------------------------------------------------------------------
+dryad_intralayer_islands <- dryad_intralayer
+
+old_names <- c("WesternSahara1", "WesternSahara2",
+               "Fuerteventura1", "Fuerteventura2",
+               "GranCanaria1", "GranCanaria2",
+               "TenerifeSouth1", "TenerifeSouth2",
+               "TenerifeTeno1", "TenerifeTeno2",
+               "Gomera1", "Gomera2",
+               "Hierro1", "Hierro2")
+
+new_names <- c("WesternSahara", "WesternSahara",
+               "Fuerteventura", "Fuerteventura",
+               "GranCanaria", "GranCanaria",
+               "TenerifeSouth", "TenerifeSouth",
+               "TenerifeTeno", "TenerifeTeno",
+               "Gomera", "Gomera",
+               "Hierro", "Hierro")
+
+dryad_intralayer_islands$layer_from[dryad_intralayer_islands$layer_from %in% old_names] <- 
+  new_names[match(dryad_intralayer_islands$layer_from, old_names)] #change to reflect layer = island
+
+dryad_intralayer_islands$layer_to[dryad_intralayer_islands$layer_to %in% old_names] <- 
+  new_names[match(dryad_intralayer_islands$layer_to, old_names)] #change to reflect layer = island
+
+#if node_from, node_to, layer_from, layer_to are all the same need to sum the weight
+dryad_intralayer_islands_grouped <- dryad_intralayer_islands %>% 
+  group_by(layer_from, node_from, layer_to, node_to) %>% 
+  summarise(sum_weight = sum(weight))
+
+
 ## ----multilayer_intra-----------------------------------------------------------------------------------------------
 dryad_matrices <- NULL
 for (layer in 1:14){
