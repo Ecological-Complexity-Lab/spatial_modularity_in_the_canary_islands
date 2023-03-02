@@ -24,7 +24,9 @@ library(ggpubr)
 
 ##----get_data--------------------------------------------------------------------------------------------------------
 #setwd("/Users/maya/Desktop/plant_pollinator_data/dryad_network")
+#setwd("/Users/mayagoldstein/Desktop/project")
 #getwd()
+
 dryad_intralayer <- read.csv("./csvs/intralayer_file.csv")
 #print(dryad_intralayer)
 dryad_interlayer <- read.csv("./csvs/interlayer_file.csv") #already has inverted within
@@ -911,4 +913,54 @@ mean(ave_number_of_islands_pols$number_of_islands)
 
 ave_number_of_islands_plants <- num_of_islands_per_species %>% filter(type == "plant") 
 mean(ave_number_of_islands_plants$number_of_islands)
+
+#---- number of modules found in islands----------------------------
+modules_in_network <- read_csv("./csvs/modules_dryad_multilayer.csv")
+
+#old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
+#new <- c("1","1","2","2","3","3","4east","4east","4west","4west","5","5","6","6")
+modules_in_network$layer_id[modules_in_network$layer_id %in% old] <- 
+  new[match(modules_in_network$layer_id, old)]
+
+modules_in_network <- modules_in_network %>% unique() #delete doubles caused by layers turning to islands
+
+
+lon_lat_data <- read_csv('./csvs/layers.csv') #create new data frame with just the layer data
+lon_lat_data <- lon_lat_data %>% select(c("layer_id","lat","Lon")) %>% na.omit()  #only select layer id and coordinates
+
+lon_lat_data$layer_id[lon_lat_data$layer_id %in% old] <- 
+  new[match(lon_lat_data$layer_id, old)]
+
+#write.csv(lon_lat_data, "csvs/lon_lat_data.csv", row.names = FALSE)
+
+module_data_with_loc <- merge(module_data, lon_lat_data, by= c("layer_id","layer_id")) #merge modules with module size with the coordinates
+
+#how many layers are within a module
+modules_with_lat_lon <- module_data_with_loc %>% select(layer_id, module, lat, Lon, size_of_module) %>% unique() #take only certain columns
+modules_with_lat_lon$count <- c(1)
+
+#old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
+#new <- c("1","1","2","2","3","3","4east","4east","4west","4west","5","5","6","6")
+modules_with_lat_lon$layer_id[modules_with_lat_lon$layer_id %in% old] <- 
+  new[match(modules_with_lat_lon$layer_id, old)]
+
+modules_with_lat_lon %>% 
+  ggplot(aes(x=module, y= count ,fill= factor(layer_id)))+ geom_bar(stat= "identity")+ theme_classic()+
+  scale_x_continuous(breaks=seq(1,43,2))+ labs(y="number of physical nodes", x="module number")+
+  guides(fill=guide_legend(title="layer\nnumber"))
+
+#how many islands are within a module
+modules_with_lat_lon_islands <- module_data_with_loc %>% select(layer_id, module, lat, Lon, size_of_module) %>% unique() #take only certain columns
+old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
+new <- c("1","1","2","2","3","3","4east","4east","4west","4west","5","5","6","6")
+modules_with_lat_lon_islands$layer_id[modules_with_lat_lon_islands$layer_id %in% old] <- new[match(modules_with_lat_lon_islands$layer_id, old)]
+modules_with_lat_lon_islands$count <- c(1)
+
+modules_with_lat_lon_islands %>% 
+  ggplot(aes(x=module, y= count ,fill= factor(layer_id)))+ geom_bar(stat= "identity")+ theme_classic()+
+  scale_x_continuous(breaks=seq(1,43,2))+ labs(y="number of physical nodes", x="module number")+ 
+  guides(fill=guide_legend(title="island\nnumber"))
+
+
+
 
