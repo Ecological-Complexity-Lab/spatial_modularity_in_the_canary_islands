@@ -925,42 +925,60 @@ modules_in_network$layer_id[modules_in_network$layer_id %in% old] <-
 modules_in_network <- modules_in_network %>% unique() #delete doubles caused by layers turning to islands
 
 
-lon_lat_data <- read_csv('./csvs/layers.csv') #create new data frame with just the layer data
-lon_lat_data <- lon_lat_data %>% select(c("layer_id","lat","Lon")) %>% na.omit()  #only select layer id and coordinates
+lon_lat_data_island <- read_csv('./csvs/layers.csv') #create new data frame with just the layer data
+lon_lat_data_island <- lon_lat_data_island %>% select(c("layer_id","lat","Lon")) %>% na.omit()  #only select layer id and coordinates
 
-lon_lat_data$layer_id[lon_lat_data$layer_id %in% old] <- 
-  new[match(lon_lat_data$layer_id, old)]
+lon_lat_data_island$layer_id[lon_lat_data_island$layer_id %in% old] <- 
+  new[match(lon_lat_data_island$layer_id, old)]
 
-#write.csv(lon_lat_data, "csvs/lon_lat_data.csv", row.names = FALSE)
+lon_lat_data_island <- lon_lat_data_island %>% unique() #delete doubles caused by layers turning to islands
 
-module_data_with_loc <- merge(module_data, lon_lat_data, by= c("layer_id","layer_id")) #merge modules with module size with the coordinates
+module_data_with_loc_islands <- merge(modules_in_network, lon_lat_data_island, by= c("layer_id","layer_id")) #merge modules with module size with the coordinates
 
 #how many layers are within a module
 modules_with_lat_lon <- module_data_with_loc %>% select(layer_id, module, lat, Lon, size_of_module) %>% unique() #take only certain columns
 modules_with_lat_lon$count <- c(1)
 
-#old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
-#new <- c("1","1","2","2","3","3","4east","4east","4west","4west","5","5","6","6")
+modules_with_lat_lon_islands <- modules_with_lat_lon #create to replace with island names later
+
+old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
+new <- c("1","1","2","2","3","3","4east","4east","4west","4west","5","5","6","6")
 modules_with_lat_lon$layer_id[modules_with_lat_lon$layer_id %in% old] <- 
   new[match(modules_with_lat_lon$layer_id, old)]
 
-modules_with_lat_lon %>% 
-  ggplot(aes(x=module, y= count ,fill= factor(layer_id)))+ geom_bar(stat= "identity")+ theme_classic()+
-  scale_x_continuous(breaks=seq(1,43,2))+ labs(y="number of physical nodes", x="module number")+
-  guides(fill=guide_legend(title="layer\nnumber"))
+#number of module which are found in x islands
+modules_in_i_islands <- NULL
+for (i in 1:7){
+  modules_for_similarity_in_i_islands_num <- modules_with_lat_lon %>% select(module, layer_id) %>%
+    unique() %>% group_by(module) %>% filter(n()==i) %>% select(module) %>% unique() #check which modules occur in i or more layers
+  modules_for_similarity_in_i_islands <- modules_with_lat_lon %>%
+    filter(module %in% modules_for_similarity_in_i_islands_num$module) %>% count(module)#only save the modules that are found in i or more layers
+  modules_in_i_islands <- rbind(modules_in_i_islands, tibble(module= modules_for_similarity_in_i_islands$module, i=i))
+}
 
-#how many islands are within a module
-modules_with_lat_lon_islands <- module_data_with_loc %>% select(layer_id, module, lat, Lon, size_of_module) %>% unique() #take only certain columns
-old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
-new <- c("1","1","2","2","3","3","4east","4east","4west","4west","5","5","6","6")
-modules_with_lat_lon_islands$layer_id[modules_with_lat_lon_islands$layer_id %in% old] <- new[match(modules_with_lat_lon_islands$layer_id, old)]
-modules_with_lat_lon_islands$count <- c(1)
+num_of_modules_in_i_islands <- modules_in_i_islands %>% count(i)
+num_of_modules_in_i_islands %>% ggplot(aes(x=i, y=n))+geom_bar(stat="identity")+theme_classic()+
+  scale_x_continuous(breaks=seq(1,7,1))+ 
+  labs(x="number of spatial locations", y="number of modules found in x spatial locations")
 
-modules_with_lat_lon_islands %>% 
-  ggplot(aes(x=module, y= count ,fill= factor(layer_id)))+ geom_bar(stat= "identity")+ theme_classic()+
-  scale_x_continuous(breaks=seq(1,43,2))+ labs(y="number of physical nodes", x="module number")+ 
-  guides(fill=guide_legend(title="island\nnumber"))
+#number of modules found in each island
+island_names <- c("Western Sahara","Western Sahara", #change layers to island names
+                  "Fuerteventura","Fuerteventura",
+                  "GranCanaria","GranCanaria",
+                  "Tenerife South","Tenerife South",
+                  "Tenerife Teno","Tenerife Teno",
+                  "Gomera","Gomera",
+                  "Hierro","Hierro")
 
+modules_with_lat_lon_islands$layer_id[modules_with_lat_lon_islands$layer_id %in% old] <- 
+  island_names[match(modules_with_lat_lon_islands$layer_id, old)]
 
+modules_with_lat_lon_islands <- modules_with_lat_lon_islands %>% unique() #delete doubles caused by layers turning to islands
 
+modules_per_island <- modules_with_lat_lon_islands %>% group_by(layer_id) %>% count() #number of modules found per island
+
+modules_per_island %>% ggplot(aes(x=layer_id, y=n))+geom_bar(stat="identity")+theme_classic()+
+  scale_x_discrete()+ 
+  labs(x="Island Name", y="Number of Modules in Island")+ 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.55, hjust = 0.4))
 
