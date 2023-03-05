@@ -951,4 +951,17 @@ run_standalone = T, remove_auxilary_files = T, ...)
   return(out)
 }
 
+#---- proper theme for figures ------------------------------------------------------------------------------------------------
+#not an actual function but must be applied to figures for paper
+paper_figs_theme <- 
+  theme_bw()+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+paper_figs_theme_no_legend <- 
+  paper_figs_theme +
+  theme(legend.position = 'none')
 

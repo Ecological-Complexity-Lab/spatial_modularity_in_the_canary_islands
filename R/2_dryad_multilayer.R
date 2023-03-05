@@ -32,37 +32,6 @@ dryad_intralayer <- read.csv("./csvs/intralayer_file.csv")
 dryad_interlayer <- read.csv("./csvs/interlayer_file.csv") #already has inverted within
 #print(dryad_interlayer)
 
-##---- layers as islands and not sites -------------------------------------------------------------------------------
-dryad_intralayer_islands <- dryad_intralayer
-
-old_names <- c("WesternSahara1", "WesternSahara2",
-               "Fuerteventura1", "Fuerteventura2",
-               "GranCanaria1", "GranCanaria2",
-               "TenerifeSouth1", "TenerifeSouth2",
-               "TenerifeTeno1", "TenerifeTeno2",
-               "Gomera1", "Gomera2",
-               "Hierro1", "Hierro2")
-
-new_names <- c("WesternSahara", "WesternSahara",
-               "Fuerteventura", "Fuerteventura",
-               "GranCanaria", "GranCanaria",
-               "TenerifeSouth", "TenerifeSouth",
-               "TenerifeTeno", "TenerifeTeno",
-               "Gomera", "Gomera",
-               "Hierro", "Hierro")
-
-dryad_intralayer_islands$layer_from[dryad_intralayer_islands$layer_from %in% old_names] <- 
-  new_names[match(dryad_intralayer_islands$layer_from, old_names)] #change to reflect layer = island
-
-dryad_intralayer_islands$layer_to[dryad_intralayer_islands$layer_to %in% old_names] <- 
-  new_names[match(dryad_intralayer_islands$layer_to, old_names)] #change to reflect layer = island
-
-#if node_from, node_to, layer_from, layer_to are all the same need to sum the weight
-dryad_intralayer_islands_grouped <- dryad_intralayer_islands %>% 
-  group_by(layer_from, node_from, layer_to, node_to) %>% 
-  summarise(sum_weight = sum(weight))
-
-
 ## ----multilayer_intra-----------------------------------------------------------------------------------------------
 dryad_matrices <- NULL
 for (layer in 1:14){
@@ -360,7 +329,6 @@ modules_for_similarity_num <- modules_dryad_multilayer$modules %>% select(module
 modules_for_similarity <- modules_dryad_multilayer$modules %>%
   filter(module %in% modules_for_similarity_num$module) #only save the modules that are found in 2 or more layers
 
-
 #pivot modules
 module_pivoted <- pivot_by_module(modules_for_similarity)
 
@@ -572,38 +540,16 @@ combine_map <- ggdraw()+ draw_plot(dryad_map)+
 print(combine_map) 
 
 
-#---- jaccard on islands---------------------------------------------------------------------------------------------------
-module_island_turnover <- NULL
-
-island_list <- c("1","2","3","4east","4west","5","6")
-
-for (i in island_list){
-  for (j in island_list){
-    print(i)
-    modules_in_island_from <- filter(edge_list_by_islands_modules, layer_from == i) %>% select(module) %>% unique() %>% unlist()
-    modules_in_island_to <- filter(edge_list_by_islands_modules, layer_from == j) %>% select(module) %>% unique() %>% unlist()
-    #take all nodes in layer_from and all nodes in layer_to to check turnover
-    int_both <- intersect(modules_in_island_from, modules_in_island_to) #how many nodes are found in both layers
-    uni_both <- union(modules_in_island_from, modules_in_island_to)
-    turnover <- length(int_both)/length(uni_both)
-    module_island_turnover <- rbind(module_island_turnover, tibble(layer_from= i, layer_to= j, turnover= turnover))
-  }
-}
-
-edge_list_by_islands_ave <- edge_list_by_islands %>% group_by(layer_from, layer_to) %>%
-  summarise(ave_distance= mean(distance_in_meters)) %>% unique()
-
-islands_turnover_with_distnace_empirical <- edge_list_by_islands_ave %>%
-  merge(module_island_turnover, by= c("layer_from", "layer_to")) #merge both versions 
-
-##same but with layers
+#---- jaccard on layers---------------------------------------------------------------------------------------------------
 module_layer_turnover <- NULL
 
+ #need to make sure all the jaccards are changed to this format!
+
 for (i in 1:14){
-  for (j in 1:14){
+  for (j in (1+i):13){
     print(i)
-    modules_in_layer_from <- filter(edge_list_by_layers_modules, layer_from == i) %>% select(module) %>% unique() %>% unlist()
-    modules_in_layer_to <- filter(edge_list_by_layers_modules, layer_from == j) %>% select(module) %>% unique() %>% unlist()
+    modules_in_layer_from <- filter(modules_with_lat_lon, layer_id == i) %>% select(module) %>% unique() %>% unlist()
+    modules_in_layer_to <- filter(modules_with_lat_lon, layer_id == j) %>% select(module) %>% unique() %>% unlist()
     #take all nodes in layer_from and all nodes in layer_to to check turnover
     int_both <- intersect(modules_in_layer_from, modules_in_layer_to) #how many nodes are found in both layers
     uni_both <- union(modules_in_layer_from, modules_in_layer_to)
@@ -612,19 +558,23 @@ for (i in 1:14){
   }
 }
 
-edge_list_by_layers_ave <- edge_list_with_distances %>% group_by(layer_from, layer_to) %>%
-  summarise(ave_distance= mean(distance_in_meters)) %>% unique()
+#edge_list_by_layers_ave <- edge_list_with_distances %>% group_by(layer_from, layer_to) %>%
+#  summarise(ave_distance= mean(distance_in_meters)) %>% unique()
 
-layers_turnover_with_distnace_empirical <- edge_list_by_layers_ave %>%
+layers_turnover_with_distnace_empirical <- edge_list_with_distances %>%
   merge(module_layer_turnover, by= c("layer_from", "layer_to")) #merge both versions 
 
+layers_turnover_with_distnace_empirical <- layers_turnover_with_distnace_empirical %>% 
+  mutate(distance_in_km=distance_in_meters/1000) %>% select(layer_from, layer_to, turnover, distance_in_km) %>%
+  unique() #turn to km
 
-islands_turnover_with_distnace_empirical %>%
-  ggplot(aes(x=ave_distance, y=turnover))+
-  geom_point()+ scale_x_continuous(breaks=seq(0,455736.67290,100000))+theme_classic()+ stat_smooth(method= "lm")+
+
+layers_turnover_with_distnace_empirical %>%
+  ggplot(aes(x=distance_in_km, y=turnover))+
+  geom_point()+ scale_x_continuous()+theme_classic()+ stat_smooth(method= "lm", se = F)+
   theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
   theme(axis.text.y=element_text(size=15))+
-  labs(x="Distance in Meters", y="Jaccard Similarity")
+  labs(x="Distance in Km", y="Jaccard Similarity")
 
 #jaccard similarity on map
 
