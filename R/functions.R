@@ -124,75 +124,76 @@ modularity_for_shuf <- function(edge_list, output){
 
 ##---- module distance decay for shuffled null models between islands
 
+## irrelevant as we created a proper version based on islands
 
 ## this function calculates Jaccard Similarity in modules between islands
-module_distance_decay_func <- function(multilayer_1000, 
-                                       islands_turnover_with_distnace){
-  for (trial in 1:1000){
-    print(trial) #to keep tab on how far along we are
+#module_distance_decay_func <- function(multilayer_1000, 
+#                                       islands_turnover_with_distnace){
+#  for (trial in 1:1000){
+#    print(trial) #to keep tab on how far along we are
 
-    modules_for_similarity_shuf <- multilayer_1000 %>% filter(trial_num == trial) #take only 1 trial each run
+#    modules_for_similarity_shuf <- multilayer_1000 %>% filter(trial_num == trial) #take only 1 trial each run
 
     #pivot modules
-    module_pivoted_shuf <- pivot_by_module(modules_for_similarity_shuf) #pivot will be done on 1 trial each time
+#    module_pivoted_shuf <- pivot_by_module(modules_for_similarity_shuf) #pivot will be done on 1 trial each time
     
     #create edge list with distances
-    modules_edge_list_shuf <- NULL
+#    modules_edge_list_shuf <- NULL
     
-    for (k in (1:nrow(module_pivoted_shuf))){ #run the function for each row in the data frame
-      modules_edge_list_shuf <- edge_list_per_module(module_pivoted_shuf[k,], modules_edge_list_shuf) 
-      current_module <- rownames(module_pivoted_shuf)[k]
-      if (is.null(modules_edge_list_shuf)) next
-      modules_edge_list_shuf <- modules_edge_list_shuf %>% mutate(module = replace_na(module, current_module)) #add module number
-    }
+#    for (k in (1:nrow(module_pivoted_shuf))){ #run the function for each row in the data frame
+#      modules_edge_list_shuf <- edge_list_per_module(module_pivoted_shuf[k,], modules_edge_list_shuf) 
+#      current_module <- rownames(module_pivoted_shuf)[k]
+#      if (is.null(modules_edge_list_shuf)) next
+#      modules_edge_list_shuf <- modules_edge_list_shuf %>% mutate(module = replace_na(module, current_module)) #add module number
+#    }
     
     
-    edge_list_with_distances_shuf <- right_join(modules_edge_list_shuf, distances_with_ids, by= c("layer_from", "layer_to")) #combine the edge list with the distances between each two layers
-    edge_list_with_distances_shuf <- na.omit(edge_list_with_distances_shuf) #remove NA 
+#    edge_list_with_distances_shuf <- right_join(modules_edge_list_shuf, distances_with_ids, by= c("layer_from", "layer_to")) #combine the edge list with the distances between each two layers
+#    edge_list_with_distances_shuf <- na.omit(edge_list_with_distances_shuf) #remove NA 
     
     #modules similarity pairwise distance between islands
     #change layer number to island identity (aggregate by island)
-    edge_list_by_islands_shuf <- edge_list_with_distances_shuf
-    old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
-    new <- c("1","1","2","2","3","3","4east","4east","4west","4west","5","5","6","6")
-    edge_list_by_islands_shuf$layer_from[edge_list_by_islands_shuf$layer_from %in% old] <- new[match(edge_list_by_islands_shuf$layer_from, old)]
-    edge_list_by_islands_shuf$layer_to[edge_list_by_islands_shuf$layer_to %in% old] <- new[match(edge_list_by_islands_shuf$layer_to, old)]
+#    edge_list_by_islands_shuf <- edge_list_with_distances_shuf
+#    old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
+#    new <- c("1","1","2","2","3","3","4east","4east","4west","4west","5","5","6","6")
+#    edge_list_by_islands_shuf$layer_from[edge_list_by_islands_shuf$layer_from %in% old] <- new[match(edge_list_by_islands_shuf$layer_from, old)]
+#    edge_list_by_islands_shuf$layer_to[edge_list_by_islands_shuf$layer_to %in% old] <- new[match(edge_list_by_islands_shuf$layer_to, old)]
     
     #version with number of modules in layers
-    edge_list_by_islands_modules_shuf <- edge_list_by_islands_shuf %>% group_by(layer_from, layer_to, module) %>%
-      summarise(ave_distance= mean(distance_in_meters))
-    edge_list_by_islands_modules_shuf$count <- c(1)
-    edge_list_by_islands_modules_shuf <- edge_list_by_islands_modules_shuf %>% mutate(number_of_modules= sum(count)) %>%
-      select(layer_from, layer_to, module, number_of_modules) 
+#    edge_list_by_islands_modules_shuf <- edge_list_by_islands_shuf %>% group_by(layer_from, layer_to, module) %>%
+#      summarise(ave_distance= mean(distance_in_meters))
+#    edge_list_by_islands_modules_shuf$count <- c(1)
+#    edge_list_by_islands_modules_shuf <- edge_list_by_islands_modules_shuf %>% mutate(number_of_modules= sum(count)) %>%
+#      select(layer_from, layer_to, module, number_of_modules) 
 
     ## jaccard similairty shuf
     #total number of modules in each layer
-    module_island_turnover_shuf <- NULL
-    island_list <- c("1","2","3","4east","4west","5","6")
+#    module_island_turnover_shuf <- NULL
+#    island_list <- c("1","2","3","4east","4west","5","6")
     
-    for (i in island_list){
-      for (j in island_list){
-        modules_in_island_from_shuf <- filter(edge_list_by_islands_modules_shuf, layer_from == i) %>% select(module) %>% unique() %>% unlist() #all modules in island from
-        modules_in_island_to_shuf <- filter(edge_list_by_islands_modules_shuf, layer_from == j) %>% select(module) %>% unique() %>% unlist() #all modules in island to
-        int_both <- intersect(modules_in_island_from_shuf, modules_in_island_to_shuf) #how many modules are common in both islands
-        uni_both <- union(modules_in_island_from_shuf, modules_in_island_to_shuf) #how many modules are found in both islands in total
-        turnover <- length(int_both)/length(uni_both)
-        module_island_turnover_shuf <- rbind(module_island_turnover_shuf, tibble(layer_from= i, layer_to= j, turnover= turnover))
-      }
-    }
+#    for (i in island_list){
+#      for (j in island_list){
+#        modules_in_island_from_shuf <- filter(edge_list_by_islands_modules_shuf, layer_from == i) %>% select(module) %>% unique() %>% unlist() #all modules in island from
+#        modules_in_island_to_shuf <- filter(edge_list_by_islands_modules_shuf, layer_from == j) %>% select(module) %>% unique() %>% unlist() #all modules in island to
+#        int_both <- intersect(modules_in_island_from_shuf, modules_in_island_to_shuf) #how many modules are common in both islands
+#        uni_both <- union(modules_in_island_from_shuf, modules_in_island_to_shuf) #how many modules are found in both islands in total
+#        turnover <- length(int_both)/length(uni_both)
+#        module_island_turnover_shuf <- rbind(module_island_turnover_shuf, tibble(layer_from= i, layer_to= j, turnover= turnover))
+#      }
+#    }
     
-    edge_list_by_islands_ave_shuf <- edge_list_by_islands_shuf %>% group_by(layer_from, layer_to) %>%
-      summarise(ave_distance= mean(distance_in_meters)) %>% unique() #create an average distance as every two layers in an island are 50-500 meters apart
+#    edge_list_by_islands_ave_shuf <- edge_list_by_islands_shuf %>% group_by(layer_from, layer_to) %>%
+#      summarise(ave_distance= mean(distance_in_meters)) %>% unique() #create an average distance as every two layers in an island are 50-500 meters apart
     
-    islands_turnover_with_distnace <- edge_list_by_islands_ave_shuf %>%
-      merge(module_island_turnover_shuf, by= c("layer_from", "layer_to")) #merge both versions
+#    islands_turnover_with_distnace <- edge_list_by_islands_ave_shuf %>%
+#      merge(module_island_turnover_shuf, by= c("layer_from", "layer_to")) #merge both versions
     
-    islands_turnover_with_distnace_all_trials <- rbind(islands_turnover_with_distnace_all_trials, 
-                                                       tibble(islands_turnover_with_distnace, trial_num = trial))
+#    islands_turnover_with_distnace_all_trials <- rbind(islands_turnover_with_distnace_all_trials, 
+#                                                       tibble(islands_turnover_with_distnace, trial_num = trial))
     
-  }
-  return(islands_turnover_with_distnace_all_trials)
-}
+ # }
+#  return(islands_turnover_with_distnace_all_trials)
+#}
 
 
 ##----number of shared modules between islands
@@ -296,11 +297,11 @@ module_distance_decay_layer_func <- function(multilayer_1000,
     edge_list_by_layers_modules_shuf <- edge_list_by_layers_modules_shuf %>% mutate(number_of_modules= sum(count)) %>%
       select(layer_from, layer_to, module, number_of_modules) 
     
-    
+    #need to make sure the function is OK ############
     for (i in 1:14){
       for (j in 1:14){
-        modules_in_layer_from_shuf <- filter(edge_list_by_layers_modules_shuf, layer_from == i) %>% select(module) %>% unique() %>% unlist() #modules in layer from
-        modules_in_layer_to_shuf <- filter(edge_list_by_layers_modules_shuf, layer_from == j) %>% select(module) %>% unique() %>% unlist() #modules in layer to
+        modules_in_layer_from_shuf <- filter(modules_with_lat_lon, layer_id == i) %>% select(module) %>% unique() %>% unlist() #modules in layer from
+        modules_in_layer_to_shuf <- filter(modules_with_lat_lon, layer_id == j) %>% select(module) %>% unique() %>% unlist() #modules in layer to
         int_both <- intersect(modules_in_layer_from_shuf, modules_in_layer_to_shuf) #how many modules are common in both layers
         uni_both <- union(modules_in_layer_from_shuf, modules_in_layer_to_shuf) #how many modules are found in both layers in total
         turnover <- length(int_both)/length(uni_both)

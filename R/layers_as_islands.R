@@ -764,4 +764,173 @@ write.csv(interlayer_edges_shuf_both, "./HPC/shuf_between_layers_islands_as_laye
 # running 1_1000_x.sh manually in the cmd will make the other two run.
 # all 1000 result csvs can be found in HPC/csvs_x (x being pollinators, plants or both) files
 
+#both
+files_both <- list.files("./HPC/shuf_between_layers_islands_as_layers/csvs_both/", pattern = ".csv$", recursive = TRUE, full.names = TRUE)
+my_merged_interlayer_shuf_both <- read_csv(files_both) %>% bind_rows() #create a long edge list with all the csvs
 
+#pollinators
+files_pollinators <- list.files("./HPC/shuf_between_layers_islands_as_layers/csvs_pollinators/", pattern = ".csv$", recursive = TRUE, full.names = TRUE)
+my_merged_interlayer_shuf_pol <- read_csv(files_pollinators) %>% bind_rows() #create a long edge list with all the csvs
+
+#plants
+files_plants <- list.files("./HPC/shuf_between_layers_islands_as_layers/csvs_plants/", pattern = ".csv$", recursive = TRUE, full.names = TRUE)
+my_merged_interlayer_shuf_plants <- read_csv(files_plants) %>% bind_rows() #create a long edge list with all the csvs
+
+#write.csv(my_merged_interlayer_shuf_both, "./csvs/my_merged_interlayer_shuf_both_islands_as_layers.csv", row.names = FALSE)
+#write.csv(my_merged_interlayer_shuf_pol, "./csvs/my_merged_interlayer_shuf_pol_islands_as_layers.csv", row.names = FALSE)
+#write.csv(my_merged_interlayer_shuf_plants, "./csvs/my_merged_interlayer_shuf_plants_islands_as_layers.csv", row.names = FALSE)
+
+#---- interlayers with weights shuf version ------------------------------------------
+distances_with_weights_ids <- distances_with_weights %>%
+  left_join(layer_metadata, by=c('layer_from' = 'layer_name')) %>%  # Join for plants
+  left_join(layer_metadata, by=c('layer_to' = 'layer_name')) %>%  # Join for plants
+  dplyr::select(-layer_from, -layer_to) %>% 
+  dplyr::select(layer_from=layer_id.x, layer_to=layer_id.y, weight)
+
+#write.csv(distances_with_weights_ids, "./csvs/distances_with_weights_ids.csv", row.names = FALSE)
+
+#pols
+interlayers_with_weights_shuf_pols <- my_merged_interlayer_shuf_pol %>% inner_join(distances_with_weights_ids, 
+                                                                                   by = c("layer_from", "layer_to")) %>% unique()
+
+interlayers_with_weights_shuf_pols <- interlayers_with_weights_shuf_pols[!duplicated(interlayers_with_weights_shuf_pols[c(1,3,5,6)]),]
+
+#plants
+interlayers_with_weights_shuf_plants <- my_merged_interlayer_shuf_plants %>% inner_join(distances_with_weights_ids, 
+                                                                                        by = c("layer_from", "layer_to")) %>% unique()
+
+interlayers_with_weights_shuf_plants <- interlayers_with_weights_shuf_plants[!duplicated(interlayers_with_weights_shuf_plants[c(1,3,5,6)]),]
+
+#both
+interlayers_with_weights_shuf_both <- my_merged_interlayer_shuf_both %>% inner_join(distances_with_weights_ids, 
+                                                                                    by = c("layer_from", "layer_to")) %>% unique()
+
+interlayers_with_weights_shuf_both <- interlayers_with_weights_shuf_both[!duplicated(interlayers_with_weights_shuf_both[c(1,3,5,6)]),]
+
+#write.csv(interlayers_with_weights_shuf_pols, "./csvs/interlayer_shuf_file_pols_islands_as_layers.csv", row.names = FALSE)
+#write.csv(interlayers_with_weights_shuf_plants, "./csvs/interlayer_shuf_file_plants_islands_as_layers.csv", row.names = FALSE)
+#write.csv(interlayers_with_weights_shuf_both, "./csvs/interlayer_shuf_file_both_islands_as_layers.csv", row.names = FALSE)
+
+#create inter and intra for the 1000 shuf trials
+dryad_interlayer_shuf_pols <- read.csv("./csvs/interlayer_shuf_file_pols_islands_as_layers.csv") #already has inverted
+dryad_interlayer_shuf_plants <- read.csv("./csvs/interlayer_shuf_file_plants_islands_as_layers.csv") #already has inverted
+dryad_interlayer_shuf_both <- read.csv("./csvs/interlayer_shuf_file_both_islands_as_layers.csv") #already has inverted
+
+#pols
+dryad_intralayer_shuf_pols <- read.csv("csvs/shuf_null_edge_list_islands_as_layers.csv") 
+dryad_intralayer_shuf_pols <- dryad_intralayer_shuf_pols[, c(6,1,2,3,4,5)]
+
+#plants
+dryad_intralayer_shuf_plants <- read.csv("csvs/shuf_null_edge_list_plants_islands_as_layers.csv") 
+dryad_intralayer_shuf_plants <- dryad_intralayer_shuf_plants[, c(6,1,2,3,4,5)]
+
+#both
+dryad_intralayer_shuf_both <- read.csv("csvs/shuf_null_edge_list_both_islands_as_layers.csv") 
+dryad_intralayer_shuf_both <- dryad_intralayer_shuf_both[, c(6,1,2,3,4,5)]
+
+#----create inverted versions--------------------------------------------
+#pols
+intralayer_inverted_shuf_pols <- tibble(values= dryad_intralayer_shuf_pols$layer_to, dryad_intralayer_shuf_pols$node_to, 
+                                        dryad_intralayer_shuf_pols$layer_from, dryad_intralayer_shuf_pols$node_from, 
+                                        dryad_intralayer_shuf_pols$weight, dryad_intralayer_shuf_pols$trial_number) #create an inverted copy for directed intralayers
+colnames(intralayer_inverted_shuf_pols) <- c("layer_from", "node_from", "layer_to", "node_to", "weight", "trial_number")
+
+
+#plants
+intralayer_inverted_shuf_plants <- tibble(values= dryad_intralayer_shuf_plants$layer_to, dryad_intralayer_shuf_plants$node_to, 
+                                          dryad_intralayer_shuf_plants$layer_from, dryad_intralayer_shuf_plants$node_from, 
+                                          dryad_intralayer_shuf_plants$weight, dryad_intralayer_shuf_plants$trial_number) #create an inverted copy for directed intralayers
+colnames(intralayer_inverted_shuf_plants) <- c("layer_from", "node_from", "layer_to", "node_to", "weight", "trial_number")
+
+#both
+intralayer_inverted_shuf_both <- tibble(values= dryad_intralayer_shuf_both$layer_to, dryad_intralayer_shuf_both$node_to, 
+                                        dryad_intralayer_shuf_both$layer_from, dryad_intralayer_shuf_both$node_from, 
+                                        dryad_intralayer_shuf_both$weight, dryad_intralayer_shuf_both$trial_number) #create an inverted copy for directed intralayers
+colnames(intralayer_inverted_shuf_both) <- c("layer_from", "node_from", "layer_to", "node_to", "weight", "trial_number")
+
+
+## ----weighted intralayer edges--------------------------------------------------------------------------
+##pols
+#plants in from
+tot_plant_shuf_pols <- intralayer_inverted_shuf_pols %>% 
+  group_by(layer_from,node_from, trial_number) %>% 
+  dplyr::summarise(tot=sum(weight))
+intralayer_weighted_shuf_pols <- intralayer_inverted_shuf_pols %>% left_join(tot_plant_shuf_pols) %>% mutate(rel_weight=weight/tot) %>% 
+  select(-weight,-tot) %>% dplyr::rename(weight=rel_weight)
+tot_plant_shuf_pols <- tot_plant_shuf_pols[, c(3,1,2,4)]
+
+#pols in from
+tot_pol_shuf_pols <- dryad_intralayer_shuf_pols %>% 
+  group_by(layer_from,node_from, trial_number) %>% 
+  dplyr::summarise(tot=sum(weight))
+intralayer_weighted_inverted_shuf_pols <- dryad_intralayer_shuf_pols %>% left_join(tot_pol_shuf_pols) %>% mutate(rel_weight=weight/tot) %>% 
+  select(-weight,-tot) %>% dplyr::rename(weight=rel_weight)
+tot_pol_shuf_pols <- tot_pol_shuf_pols[, c(3,1,2,4)]
+
+##plants
+#plants in from
+tot_plant_shuf_plants <- intralayer_inverted_shuf_plants %>% 
+  group_by(layer_from,node_from, trial_number) %>% 
+  dplyr::summarise(tot=sum(weight))
+intralayer_weighted_shuf_plants <- intralayer_inverted_shuf_plants %>% left_join(tot_plant_shuf_plants) %>% mutate(rel_weight=weight/tot) %>% 
+  select(-weight,-tot) %>% dplyr::rename(weight=rel_weight)
+tot_plant_shuf_plants <- tot_plant_shuf_plants[, c(3,1,2,4)]
+
+#pols in from
+tot_pol_shuf_plants <- dryad_intralayer_shuf_plants %>%
+  group_by(layer_from,node_from, trial_number) %>% 
+  dplyr::summarise(tot=sum(weight))
+intralayer_weighted_inverted_shuf_plants <- dryad_intralayer_shuf_plants %>% left_join(tot_pol_shuf_plants) %>% mutate(rel_weight=weight/tot) %>% 
+  select(-weight,-tot) %>% dplyr::rename(weight=rel_weight)
+tot_pol_shuf_plants <- tot_pol_shuf_plants[, c(3,1,2,4)]
+
+##both
+#plants in from
+tot_plant_shuf_both <- intralayer_inverted_shuf_both %>% 
+  group_by(layer_from,node_from, trial_number) %>% 
+  dplyr::summarise(tot=sum(weight))
+intralayer_weighted_shuf_both <- intralayer_inverted_shuf_both %>% left_join(tot_plant_shuf_both) %>% mutate(rel_weight=weight/tot) %>% 
+  select(-weight,-tot) %>% dplyr::rename(weight=rel_weight)
+tot_plant_shuf_both <- tot_plant_shuf_both[, c(3,1,2,4)]
+
+
+#pols in from
+tot_pol_shuf_both <- dryad_intralayer_shuf_both %>% 
+  group_by(layer_from,node_from, trial_number) %>% 
+  dplyr::summarise(tot=sum(weight))
+intralayer_weighted_inverted_shuf_both <- dryad_intralayer_shuf_both %>% left_join(tot_pol_shuf_both) %>% mutate(rel_weight=weight/tot) %>% 
+  select(-weight,-tot) %>% dplyr::rename(weight=rel_weight)
+tot_pol_shuf_both <- tot_pol_shuf_both[, c(3,1,2,4)]
+
+## ----multilayer_extended_final--------------------------------------------------------------------------------------
+
+edgelist_intralayer_shuf_pols <- bind_rows(intralayer_weighted_shuf_pols, intralayer_weighted_inverted_shuf_pols)
+edgelist_intralayer_shuf_plants <- bind_rows(intralayer_weighted_shuf_plants, intralayer_weighted_inverted_shuf_plants)
+edgelist_intralayer_shuf_both <- bind_rows(intralayer_weighted_shuf_both, intralayer_weighted_inverted_shuf_both)
+
+dryad_edgelist_complete_shuf_pols <- bind_rows(edgelist_intralayer_shuf_pols, dryad_interlayer_shuf_pols) #combine inter and intra
+dryad_edgelist_complete_shuf_plants <- bind_rows(edgelist_intralayer_shuf_plants, dryad_interlayer_shuf_plants) #combine inter and intra
+dryad_edgelist_complete_shuf_both <- bind_rows(edgelist_intralayer_shuf_both, dryad_interlayer_shuf_both) #combine inter and intra
+
+## ----distance decay in species shuf networks --------------------------------------------------------------------
+#pols
+all_species_all_layers_all_trials_pols <- rbind(tot_plant_shuf_pols, tot_pol_shuf_pols) %>% subset(select = -c(tot)) %>% 
+  rename(node_id = node_from, layer_id = layer_from)
+
+#plants
+all_species_all_layers_all_trials_plants <- rbind(tot_plant_shuf_plants, tot_pol_shuf_plants) %>% subset(select = -c(tot)) %>% 
+  rename(node_id = node_from, layer_id = layer_from)
+
+#both
+all_species_all_layers_all_trials_both <- rbind(tot_plant_shuf_both, tot_pol_shuf_both) %>% subset(select = -c(tot)) %>% 
+  rename(node_id = node_from, layer_id = layer_from)
+
+classic_layers_turnover_shuf_pols <- NULL
+classic_layers_turnover_shuf_plants <- NULL
+classic_layers_turnover_shuf_both <- NULL
+
+#pols
+classic_layers_turnover_shuf_output_pols <- distnace_decay_shuf(all_species_all_layers_all_trials_pols, 
+                                                                classic_layers_turnover_shuf_pols) 
+
+#check if i need a new version for islands distnace_decay_shuf
