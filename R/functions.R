@@ -56,7 +56,7 @@ edge_list_per_module <- function(data,edge_list){
       for (j in ((i+1):14)){
         if (data[j]==0) next #only take layers where the module is present
         else {
-          edge_list <- rbind(edge_list, tibble(layer_from=i, layer_to=j, module=NA)) #create edge list of all the layer found in a module
+          edge_list <- rbind(edge_list, tibble(layer_from=i, layer_to=j, module=as.character(NA))) #create edge list of all the layer found in a module
         }
       }
     }

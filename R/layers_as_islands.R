@@ -357,7 +357,13 @@ classic_layers_turnover_with_distances %>%
   stat_smooth(method= "lm", se=F, color = "indianred2")+
   theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
   theme(axis.text.y=element_text(size=15))+
-  labs(x="Distance in Km", y="Jaccard Similarity")
+  labs(x="Distance in Km", y="Jaccard Similarity")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
 
 #---- jaccard on islands---------------------------------------------------------------------------------------------------
 #similarity check 2 furthest apart
@@ -389,7 +395,7 @@ edge_list_per_module_islands <- function(data,edge_list){
       for (j in ((i+1):7)){
         if (data[j]==0) next #only take layers where the module is present
         else {
-          edge_list <- rbind(edge_list, tibble(layer_from=i, layer_to=j, module=NA)) #create edge list of all the layer found in a module
+          edge_list <- rbind(edge_list, tibble(layer_from=i, layer_to=j, module=as.character(NA))) #create edge list of all the layer found in a module
         }
       }
     }
@@ -401,11 +407,10 @@ edge_list_per_module_islands <- function(data,edge_list){
 modules_edge_list <- NULL
 
 for (i in (1:nrow(module_pivoted))){ #run the function for each row in the data frame
-  modules_edge_list <- edge_list_per_module_islands(module_pivoted[i,], modules_edge_list) 
+  modules_edge_list <- edge_list_per_module_islands(module_pivoted[i,], modules_edge_list)
   current_module <- rownames(module_pivoted)[i]
   modules_edge_list <- modules_edge_list %>% mutate(module = replace_na(module, current_module)) #add module number
 }
-
 
 edge_list_with_distances <- right_join(modules_edge_list, distances_with_ids, by= c("layer_from", "layer_to")) #combine the edge list with the distances between each two layers
 edge_list_with_distances <- na.omit(edge_list_with_distances) #remove NA and delete layer name
@@ -480,7 +485,7 @@ islands_turnover_with_distnace_empirical %>%
   geom_point()+ scale_x_continuous()+ stat_smooth(method= "lm", se=F)+
   theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
   theme(axis.text.y=element_text(size=15))+
-  labs(x="Distance in Meters", y="Jaccard Similarity")+ theme_bw()+
+  labs(x="Distance in Km", y="Jaccard Similarity")+ theme_bw()+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
         panel.spacing = unit(0.5, "cm", data = NULL),
@@ -787,7 +792,7 @@ distances_with_weights_ids <- distances_with_weights %>%
   dplyr::select(-layer_from, -layer_to) %>% 
   dplyr::select(layer_from=layer_id.x, layer_to=layer_id.y, weight)
 
-#write.csv(distances_with_weights_ids, "./csvs/distances_with_weights_ids.csv", row.names = FALSE)
+#write.csv(distances_with_weights_ids, "./csvs/distances_with_weights_ids_islands_as_layers.csv", row.names = FALSE)
 
 #pols
 interlayers_with_weights_shuf_pols <- my_merged_interlayer_shuf_pol %>% inner_join(distances_with_weights_ids, 
@@ -810,7 +815,7 @@ interlayers_with_weights_shuf_both <- interlayers_with_weights_shuf_both[!duplic
 #write.csv(interlayers_with_weights_shuf_pols, "./csvs/interlayer_shuf_file_pols_islands_as_layers.csv", row.names = FALSE)
 #write.csv(interlayers_with_weights_shuf_plants, "./csvs/interlayer_shuf_file_plants_islands_as_layers.csv", row.names = FALSE)
 #write.csv(interlayers_with_weights_shuf_both, "./csvs/interlayer_shuf_file_both_islands_as_layers.csv", row.names = FALSE)
-
+#here!
 #create inter and intra for the 1000 shuf trials
 dryad_interlayer_shuf_pols <- read.csv("./csvs/interlayer_shuf_file_pols_islands_as_layers.csv") #already has inverted
 dryad_interlayer_shuf_plants <- read.csv("./csvs/interlayer_shuf_file_plants_islands_as_layers.csv") #already has inverted

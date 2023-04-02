@@ -382,8 +382,14 @@ classic_layers_turnover_with_distances %>%
   stat_smooth(method= "lm", se=F, color = "indianred2")+
   theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
   theme(axis.text.y=element_text(size=15))+
-  labs(x="Distance in Km", y="Jaccard Similarity")+ stat_cor(aes(label = ..p.label..), label.x = 400, color = "indianred2")+
-  stat_cor(aes(label = ..rr.label..), label.x = 400, label.y = c(0.4), color = "indianred2") 
+  labs(x="Distance in Km", y="Jaccard Similarity")+#+ stat_cor(aes(label = ..p.label..), label.x = 400, color = "indianred2")+
+  #stat_cor(aes(label = ..rr.label..), label.x = 400, label.y = c(0.4), color = "indianred2") 
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
 
 
 
@@ -394,6 +400,7 @@ for (i in (1:nrow(module_pivoted))){ #run the function for each row in the data 
   current_module <- rownames(module_pivoted)[i]
   modules_edge_list <- modules_edge_list %>% mutate(module = replace_na(module, current_module)) #add module number
 }
+
 
 #view(modules_edge_list)
 
@@ -422,41 +429,41 @@ modules_with_lat_lon %>%
   scale_x_continuous(breaks=seq(1,43,2))+ labs(y="number of physical nodes", x="module number")+
   guides(fill=guide_legend(title="layer\nnumber"))
 
-#how many islands are within a module
-modules_with_lat_lon_islands <- module_data_with_loc %>% select(layer_id, module, lat, Lon, size_of_module) %>% unique() #take only certain columns
-old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
-new <- c("1","1","2","2","3","3","4east","4east","4west","4west","5","5","6","6")
-modules_with_lat_lon_islands$layer_id[modules_with_lat_lon_islands$layer_id %in% old] <- new[match(modules_with_lat_lon_islands$layer_id, old)]
-modules_with_lat_lon_islands$count <- c(1)
+#how many islands are within a module #new islands analysis so this is not needed
+#modules_with_lat_lon_islands <- module_data_with_loc %>% select(layer_id, module, lat, Lon, size_of_module) %>% unique() #take only certain columns
+#old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
+#new <- c("1","1","2","2","3","3","4east","4east","4west","4west","5","5","6","6")
+#modules_with_lat_lon_islands$layer_id[modules_with_lat_lon_islands$layer_id %in% old] <- new[match(modules_with_lat_lon_islands$layer_id, old)]
+#modules_with_lat_lon_islands$count <- c(1)
 
-modules_with_lat_lon_islands %>% 
-  ggplot(aes(x=module, y= count ,fill= factor(layer_id)))+ geom_bar(stat= "identity")+ theme_classic()+
-  scale_x_continuous(breaks=seq(1,43,2))+ labs(y="number of physical nodes", x="module number")+ 
-  guides(fill=guide_legend(title="island\nnumber"))
+#modules_with_lat_lon_islands %>% 
+#  ggplot(aes(x=module, y= count ,fill= factor(layer_id)))+ geom_bar(stat= "identity")+ theme_classic()+
+#  scale_x_continuous(breaks=seq(1,43,2))+ labs(y="number of physical nodes", x="module number")+ 
+#  guides(fill=guide_legend(title="island\nnumber"))
 
 #modules similarity pairwise distance between islands
-edge_list_by_islands <- edge_list_with_distances
-old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
-new <- c("1","1","2","2","3","3","4east","4east","4west","4west","5","5","6","6")
-edge_list_by_islands$layer_from[edge_list_by_islands$layer_from %in% old] <- new[match(edge_list_by_islands$layer_from, old)]
-edge_list_by_islands$layer_to[edge_list_by_islands$layer_to %in% old] <- new[match(edge_list_by_islands$layer_to, old)]
+#edge_list_by_islands <- edge_list_with_distances
+#old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
+#new <- c("1","1","2","2","3","3","4east","4east","4west","4west","5","5","6","6")
+#edge_list_by_islands$layer_from[edge_list_by_islands$layer_from %in% old] <- new[match(edge_list_by_islands$layer_from, old)]
+#edge_list_by_islands$layer_to[edge_list_by_islands$layer_to %in% old] <- new[match(edge_list_by_islands$layer_to, old)]
 
 #version with # of modules in layers
-edge_list_by_islands_modules <- edge_list_by_islands %>% group_by(layer_from, layer_to, module) %>%
-  summarise(ave_distance= mean(distance_in_meters)) #maybe do it differently? should i make all distances within the same island 0?
-edge_list_by_islands_modules$count <- c(1)
-edge_list_by_islands_modules <- edge_list_by_islands_modules %>% mutate(number_of_modules= sum(count)) %>%
-  select(layer_from, layer_to, module, number_of_modules) 
+#edge_list_by_islands_modules <- edge_list_by_islands %>% group_by(layer_from, layer_to, module) %>%
+#  summarise(ave_distance= mean(distance_in_meters)) #maybe do it differently? should i make all distances within the same island 0?
+#edge_list_by_islands_modules$count <- c(1)
+#edge_list_by_islands_modules <- edge_list_by_islands_modules %>% mutate(number_of_modules= sum(count)) %>%
+#  select(layer_from, layer_to, module, number_of_modules) 
 
 #version with correct average between layers
-edge_list_by_islands_ave <- edge_list_by_islands %>% group_by(layer_from, layer_to) %>%
-  summarise(ave_distance= mean(distance_in_meters)) %>% unique()
+#edge_list_by_islands_ave <- edge_list_by_islands %>% group_by(layer_from, layer_to) %>%
+#  summarise(ave_distance= mean(distance_in_meters)) %>% unique()
 
 #combine
-edge_list_island_combine <- edge_list_by_islands_ave %>%
-  merge(edge_list_by_islands_modules, by= c("layer_from", "layer_to")) #merge both versions 
+#edge_list_island_combine <- edge_list_by_islands_ave %>%
+#  merge(edge_list_by_islands_modules, by= c("layer_from", "layer_to")) #merge both versions 
   
-edge_list_island_combine_no_module <- edge_list_island_combine %>% select(-module) %>% unique() #have version where modules aren't present
+#edge_list_island_combine_no_module <- edge_list_island_combine %>% select(-module) %>% unique() #have version where modules aren't present
 
 
 #same but for layers
@@ -479,65 +486,65 @@ edge_list_layer_combine_no_module <- edge_list_layer_combine %>% select(-module)
 #---- graphs modules in common -----------------------------------------------------------------------
 
 # number of modules in common as func of distance between islands
-edge_list_island_combine_no_module %>%
-  ggplot(aes(x=ave_distance, y=number_of_modules))+
-  geom_point()+ scale_x_continuous(breaks=seq(0,455736.67290,100000))+theme_classic()+ stat_smooth(method= "lm")+
-  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
-  theme(axis.text.y=element_text(size=15))+
-  labs(x="distance in meters", y="number of modules in common")
+#edge_list_island_combine_no_module %>%
+#  ggplot(aes(x=ave_distance, y=number_of_modules))+
+#  geom_point()+ scale_x_continuous(breaks=seq(0,455736.67290,100000))+theme_classic()+ stat_smooth(method= "lm")+
+#  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
+#  theme(axis.text.y=element_text(size=15))+
+#  labs(x="distance in meters", y="number of modules in common")
 
 # heatmap
-edge_list_by_islands_heatmap <- edge_list_island_combine_no_module %>% select(layer_from, layer_to, number_of_modules) 
-edge_list_by_islands_heatmap %>% 
-  ggplot()+ geom_tile(aes(x=layer_from, y=layer_to, fill= number_of_modules))+ theme_classic()+
-  scale_fill_gradient(low= "lightskyblue1", high= "red")+
-  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
-  theme(axis.text.y=element_text(size=15))+
-  labs(x="island from", y="island to", fill= "number of modules \n in common")
+#edge_list_by_islands_heatmap <- edge_list_island_combine_no_module %>% select(layer_from, layer_to, number_of_modules) 
+#edge_list_by_islands_heatmap %>% 
+#  ggplot()+ geom_tile(aes(x=layer_from, y=layer_to, fill= number_of_modules))+ theme_classic()+
+#  scale_fill_gradient(low= "lightskyblue1", high= "red")+
+#  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
+#  theme(axis.text.y=element_text(size=15))+
+#  labs(x="island from", y="island to", fill= "number of modules \n in common")
 
 # network graph
-network_graph <- graph_from_data_frame(edge_list_by_islands_heatmap, directed= FALSE)
-network_graph %>%
-  plot(edge.width=edge_list_by_islands_heatmap$number_of_modules)
+#network_graph <- graph_from_data_frame(edge_list_by_islands_heatmap, directed= FALSE)
+#network_graph %>%
+#  plot(edge.width=edge_list_by_islands_heatmap$number_of_modules)
 
 #network graph on world map
-lat_lon_for_graph <- modules_with_lat_lon 
-lat_lon_for_graph <- lat_lon_for_graph %>% select(layer_id, lat, Lon)
+#lat_lon_for_graph <- modules_with_lat_lon 
+#lat_lon_for_graph <- lat_lon_for_graph %>% select(layer_id, lat, Lon)
 
-old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
-new <- c("1","1","2","2","3","3","4east","4east","4west","4west","5","5","6","6")
-lat_lon_for_graph$layer_id[lat_lon_for_graph$layer_id %in% old] <- new[match(lat_lon_for_graph$layer_id, old)]
+#old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
+#new <- c("1","1","2","2","3","3","4east","4east","4west","4west","5","5","6","6")
+#lat_lon_for_graph$layer_id[lat_lon_for_graph$layer_id %in% old] <- new[match(lat_lon_for_graph$layer_id, old)]
 
-islands_with_lat_lon <- edge_list_island_combine_no_module %>%
-  inner_join(lat_lon_for_graph, by= c("layer_from" = "layer_id")) %>%  #add edge list to coordinates
-  rename(x= Lon, y=lat) %>%
-  inner_join(lat_lon_for_graph, by= c("layer_to" = "layer_id")) %>%
-  rename(xend= Lon, yend= lat) %>%
-  select(layer_from, layer_to, number_of_modules, y, yend, x, xend) %>% unique() 
+#islands_with_lat_lon <- edge_list_island_combine_no_module %>%
+#  inner_join(lat_lon_for_graph, by= c("layer_from" = "layer_id")) %>%  #add edge list to coordinates
+#  rename(x= Lon, y=lat) %>%
+#  inner_join(lat_lon_for_graph, by= c("layer_to" = "layer_id")) %>%
+#  rename(xend= Lon, yend= lat) %>%
+#  select(layer_from, layer_to, number_of_modules, y, yend, x, xend) %>% unique() 
 
-lat_lon_nodes <- islands_with_lat_lon %>% group_by(layer_from) %>% arrange(desc(layer_to)) %>% slice(1) #save coordinates of islands
+#lat_lon_nodes <- islands_with_lat_lon %>% group_by(layer_from) %>% arrange(desc(layer_to)) %>% slice(1) #save coordinates of islands
 
-islands_with_lon_lat_dif <- islands_with_lat_lon %>% filter(layer_from != layer_to)
+#islands_with_lon_lat_dif <- islands_with_lat_lon %>% filter(layer_from != layer_to)
 
 #write.csv(islands_with_lon_lat_dif, "./csvs/islands_with_lon_lat_dif.csv", row.names = FALSE)
 
-worldmap <- map_data("world")
-dryad_location <- make_bbox(lon= c(-18.542076, -12.58351), lat= c(26, 30.323990))  
-dryad_map <- get_map(location=dryad_location, zoom=10, maptype="terrain") %>% ggmap()+
-  geom_segment(aes(x= x, xend= xend, y= y, yend= yend, color = number_of_modules),
-             data= islands_with_lon_lat_dif)+ scale_color_gradient(high="red",low="lightskyblue1")+
-  geom_point(aes(x=x, y=y),shape= 21 , fill= 'white', color= "black", data= lat_lon_nodes)+ 
-  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
-  theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+ 
-  labs(x = "Longitude", y = "Latitude")+ labs(color = "number of modules \n in common")
+#worldmap <- map_data("world")
+#dryad_location <- make_bbox(lon= c(-18.542076, -12.58351), lat= c(26, 30.323990))  
+#dryad_map <- get_map(location=dryad_location, zoom=10, maptype="terrain") %>% ggmap()+
+#  geom_segment(aes(x= x, xend= xend, y= y, yend= yend, color = number_of_modules),
+#             data= islands_with_lon_lat_dif)+ scale_color_gradient(high="red",low="lightskyblue1")+
+#  geom_point(aes(x=x, y=y),shape= 21 , fill= 'white', color= "black", data= lat_lon_nodes)+ 
+#  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
+#  theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+ 
+#  labs(x = "Longitude", y = "Latitude")+ labs(color = "number of modules \n in common")
 
-print(dryad_map)
-print(top_10_scatterpies)
-top_10_scatterpies_no_legend <- top_10_scatterpies + theme(legend.position = "none")
+#print(dryad_map)
+#print(top_10_scatterpies)
+#top_10_scatterpies_no_legend <- top_10_scatterpies + theme(legend.position = "none")
 
-combine_map <- ggdraw()+ draw_plot(dryad_map)+
-  draw_plot(top_10_scatterpies_no_legend, x = -0.07, y = 0.1, scale = 0.70)
-print(combine_map) 
+#combine_map <- ggdraw()+ draw_plot(dryad_map)+
+#  draw_plot(top_10_scatterpies_no_legend, x = -0.07, y = 0.1, scale = 0.70)
+#print(combine_map) 
 
 
 #---- jaccard on layers---------------------------------------------------------------------------------------------------
@@ -568,13 +575,19 @@ layers_turnover_with_distnace_empirical <- layers_turnover_with_distnace_empiric
   mutate(distance_in_km=distance_in_meters/1000) %>% select(layer_from, layer_to, turnover, distance_in_km) %>%
   unique() #turn to km
 
-
 layers_turnover_with_distnace_empirical %>%
   ggplot(aes(x=distance_in_km, y=turnover))+
-  geom_point()+ scale_x_continuous()+theme_classic()+ stat_smooth(method= "lm", se = F)+
+  geom_point(color = "indianred2")+ scale_x_continuous()+theme_classic()+ 
+  stat_smooth(method= "lm", se = F, color = "indianred2")+
   theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
   theme(axis.text.y=element_text(size=15))+
-  labs(x="Distance in Km", y="Jaccard Similarity")
+  labs(x="Distance in Km", y="Jaccard Similarity")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
 
 #jaccard similarity on map
 
@@ -588,7 +601,7 @@ jaccard_similarity_on_map <- merge(empirical_turnover_for_module_island_shuf_no_
 
 worldmap <- map_data("world")
 dryad_location <- make_bbox(lon= c(-18.542076, -12.58351), lat= c(26, 30.323990))  
-dryad_map_jaccard <- get_map(location=dryad_location, zoom=10, maptype="terrain") %>% ggmap()+
+dryad_map_jaccard <- get_map(location=dryad_location, zoom=10, maptype="terrain") %>% ggmap()+ #requires an API key now
   geom_segment(aes(x= x, xend= xend, y= y, yend= yend, color = ave),
                data= jaccard_similarity_on_map)+ scale_color_gradient(high="red",low="lightskyblue1")+
   geom_point(aes(x=x, y=y),shape= 21 , fill= 'white', color= "black", data= lat_lon_nodes)+ 
@@ -632,9 +645,11 @@ layers_furthest_apart_km %>%
   ggplot()+geom_histogram(aes(x=distance_in_km))+theme_classic()+ scale_x_continuous(breaks=seq(0,457,50))
 
 #distance decay species turnover with regards to modules
+
 layers_turnover <- NULL
 
 for (i in (1:nrow(module_pivoted))){
+  if (!(i %in% edge_list_with_distances$module)) next
   focal_module <- filter(edge_list_with_distances, module == i) #look at one module at a time
   for (j in (1:nrow(focal_module))){
     module <- focal_module[j,]
@@ -655,13 +670,25 @@ for (i in (1:nrow(module_pivoted))){
 }
 
 layers_turnover <- layers_turnover %>% unique()
+layers_turnover_km <- layers_turnover %>% mutate(distance = replace(distance, distance>0, 
+                                                              distance/1000))
 
-ggplot(layers_turnover, aes(x=distance, y=turnover))+
-  geom_point()+ scale_x_continuous(breaks=seq(0,455736.67290,100000))+theme_classic()+ stat_smooth(method= "lm")+
+names(layers_turnover_km)[4] <- "distance_in_km"
+
+ggplot(layers_turnover_km, aes(x=distance_in_km, y=turnover))+
+  geom_point(color = "indianred2")+ scale_x_continuous()+theme_classic()+ 
+  stat_smooth(method= "lm", se = F, color = "indianred2")+
   theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
   theme(axis.text.y=element_text(size=15))+
-  labs(x="distance in meters", y="similarity")
+  labs(x="Distance in Km", y="Jaccard Similarity")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
 
+#HERE!
 
 #module size distribution
 plants_and_pols <- modules_dryad_multilayer$modules %>% count(type) 
