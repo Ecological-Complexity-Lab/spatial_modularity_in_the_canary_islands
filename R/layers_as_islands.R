@@ -815,7 +815,7 @@ interlayers_with_weights_shuf_both <- interlayers_with_weights_shuf_both[!duplic
 #write.csv(interlayers_with_weights_shuf_pols, "./csvs/interlayer_shuf_file_pols_islands_as_layers.csv", row.names = FALSE)
 #write.csv(interlayers_with_weights_shuf_plants, "./csvs/interlayer_shuf_file_plants_islands_as_layers.csv", row.names = FALSE)
 #write.csv(interlayers_with_weights_shuf_both, "./csvs/interlayer_shuf_file_both_islands_as_layers.csv", row.names = FALSE)
-#here!
+
 #create inter and intra for the 1000 shuf trials
 dryad_interlayer_shuf_pols <- read.csv("./csvs/interlayer_shuf_file_pols_islands_as_layers.csv") #already has inverted
 dryad_interlayer_shuf_plants <- read.csv("./csvs/interlayer_shuf_file_plants_islands_as_layers.csv") #already has inverted
@@ -930,12 +930,42 @@ all_species_all_layers_all_trials_plants <- rbind(tot_plant_shuf_plants, tot_pol
 all_species_all_layers_all_trials_both <- rbind(tot_plant_shuf_both, tot_pol_shuf_both) %>% subset(select = -c(tot)) %>% 
   rename(node_id = node_from, layer_id = layer_from)
 
+#write.csv(all_species_all_layers_all_trials_pols, "./csvs/all_species_all_layers_all_trials_pols_islands_as_layers.csv", row.names = FALSE)
+#write.csv(all_species_all_layers_all_trials_plants, "./csvs/all_species_all_layers_all_trials_plants_islands_as_layers.csv", row.names = FALSE)
+#write.csv(all_species_all_layers_all_trials_both, "./csvs/all_species_all_layers_all_trials_both_islands_as_layers.csv", row.names = FALSE)
+
+
+#function for islands
+islands_distnace_decay_shuf <- function(species_all_layers, output){
+  for (k in 1:1000){ #1000 iterations
+    current_trial <- species_all_layers %>% filter(trial_number == k)
+    print(k) #to keep tab on how far along we are
+    for (i in (1:6)){
+      for (j in ((i+1):7)){
+        physical_nodes_in_layer_from <- filter(current_trial, layer_id == i) %>% select(node_id) %>% unlist() #all species in layer from
+        physical_nodes_in_layer_to <- filter(current_trial, (layer_id == j)) %>% select(node_id) %>% unlist() #all species in layer to
+        int_both <- intersect(physical_nodes_in_layer_from, physical_nodes_in_layer_to) #how many nodes are common to both layers
+        uni_both <- union(physical_nodes_in_layer_from, physical_nodes_in_layer_to) #how many nodes are found in both layers total
+        turnover <- length(int_both)/length(uni_both)
+        output <- rbind(output, tibble(trial_number = k, layer_from = i, layer_to = j, turnover = turnover))
+      }
+    }
+  }
+  
+  output <- output %>% unique()
+  
+  return(output)
+}
+
 classic_layers_turnover_shuf_pols <- NULL
 classic_layers_turnover_shuf_plants <- NULL
 classic_layers_turnover_shuf_both <- NULL
 
 #pols
-classic_layers_turnover_shuf_output_pols <- distnace_decay_shuf(all_species_all_layers_all_trials_pols, 
+classic_layers_turnover_shuf_output_pols <- islands_distnace_decay_shuf(all_species_all_layers_all_trials_pols, 
                                                                 classic_layers_turnover_shuf_pols) 
+
+#write.csv(classic_layers_turnover_shuf_output_pols, "./csvs/classic_layers_turnover_shuf_output_pols_islands_as_layers.csv", row.names = FALSE)
+
 
 #check if i need a new version for islands distnace_decay_shuf
