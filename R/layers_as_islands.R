@@ -1075,4 +1075,38 @@ p_value_plants #result is 0.3198874
 p_value_both = 2*pnorm(-abs(compare.coeff(b1,se1,b4,se4)))
 p_value_both #result is 7.374046e-12
 
+## ----multilayer_class-----------------------------------------------------------------------------------------------
+# Input: An extended edge list.
+dryad_edgelist_complete_shuf_pols <- dryad_edgelist_complete_shuf_pols[, c(1,2,3,4,6,5)] #make sure weight is #5
+dryad_edgelist_complete_shuf_plants <- dryad_edgelist_complete_shuf_plants[, c(1,2,3,4,6,5)] #make sure weight is #5
+dryad_edgelist_complete_shuf_both <- dryad_edgelist_complete_shuf_both[, c(1,2,3,4,6,5)] #make sure weight is #5
+
+#write.csv(dryad_edgelist_complete_shuf_pols, "./csvs/dryad_edgelist_complete_shuf_pols_islands_as_layers.csv", row.names = FALSE)
+#write.csv(dryad_edgelist_complete_shuf_plants, "./csvs/dryad_edgelist_complete_shuf_plants_islands_as_layers.csv", row.names = FALSE)
+#write.csv(dryad_edgelist_complete_shuf_both, "./csvs/dryad_edgelist_complete_shuf_both_islands_as_layers.csv", row.names = FALSE)
+
+dryad_edgelist_complete_shuf_pols <- read.csv("./csvs/dryad_edgelist_complete_shuf_pols_islands_as_layers.csv")
+dryad_edgelist_complete_shuf_plants <- read.csv("./csvs/dryad_edgelist_complete_shuf_plants_islands_as_layers.csv")
+dryad_edgelist_complete_shuf_both <- read.csv("./csvs/dryad_edgelist_complete_shuf_both_islands_as_layers.csv")
+
+dryad_multilayer_shuf_1000_pols <- NULL
+dryad_multilayer_shuf_1000_plants <- NULL
+dryad_multilayer_shuf_1000_both <- NULL
+
+#pols
+dryad_multilayer_shuf_1000_pols_output <- modularity_for_shuf(dryad_edgelist_complete_shuf_pols, 
+                                                              dryad_multilayer_shuf_1000_pols)
+
+
+#plants
+dryad_multilayer_shuf_1000_plants_output <- modularity_for_shuf(dryad_edgelist_complete_shuf_plants, 
+                                                                dryad_multilayer_shuf_1000_plants)
+
+
+#both
+dryad_multilayer_shuf_1000_both_output <- modularity_for_shuf(dryad_edgelist_complete_shuf_both, 
+                                                              dryad_multilayer_shuf_1000_both)
+
+#write.csv(dryad_multilayer_shuf_1000_pols_output, "./csvs/dryad_multilayer_shuf_1000_pols_output_islands_as_layers.csv", row.names = FALSE)
+#write.csv(dryad_multilayer_shuf_1000_plants_output, "./csvs/dryad_multilayer_shuf_1000_plants_output_output_islands_as_layers.csv", row.names = FALSE)
 

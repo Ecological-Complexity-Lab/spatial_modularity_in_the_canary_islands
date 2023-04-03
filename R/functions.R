@@ -106,7 +106,7 @@ modularity_for_shuf <- function(edge_list, output){
     
     
     #create modules for empirical network
-    modules_dryad_multilayer_shuf_1000 <- run_infomap_multilayer(dryad_multilayer_shuf_trial, 
+    modules_dryad_multilayer_shuf_1000 <- modified_multi(dryad_multilayer_shuf_trial, 
                                                                 infomap_executable = "Infomap",
                                                                 flow_model = 'directed',
                                                                 relax = F, 
