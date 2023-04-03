@@ -965,7 +965,114 @@ classic_layers_turnover_shuf_both <- NULL
 classic_layers_turnover_shuf_output_pols <- islands_distnace_decay_shuf(all_species_all_layers_all_trials_pols, 
                                                                 classic_layers_turnover_shuf_pols) 
 
+#plants
+classic_layers_turnover_shuf_output_plants <- islands_distnace_decay_shuf(all_species_all_layers_all_trials_plants, 
+                                                                  classic_layers_turnover_shuf_plants)
+
+#both
+classic_layers_turnover_shuf_output_both <- islands_distnace_decay_shuf(all_species_all_layers_all_trials_both, 
+                                                                classic_layers_turnover_shuf_both)
+
+
 #write.csv(classic_layers_turnover_shuf_output_pols, "./csvs/classic_layers_turnover_shuf_output_pols_islands_as_layers.csv", row.names = FALSE)
+#write.csv(classic_layers_turnover_shuf_output_plants, "./csvs/classic_layers_turnover_shuf_output_plants_islands_as_layers.csv", row.names = FALSE)
+#write.csv(classic_layers_turnover_shuf_output_both, "./csvs/classic_layers_turnover_shuf_output_both_islands_as_layers.csv", row.names = FALSE)
 
 
-#check if i need a new version for islands distnace_decay_shuf
+#pols
+classic_layers_turnover_with_distances_shuf_pols <- right_join(classic_layers_turnover_shuf_output_pols, 
+                                                               distances_with_ids, by= c("layer_from", "layer_to"))
+classic_layers_turnover_with_distances_shuf_pols <- na.omit(classic_layers_turnover_with_distances_shuf_pols) #remove NA and delete layer name
+
+#plants
+classic_layers_turnover_with_distances_shuf_plants <- right_join(classic_layers_turnover_shuf_output_plants, 
+                                                                 distances_with_ids, by= c("layer_from", "layer_to"))
+classic_layers_turnover_with_distances_shuf_plants <- na.omit(classic_layers_turnover_with_distances_shuf_plants) #remove NA and delete layer name
+
+#both
+classic_layers_turnover_with_distances_shuf_both <- right_join(classic_layers_turnover_shuf_output_both, 
+                                                               distances_with_ids, by= c("layer_from", "layer_to"))
+classic_layers_turnover_with_distances_shuf_both <- na.omit(classic_layers_turnover_with_distances_shuf_both) #remove NA and delete layer name
+
+#write.csv(classic_layers_turnover_with_distances_shuf_pols, "./csvs/classic_layers_turnover_with_distances_shuf_pols_islands_as_layers.csv", row.names = FALSE)
+#write.csv(classic_layers_turnover_with_distances_shuf_plants, "./csvs/classic_layers_turnover_with_distances_shuf_plants_islands_as_layers.csv", row.names = FALSE)
+#write.csv(classic_layers_turnover_with_distances_shuf_both, "./csvs/classic_layers_turnover_with_distances_shuf_both_islands_as_layers.csv", row.names = FALSE)
+classic_layers_turnover_with_distances_shuf_pols <- read.csv("./csvs/classic_layers_turnover_with_distances_shuf_pols_islands_as_layers.csv")
+classic_layers_turnover_with_distances_shuf_plants <- read.csv("./csvs/classic_layers_turnover_with_distances_shuf_plants_islands_as_layers.csv")
+classic_layers_turnover_with_distances_shuf_both <- read.csv("./csvs/classic_layers_turnover_with_distances_shuf_both_islands_as_layers.csv")
+
+#create an average for shuf with sd
+#pols
+ave_turnover_for_shuf_pols <- classic_layers_turnover_with_distances_shuf_pols %>% 
+  group_by(layer_from, layer_to, mean_distance) %>%
+  summarise(ave=mean(turnover), sd=sd(turnover)) %>% mutate(type="null_pollinators") #create mean and sd for each point
+
+#plants
+ave_turnover_for_shuf_plants <- classic_layers_turnover_with_distances_shuf_plants %>% 
+  group_by(layer_from, layer_to, mean_distance) %>%
+  summarise(ave=mean(turnover), sd=sd(turnover)) %>% mutate(type="null_plants") #create mean and sd for each point
+
+#both
+ave_turnover_for_shuf_both <- classic_layers_turnover_with_distances_shuf_both %>% 
+  group_by(layer_from, layer_to, mean_distance) %>%
+  summarise(ave=mean(turnover), sd=sd(turnover)) %>% mutate(type="null_both") #create mean and sd for each point
+
+#add the emprical classical turnover
+empirical_turnover_for_shuf <- classic_layers_turnover_with_distances %>% 
+  group_by(layer_from, layer_to, mean_distance) %>%
+  summarise(ave=mean(turnover), sd=sd(turnover)) %>% mutate(type="empirical") #make sure sd is 0 cause its the empirical and not null
+
+#---- graphs for distance decay in species-----------------------------------------------------
+turnover_shuf_and_empirical <- rbind(empirical_turnover_for_shuf, ave_turnover_for_shuf_pols, ave_turnover_for_shuf_plants,
+                                     ave_turnover_for_shuf_both)
+
+turnover_shuf_and_empirical <- turnover_shuf_and_empirical %>% mutate(distance_in_km = mean_distance/1000)
+
+#write.csv(turnover_shuf_and_empirical, "./csvs/turnover_shuf_and_empirical_islands_as_layers.csv", row.names = FALSE)
+
+turnover_shuf_and_empirical %>% ggplot(aes(x= distance_in_km, y= ave, group= type, color= type))+
+  geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ geom_smooth(method= "lm", se=F)+
+  labs(x="Distance in Km", y="Jaccard Similarity")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+  #+ stat_cor(aes(label = ..p.label..), label.x = 400)+
+  #stat_cor(aes(label = ..rr.label..), label.x = 400, label.y = c(0.36, 0.34, 0.32, 0.30))
+
+#-------making sure its significant---------------------------------------------
+
+lm1 = lm(ave ~ distance_in_km ,data=subset(turnover_shuf_and_empirical,
+                                           turnover_shuf_and_empirical$type=="empirical")) #in empirical
+lm2 = lm(ave ~ distance_in_km ,data=subset(turnover_shuf_and_empirical,
+                                           turnover_shuf_and_empirical$type=="null_pollinators")) #in null pols
+lm3 = lm(ave ~ distance_in_km ,data=subset(turnover_shuf_and_empirical,
+                                           turnover_shuf_and_empirical$type=="null_plants")) #in null plants
+lm4 = lm(ave ~ distance_in_km ,data=subset(turnover_shuf_and_empirical,
+                                           turnover_shuf_and_empirical$type=="null_both")) #in null pols
+
+
+b1 <- summary(lm1)$coefficients[2,1] #coef for empirical
+se1 <- summary(lm1)$coefficients[2,2] #sd for empirical
+
+b2 <- summary(lm2)$coefficients[2,1] #coef for pols
+se2 <- summary(lm2)$coefficients[2,2] #sd for pols
+
+b3 <- summary(lm3)$coefficients[2,1] #coef for plants
+se3 <- summary(lm3)$coefficients[2,2] #sd for plants
+
+b4 <- summary(lm4)$coefficients[2,1] #coef for both
+se4 <- summary(lm4)$coefficients[2,2] #sd for both
+
+p_value_pol = 2*pnorm(-abs(compare.coeff(b1,se1,b2,se2)))
+p_value_pol #result is 1.752491e-07
+
+p_value_plants = 2*pnorm(-abs(compare.coeff(b1,se1,b3,se3)))
+p_value_plants #result is 0.3198874
+
+p_value_both = 2*pnorm(-abs(compare.coeff(b1,se1,b4,se4)))
+p_value_both #result is 7.374046e-12
+
+
