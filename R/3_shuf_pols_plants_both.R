@@ -620,6 +620,7 @@ dryad_edgelist_complete_shuf_both <- dryad_edgelist_complete_shuf_both[, c(1,2,3
 #write.csv(dryad_edgelist_complete_shuf_plants, "./csvs/dryad_edgelist_complete_shuf_plants.csv", row.names = FALSE)
 #write.csv(dryad_edgelist_complete_shuf_both, "./csvs/dryad_edgelist_complete_shuf_both.csv", row.names = FALSE)
 
+
 dryad_multilayer_shuf_1000_pols <- NULL
 dryad_multilayer_shuf_1000_plants <- NULL
 dryad_multilayer_shuf_1000_both <- NULL
@@ -647,22 +648,22 @@ dryad_multilayer_shuf_1000_plants_output <- read.csv("./csvs/dryad_multilayer_sh
 dryad_multilayer_shuf_1000_both_output <- read.csv("./csvs/dryad_multilayer_shuf_1000_both_output.csv")
 
 ##---- distance decay of modules in islands shuf vs empirical----------------------------------------------------
-all_edge_list_island_combine_no_module_shuf_pols <- NULL
-all_edge_list_island_combine_no_module_shuf_plants <- NULL
-all_edge_list_island_combine_no_module_shuf_both <- NULL
-all_edge_list_layers_combine_no_module_shuf <- NULL
+#all_edge_list_island_combine_no_module_shuf_pols <- NULL
+#all_edge_list_island_combine_no_module_shuf_plants <- NULL
+#all_edge_list_island_combine_no_module_shuf_both <- NULL
+#all_edge_list_layers_combine_no_module_shuf <- NULL
 
 
-islands_turnover_with_distnace_pols <- NULL
-islands_turnover_with_distnace_plants <- NULL
-islands_turnover_with_distnace_both <- NULL
+#islands_turnover_with_distnace_pols <- NULL
+#islands_turnover_with_distnace_plants <- NULL
+#islands_turnover_with_distnace_both <- NULL
 
-islands_turnover_with_distnaces_pols <- NULL
-islands_turnover_with_distnaces_plants <- NULL
-islands_turnover_with_distnaces_both <- NULL
+#islands_turnover_with_distnaces_pols <- NULL
+#islands_turnover_with_distnaces_plants <- NULL
+#islands_turnover_with_distnaces_both <- NULL
 
 
-module_island_turnover_shuf <- NULL
+#module_island_turnover_shuf <- NULL
 
 
 ##---- distance decay of modules in layers and ---------------------------------------------------------------
@@ -675,38 +676,38 @@ module_layer_turnover_shuf <- NULL
 
 #---- outputs islands----------------------------------------------------------------------------
 #pols
-all_edge_list_island_combine_no_module_shuf_pols_output <- module_distance_decay_func(dryad_multilayer_shuf_1000_pols_output,
-                                                                                      islands_turnover_with_distnace_pols,
-                                                                                      islands_turnover_with_distnaces_pols)
+#all_edge_list_island_combine_no_module_shuf_pols_output <- module_distance_decay_func(dryad_multilayer_shuf_1000_pols_output,
+#                                                                                      islands_turnover_with_distnace_pols,
+#                                                                                      islands_turnover_with_distnaces_pols)
 
 
-write.csv(all_edge_list_island_combine_no_module_shuf_pols_output, 
-          "./csvs/all_edge_list_island_combine_no_module_shuf_pols_output.csv", 
-          row.names = FALSE)
+#write.csv(all_edge_list_island_combine_no_module_shuf_pols_output, 
+#          "./csvs/all_edge_list_island_combine_no_module_shuf_pols_output.csv", 
+#          row.names = FALSE)
 
-all_edge_list_island_combine_no_module_shuf_pols_output <- read.csv("./csvs/all_edge_list_island_combine_no_module_shuf_pols_output.csv")
+#all_edge_list_island_combine_no_module_shuf_pols_output <- read.csv("./csvs/all_edge_list_island_combine_no_module_shuf_pols_output.csv")
 
 #plants
-all_edge_list_island_combine_no_module_shuf_plants_output <- module_distance_decay_func(dryad_multilayer_shuf_1000_plants_output,
-                                                                                        islands_turnover_with_distnace_plants,
-                                                                                        islands_turnover_with_distnaces_plants)
+#all_edge_list_island_combine_no_module_shuf_plants_output <- module_distance_decay_func(dryad_multilayer_shuf_1000_plants_output,
+#                                                                                        islands_turnover_with_distnace_plants,
+#                                                                                        islands_turnover_with_distnaces_plants)
 
-write.csv(all_edge_list_island_combine_no_module_shuf_plants_output, 
-          "./csvs/all_edge_list_island_combine_no_module_shuf_plants_output.csv", 
-          row.names = FALSE)
+#write.csv(all_edge_list_island_combine_no_module_shuf_plants_output, 
+#          "./csvs/all_edge_list_island_combine_no_module_shuf_plants_output.csv", 
+#          row.names = FALSE)
 
-all_edge_list_island_combine_no_module_shuf_plants_output <- read.csv("./csvs/all_edge_list_island_combine_no_module_shuf_plants_output.csv")
+#all_edge_list_island_combine_no_module_shuf_plants_output <- read.csv("./csvs/all_edge_list_island_combine_no_module_shuf_plants_output.csv")
 
 #both
-all_edge_list_island_combine_no_module_shuf_both_output <- module_distance_decay_func(dryad_multilayer_shuf_1000_both_output,
-                                                                                      islands_turnover_with_distnace_both,
-                                                                                      islands_turnover_with_distnaces_both)
+#all_edge_list_island_combine_no_module_shuf_both_output <- module_distance_decay_func(dryad_multilayer_shuf_1000_both_output,
+#                                                                                      islands_turnover_with_distnace_both,
+#                                                                                      islands_turnover_with_distnaces_both)
 
-write.csv(all_edge_list_island_combine_no_module_shuf_both_output, 
-          "./csvs/all_edge_list_island_combine_no_module_shuf_both_output.csv", 
-          row.names = FALSE)
+#write.csv(all_edge_list_island_combine_no_module_shuf_both_output, 
+#          "./csvs/all_edge_list_island_combine_no_module_shuf_both_output.csv", 
+#          row.names = FALSE)
 
-all_edge_list_island_combine_no_module_shuf_both_output <- read.csv("./csvs/all_edge_list_island_combine_no_module_shuf_both_output.csv")
+#all_edge_list_island_combine_no_module_shuf_both_output <- read.csv("./csvs/all_edge_list_island_combine_no_module_shuf_both_output.csv")
 
 #---- outputs layers--------------------------------------------------------------------------------------
 
@@ -796,31 +797,31 @@ all_edge_list_layer_combine_no_module_shuf_both_output <- read.csv("./csvs/all_e
 
 #---- create ave for jaccard islands -------------------------------------------------------------------------
 #pols
-ave_module_island_turnover_shuf_pols <- all_edge_list_island_combine_no_module_shuf_pols_output %>% 
-  group_by(layer_from, layer_to) %>%
-  summarise(ave=mean(turnover), sd=sd(turnover), ave_dist=mean(ave_distance)) %>% mutate(type="null_pollinators") #create mean and sd for each point
+#ave_module_island_turnover_shuf_pols <- all_edge_list_island_combine_no_module_shuf_pols_output %>% 
+#  group_by(layer_from, layer_to) %>%
+#  summarise(ave=mean(turnover), sd=sd(turnover), ave_dist=mean(ave_distance)) %>% mutate(type="null_pollinators") #create mean and sd for each point
 
 #plants
-ave_module_island_turnover_shuf_plants <- all_edge_list_island_combine_no_module_shuf_plants_output %>% 
-  group_by(layer_from, layer_to) %>%
-  summarise(ave=mean(turnover), sd=sd(turnover), ave_dist=mean(ave_distance)) %>% mutate(type="null_plants") #create mean and sd for each point
+#ave_module_island_turnover_shuf_plants <- all_edge_list_island_combine_no_module_shuf_plants_output %>% 
+#  group_by(layer_from, layer_to) %>%
+#  summarise(ave=mean(turnover), sd=sd(turnover), ave_dist=mean(ave_distance)) %>% mutate(type="null_plants") #create mean and sd for each point
 
 #both
-ave_module_island_turnover_shuf_both <- all_edge_list_island_combine_no_module_shuf_both_output %>% 
-  group_by(layer_from, layer_to) %>%
-  summarise(ave=mean(turnover), sd=sd(turnover), ave_dist=mean(ave_distance)) %>% mutate(type="null_both") #create mean and sd for each point
+#ave_module_island_turnover_shuf_both <- all_edge_list_island_combine_no_module_shuf_both_output %>% 
+#  group_by(layer_from, layer_to) %>%
+#  summarise(ave=mean(turnover), sd=sd(turnover), ave_dist=mean(ave_distance)) %>% mutate(type="null_both") #create mean and sd for each point
 
 #add the empirical empirical
-empirical_turnover_for_module_island_shuf <- islands_turnover_with_distnace_empirical %>% group_by(layer_from, layer_to) %>%
-  summarise(ave=mean(turnover), sd=sd(turnover), ave_dist=mean(ave_distance)) %>% mutate(type="empirical") #make sure sd is 0 cause its the empirical and not null
+#empirical_turnover_for_module_island_shuf <- islands_turnover_with_distnace_empirical %>% group_by(layer_from, layer_to) %>%
+#  summarise(ave=mean(turnover), sd=sd(turnover), ave_dist=mean(ave_distance)) %>% mutate(type="empirical") #make sure sd is 0 cause its the empirical and not null
 
-empirical_turnover_for_module_island_shuf_no_self_loop <- empirical_turnover_for_module_island_shuf %>% subset(layer_from != layer_to) #for empirical only distance decay graph
+#empirical_turnover_for_module_island_shuf_no_self_loop <- empirical_turnover_for_module_island_shuf %>% subset(layer_from != layer_to) #for empirical only distance decay graph
 
-empirical_turnover_for_module_island_shuf_no_self_loop_km <- empirical_turnover_for_module_island_shuf_no_self_loop %>%
-  mutate(ave_dist_in_km = ave_dist/1000)
+#empirical_turnover_for_module_island_shuf_no_self_loop_km <- empirical_turnover_for_module_island_shuf_no_self_loop %>%
+#  mutate(ave_dist_in_km = ave_dist/1000)
 
-write.csv(empirical_turnover_for_module_island_shuf_no_self_loop_km,
-          "./csvs/empirical_turnover_for_module_island_shuf_no_self_loop_km.csv", row.names = FALSE)
+#write.csv(empirical_turnover_for_module_island_shuf_no_self_loop_km,
+#          "./csvs/empirical_turnover_for_module_island_shuf_no_self_loop_km.csv", row.names = FALSE)
 
 #---- create ave for jaccard layers ----------------------------------------------------------------------------------------
 #pols
@@ -850,13 +851,13 @@ empirical_turnover_for_module_layer_shuf_no_self_loop_km <- empirical_turnover_f
 
 #---- combine for jaccard analysis------------------------------------------------------------------------------------------------------
 #combine all islands
-jaccard_similarity_empirical_and_null <- rbind(empirical_turnover_for_module_island_shuf, ave_module_island_turnover_shuf_pols,
-                                               ave_module_island_turnover_shuf_plants, ave_module_island_turnover_shuf_both)
+#jaccard_similarity_empirical_and_null <- rbind(empirical_turnover_for_module_island_shuf, ave_module_island_turnover_shuf_pols,
+#                                               ave_module_island_turnover_shuf_plants, ave_module_island_turnover_shuf_both)
 
-jaccard_similarity_empirical_and_null_no_self_loop <- jaccard_similarity_empirical_and_null %>% subset(layer_from != layer_to)
+#jaccard_similarity_empirical_and_null_no_self_loop <- jaccard_similarity_empirical_and_null %>% subset(layer_from != layer_to)
 
-jaccard_similarity_empirical_and_null_no_self_loop_km <- jaccard_similarity_empirical_and_null_no_self_loop %>% 
-  mutate(ave_dist_in_km = ave_dist/1000)
+#jaccard_similarity_empirical_and_null_no_self_loop_km <- jaccard_similarity_empirical_and_null_no_self_loop %>% 
+#  mutate(ave_dist_in_km = ave_dist/1000)
 
 #combine all layers
 jaccard_similarity_layer_empirical_and_null <- rbind(empirical_turnover_for_module_layer_shuf, ave_module_layer_turnover_shuf_pols,
