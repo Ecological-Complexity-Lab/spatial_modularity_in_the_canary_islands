@@ -101,7 +101,6 @@ write.csv(interlayer_edges_shuf_classic, "./HPC/shuf_within_layers/interlayer_ed
 
 #run on HPC and then come back with results
 
-#both
 files_classic <- list.files("./HPC/shuf_within_layers/csvs_classic/", pattern = ".csv$", recursive = TRUE, full.names = TRUE)
 my_merged_interlayer_shuf_classic <- read_csv(files_classic) %>% bind_rows() #create a long edge list with all the csvs
 

@@ -20,8 +20,11 @@ library(ggraph)
 library(ggpubr)
 library(reshape2)
 
-#this portion of code turns the data into a multilayer network with 7 layers (islands as layers) and does
-#modularity analysis
+#this portion of code turns the data into a multilayer network with 7 layers 
+#(islands as layers). It then compares the distance decay in species and modules
+#of the empirical network to null models where plants, pollinators and both are
+#shuffled.
+
 
 
 ##----get_data--------------------------------------------------------------------------------------------------------
@@ -1278,6 +1281,10 @@ jaccard_similarity_islands_empirical_and_null <- rbind(empirical_turnover_for_mo
 jaccard_similarity_layer_empirical_and_null_km <- jaccard_similarity_islands_empirical_and_null %>% 
   mutate(mean_dist_in_km = mean_distance/1000)
 
+write.csv(jaccard_similarity_layer_empirical_and_null_km, 
+          "./csvs/jaccard_similarity_layer_empirical_and_null_km_islands.csv", 
+          row.names = FALSE)
+
 #---- graphs for distance decay in modules shuf vs empirical--------------------------------
 pdf('./graphs/layers_as_islands_and_not_sites/jaccard_similarity_layer_empirical_and_null_km_islands_as_layers.pdf', 10, 6)
 jaccard_similarity_layer_empirical_and_null_km %>% 
@@ -1294,3 +1301,114 @@ jaccard_similarity_layer_empirical_and_null_km %>%
         axis.line = element_blank())#stat_cor(aes(label = ..p.label..), label.x = 400)+
   #stat_cor(aes(label = ..rr.label..), label.x = 400, label.y = c(0.63, 0.60, 0.57, 0.54))
 dev.off()
+
+#------check if its significant for islands----------------------------------------------------------------
+lm1_module = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km,
+                                            jaccard_similarity_layer_empirical_and_null_km$type=="empirical")) #in empirical
+lm2_module = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km,
+                                            jaccard_similarity_layer_empirical_and_null_km$type=="null_pollinators")) #in null pols
+lm3_module = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km,
+                                            jaccard_similarity_layer_empirical_and_null_km$type=="null_plants")) #in null plants
+lm4_module = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km,
+                                            jaccard_similarity_layer_empirical_and_null_km$type=="null_both")) #in null both
+
+#get equations
+lm1_module_equation <- paste("y=", coef(lm1_module)[[1]], "+", coef(lm1_module)[[2]], "*x")
+lm2_module_equation <- paste("y=", coef(lm2_module)[[1]], "+", coef(lm2_module)[[2]], "*x")
+lm3_module_equation <- paste("y=", coef(lm3_module)[[1]], "+", coef(lm3_module)[[2]], "*x")
+lm4_module_equation <- paste("y=", coef(lm4_module)[[1]], "+", coef(lm4_module)[[2]], "*x")
+
+b1_module <- summary(lm1_module)$coefficients[2,1]
+se1_module <- summary(lm1_module)$coefficients[2,2]
+b2_module <- summary(lm2_module)$coefficients[2,1]
+se2_module <- summary(lm2_module)$coefficients[2,2]
+b3_module <- summary(lm3_module)$coefficients[2,1]
+se3_module <- summary(lm3_module)$coefficients[2,2]
+b4_module <- summary(lm4_module)$coefficients[2,1]
+se4_module <- summary(lm4_module)$coefficients[2,2]
+
+p_value_module_pols = 2*pnorm(-abs(compare.coeff(b1_module,se1_module,b2_module,se2_module)))
+p_value_module_pols #value is 1.287614e-06
+p_value_module_plants = 2*pnorm(-abs(compare.coeff(b1_module,se1_module,b3_module,se3_module)))
+p_value_module_plants #value is 0.03441519
+p_value_module_both = 2*pnorm(-abs(compare.coeff(b1_module,se1_module,b4_module,se4_module)))
+p_value_module_both #value is 1.823412e-07
+
+##---- classic shuffle within layers ---------------------------------------------
+
+shuf_trial_matrix_classic <- NULL
+shuf_null_edge_list_classic <- NULL
+
+intralayers_with_ids_for_shuf <- 
+  dryad_intralayer_islands_grouped %>% 
+  left_join(physical_nodes, by=c('node_from' = 'species')) %>%  # Join for pollinators
+  left_join(physical_nodes, by=c('node_to' = 'species')) %>%  # Join for plants
+  dplyr::select(-node_from, -node_to) %>% #choose said columns
+  dplyr::select(layer_from, node_from=node_id.x, layer_to, node_to=node_id.y, sum_weight) %>% 
+  left_join(layer_metadata, by=c('layer_from' = 'layer_name')) %>%  # Join for plants
+  left_join(layer_metadata, by=c('layer_to' = 'layer_name')) %>%  # Join for plants
+  dplyr::select(-layer_from, -layer_to) %>% 
+  dplyr::select(layer_from=layer_id.x, node_from, layer_to=layer_id.y, node_to, sum_weight)
+
+
+for (i in 1:7){
+  current_matrix <- intralayers_with_ids_for_shuf %>%
+    filter(layer_from == layer_to) %>% filter(layer_from == i) %>% #take 1 layer at a time
+    select(node_from, node_to, sum_weight) %>% #select interactions
+    dcast(node_from ~ node_to, value.var = "sum_weight", fill = 0) %>%
+    column_to_rownames(var="node_from") 
+  
+  current_matrix <- t(current_matrix) #put pols in rows
+  
+  print(i) #to keep tab on which layer we're on
+  
+  for (j in 1:1000){ #1000 iterations
+    null <- vegan::nullmodel(current_matrix, method = 'r00_samp') #shuffle within layer
+    shuffled_matrices <- simulate(null, nsim = 1)
+    
+    trial_with_shuf_num <- cbind(shuffled_matrices, j) #add trial number 
+    shuf_trial_matrix_classic <- rbind(shuf_trial_matrix_classic, trial_with_shuf_num) #create big matrix of all matrices
+    edge_list_version_classic <- melt(as.matrix(shuffled_matrices)) %>% filter(value > 0) %>%
+      select(node_from=Var1, node_to=Var2, weight=value) #turn the matrix back into a data frame of edge lists
+    edge_list_version_classic$trial_number <- j #add trial number to the edge list
+    edge_list_version_classic$layer_from <- i #intra so layer from and to are identical
+    edge_list_version_classic$layer_to <- i
+    shuf_null_edge_list_classic <- rbind(shuf_null_edge_list_classic, edge_list_version_classic) #create mega edge list with all repetitions
+  }
+}
+
+shuf_null_edge_list_classic <- shuf_null_edge_list_classic[, c(5,1,6,2,3,4)] #change to regular order
+
+#write.csv(shuf_null_edge_list_classic, "./csvs/shuf_null_edge_list_classic_islands_as_layers.csv", row.names = FALSE)
+
+#interlayer edges
+interlayer_edges_from_shuf_classic <- shuf_null_edge_list_classic %>% group_by(trial_number, node_from) %>%
+  select(trial_number, layer_from, node_from) %>% unique() %>% #group by species and find only locations
+  mutate(loc1 = layer_from[1], loc2 = layer_from[2], loc3 = layer_from[3], 
+         loc4 = layer_from[4], loc5 = layer_from[5], loc6 = layer_from[6],
+         loc7 = layer_from[7], loc8 = layer_from[8], loc9 = layer_from[9], 
+         loc10 = layer_from[10], loc11 = layer_from[11], loc12 = layer_from[12],
+         loc13 = layer_from[13], loc14 = layer_from[14]) #all layers the species is found in
+
+
+interlayer_edges_to_shuf_classic <- shuf_null_edge_list_classic %>% group_by(trial_number, node_to) %>% 
+  select(layer_to, node_to) %>% unique() %>% #group by species and find only locations
+  mutate(loc1 = layer_to[1], loc2 = layer_to[2], loc3 = layer_to[3],
+         loc4 = layer_to[4], loc5 = layer_to[5], loc6 = layer_to[6],
+         loc7 = layer_to[7], loc8 = layer_to[8], loc9 = layer_to[9], 
+         loc10 = layer_to[10], loc11 = layer_to[11], loc12 = layer_to[12],
+         loc13 = layer_to[13], loc14 = layer_to[14]) %>% #all layers the species is found in
+  dplyr::rename(layer_from = layer_to, node_from = node_to) #make sure they look the same for rbind
+
+interlayer_edges_shuf_classic <- rbind(interlayer_edges_from_shuf_classic, interlayer_edges_to_shuf_classic) 
+
+#write.csv(interlayer_edges_shuf_classic, "./csvs/interlayer_edges_shuf_classic_islands_as_layers.csv",row.names = FALSE)
+
+#---- run oh HPC and get results for analysis -----------------------------------------------------------------
+write.csv(interlayer_edges_shuf_classic, "./HPC/shuf_within_layers_islands/interlayer_edges_shuf_classic_islands_as_layers.csv", row.names = FALSE) #create to run on HPC
+
+#run on HPC and then come back with results
+
+files_classic <- list.files("./HPC/shuf_within_layers_islands/csvs_classic/", pattern = ".csv$", recursive = TRUE, full.names = TRUE)
+my_merged_interlayer_shuf_classic <- read_csv(files_classic) %>% bind_rows() #create a long edge list with all the csvs
+
