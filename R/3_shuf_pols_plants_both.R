@@ -42,6 +42,8 @@ intralayers_with_ids$to <- paste(intralayers_with_ids$layer_to, "_", intralayers
 
 intralayers_with_ids <- intralayers_with_ids %>% select(from, to, weight) #select only new columns and weight
 
+#write.csv(intralayers_with_ids, "./csvs/intralayers_with_ids.csv")
+
 
 intralayer_matrix <- intralayers_with_ids %>%  #turn edge list to matrix
   select(from, to, weight) %>%
@@ -101,6 +103,8 @@ write.csv(shuf_null_edge_list, "./csvs/shuf_null_edge_list.csv", row.names = FAL
 write.csv(shuf_trial_matrix, "./csvs/shuf_trial_matrix.csv", row.names = TRUE)
 #shuf_null_edge_list <- read.csv("./csvs/shuf_null_edge_list.csv")
 #shuf_trial_matrix <- read.csv("./csvs/shuf_trial_matrix.csv")
+
+#here!!
 
 # 1-39 to
 # 40-288 from

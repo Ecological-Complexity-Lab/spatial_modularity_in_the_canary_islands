@@ -155,10 +155,10 @@ node_id,module,layer_id,flow,type,species
 38,3,14,0.0114419,plant,Schizogyne.sericea
 39,32,1,7.58281e-4,plant,Zilla.spinosa
 39,32,2,3.73498e-4,plant,Zilla.spinosa
-40,19,6,4.44926e-5,pollinator,Agromyzidae_sp._1
-40,19,7,7.1842e-5,pollinator,Agromyzidae_sp._1
-40,19,8,2.27045e-4,pollinator,Agromyzidae_sp._1
-41,1,10,1.8481e-5,pollinator,Agromyzidae?_sp._2
+40,1,10,1.8481e-5,pollinator,Agromyzidae?_sp._2
+41,19,6,4.44926e-5,pollinator,Agromyzidae_sp._1
+41,19,7,7.1842e-5,pollinator,Agromyzidae_sp._1
+41,19,8,2.27045e-4,pollinator,Agromyzidae_sp._1
 42,4,6,2.68785e-5,pollinator,Alliophleps_elliptica
 43,8,9,4.616e-5,pollinator,Amegilla_canifrons
 44,8,5,6.61379e-5,pollinator,Amegilla_quadrifasciata

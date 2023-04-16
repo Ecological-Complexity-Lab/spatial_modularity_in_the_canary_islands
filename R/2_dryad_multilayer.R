@@ -17,6 +17,9 @@ library(ggraph)
 #library(taxizedb)
 #library(ggtree)
 library(ggpubr)
+library(readxl)
+library(reshape2)
+
 
 #this portion of code turns the data into a multilayer network with 14 layers and does
 #modularity analysis
@@ -25,6 +28,7 @@ library(ggpubr)
 ##----get_data--------------------------------------------------------------------------------------------------------
 #setwd("/Users/maya/Desktop/plant_pollinator_data/dryad_network")
 #setwd("/Users/mayagoldstein/Desktop/project")
+#setwd("/Users/golds/Desktop/spatial_modularity_in_the_canary_islands")
 #getwd()
 
 dryad_intralayer <- read.csv("./csvs/intralayer_file.csv")
@@ -146,22 +150,30 @@ tot_pol_layer_ids$type <- "pollinator"
 
 richness_in_layer <- rbind(tot_plant_layer_ids, tot_pol_layer_ids)
 
+pdf('./graphs/basic_analysis/richness_in_layer.pdf', 10, 6)
 richness_in_layer %>%
   ggplot(aes(x= layer_id, y=n, fill=type))+ geom_bar(stat="identity", position= position_dodge2(preserve = "single"))+ 
-  theme_classic()+ scale_x_continuous(breaks=seq(1,14,1))+ labs(x= "layer id", y= "number of species")
+  theme_classic()+ scale_x_continuous(breaks=seq(1,14,1))+ labs(x= "layer id", y= "number of species")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+dev.off()
 
 #richness in each island
-richness_in_island <- richness_in_layer
-old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
-new <- c("1","1","2","2","3","3","4east","4east","4west","4west","5","5","6","6")
-richness_in_island$layer_id[richness_in_island$layer_id %in% old] <- new[match(richness_in_island$layer_id, old)]
+#richness_in_island <- richness_in_layer
+#old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
+#new <- c("1","1","2","2","3","3","4east","4east","4west","4west","5","5","6","6")
+#richness_in_island$layer_id[richness_in_island$layer_id %in% old] <- new[match(richness_in_island$layer_id, old)]
 
-richness_in_island <- richness_in_island %>% group_by(layer_id,type) %>% 
-  summarise(num_of_species=sum(n)) #sum every two layers in an island by type
+#richness_in_island <- richness_in_island %>% group_by(layer_id,type) %>% 
+#  summarise(num_of_species=sum(n)) #sum every two layers in an island by type
 
-richness_in_island %>%
-  ggplot(aes(x= layer_id, y=num_of_species, fill=type))+ geom_bar(stat="identity", position= position_dodge2(preserve = "single"))+ 
-  theme_classic()+ labs(x= "island id", y= "number of species")
+#richness_in_island %>%
+#  ggplot(aes(x= layer_id, y=num_of_species, fill=type))+ geom_bar(stat="identity", position= position_dodge2(preserve = "single"))+ 
+#  theme_classic()+ labs(x= "island id", y= "number of species")
 
 
 ## ----multilayer_class-----------------------------------------------------------------------------------------------
@@ -192,6 +204,7 @@ modules_dryad_multilayer <- modified_multi(dryad_multilayer,
                                              trials = 100,
                                              seed = 497294, 
                                              temporal_network = F)
+#43 modules
 
 #view(modules_dryad_multilayer$modules)
 
@@ -205,9 +218,17 @@ num_of_nodes_in_module <- modules_dryad_multilayer$modules %>% count(module) #nu
 local_modules <- modules_dryad_multilayer$modules %>% select(module, layer_id)
 num_of_layers_in_module <- local_modules %>% distinct() %>% count(module) #num of layers a module is found in
 
+pdf('./graphs/modularity_analysis/number_of_layers_in_module.pdf', 10, 6)
 num_of_layers_in_module %>%
   ggplot(aes(x= module, y=n))+ geom_bar(stat="identity")+ #stacked
-  theme_classic()+ scale_x_continuous(breaks=seq(1,43,2))+ labs(x= "Module", y= "Number of Layers")
+  theme_classic()+ scale_x_continuous(breaks=seq(1,43,2))+ labs(x= "Module", y= "Number of Layers")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=12, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+dev.off()
 
 #----for each layer how many nodes are found in each module-----------------------------------------------------------
 
@@ -227,12 +248,12 @@ modules_dryad_multilayer$modules %>%
 
 modules_dryad_multilayer_species_analysis <- modules_dryad_multilayer$modules
 
-modules_dryad_multilayer_species_analysis <- modules_dryad_multilayer_species_analysis %>% select(node_id, layer_id, module) %>% unique() #take only certain columns
-old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
-new <- c("1","1","2","2","3","3","4east","4east","4west","4west","5","5","6","6")
-modules_dryad_multilayer_species_analysis$layer_id[modules_dryad_multilayer_species_analysis$layer_id %in% old] <- 
-  new[match(modules_dryad_multilayer_species_analysis$layer_id, old)]
-modules_dryad_multilayer_species_analysis <- modules_dryad_multilayer_species_analysis %>% unique() #delete repeats because of layer to island conversion
+#modules_dryad_multilayer_species_analysis <- modules_dryad_multilayer_species_analysis %>% select(node_id, layer_id, module) %>% unique() #take only certain columns
+#old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
+#new <- c("1","1","2","2","3","3","4east","4east","4west","4west","5","5","6","6")
+#modules_dryad_multilayer_species_analysis$layer_id[modules_dryad_multilayer_species_analysis$layer_id %in% old] <- 
+#  new[match(modules_dryad_multilayer_species_analysis$layer_id, old)]
+#modules_dryad_multilayer_species_analysis <- modules_dryad_multilayer_species_analysis %>% unique() #delete repeats because of layer to island conversion
 
 modules_dryad_multilayer_species_analysis_module <- modules_dryad_multilayer_species_analysis %>% group_by(node_id, module) %>%
   mutate(number_of_islands = n()) %>% select(node_id, module, number_of_islands) %>% unique() #count number of islands each physical node is found in
@@ -272,19 +293,36 @@ heatmap(modules_dryad_multilayer_species_analysis_module_matrix, Colv = NA, Rowv
 
 #---- interlayer and intralayer distribution-----------------------------------------------------------------------------------------------------
 #interlayer distribution
+pdf('./graphs/basic_analysis/interlayer_distribution.pdf', 10, 6)
 weight_distribution <- inter_extended %>% arrange(weight) %>% select(weight) 
 weight_distribution %>%
   ggplot(aes(x=weight))+geom_density(fill = "#F47069", color = "#F47069", alpha = 0.4)+theme_classic()+ 
   geom_vline(xintercept = median(weight_distribution$weight), linetype = "dashed", color = "black", size = 1)+
-  theme(axis.title=element_text(size=15))
+  theme(axis.title=element_text(size=15))+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+dev.off()
 
 mean(unlist(weight_distribution))
 median(unlist(weight_distribution))
 
 #intralayer distribution
 intra_weight_distribution <- intra_nonextended %>% arrange(weight) %>% select(weight) 
+
+pdf('./graphs/basic_analysis/intralayer_distribution.pdf', 10, 6)
 intra_weight_distribution %>%
-  ggplot()+geom_histogram(aes(x=weight))+theme_classic()
+  ggplot()+geom_histogram(aes(x=weight))+theme_classic()+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+dev.off()
 
 mean(unlist(intra_weight_distribution))
 median(unlist(intra_weight_distribution))
@@ -293,8 +331,17 @@ median(unlist(intra_weight_distribution))
 inter_intra_non_directed <- data.frame(values= c(intra_nonextended$weight, inter_extended$weight), 
                                        group= c(rep("intra", nrow(intra_nonextended)), rep("inter", nrow(inter_extended))))
 
+pdf('./graphs/basic_analysis/intralayer_interlayer_non_directed_distribution.pdf', 10, 6)
 inter_intra_non_directed %>%
-  ggplot(aes(x=values, fill=group))+ geom_histogram(position= "identity", alpha= 0.6, color= "black")+ theme_classic()
+  ggplot(aes(x=values, fill=group))+ 
+  geom_histogram(position= "identity", alpha= 0.6, color= "black")+ theme_classic()+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+dev.off()
 
 #directed intralayer weights distribution
 directed_weight_distribution_plants <- intralayer_weighted %>% arrange(weight) %>% select(weight)
@@ -319,8 +366,17 @@ intra_inter_data_for_distibution <- data.frame(values= c(intralayer_weighted$wei
                                                   rep("intra pollinators", nrow(intralayer_weighted_inverted)),
                                                   rep("inter", nrow(inter_extended))))
 
+pdf('./graphs/basic_analysis/intralayer_interlayer_directed_distribution.pdf', 10, 6)
 intra_inter_data_for_distibution %>%
-  ggplot(aes(x=values, fill=group))+ geom_histogram(position= "identity", alpha= 0.6, color= "black")+ theme_classic()
+  ggplot(aes(x=values, fill=group))+ 
+  geom_histogram(position= "identity", alpha= 0.6, color= "black")+ theme_classic()+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+dev.off()
 
 ## ----distance decay in species--------------------------------------------------------------------------------------
 #similarity check 2 furthest apart
@@ -373,10 +429,11 @@ classic_layers_turnover <- classic_layers_turnover %>% unique()
 classic_layers_turnover_with_distances <- right_join(classic_layers_turnover, distances_with_ids, by= c("layer_from", "layer_to"))
 classic_layers_turnover_with_distances <- na.omit(classic_layers_turnover_with_distances) #remove NA and delete layer name
 
-write.csv(classic_layers_turnover_with_distances, "./csvs/classic_layers_turnover_with_distances.csv")
+#write.csv(classic_layers_turnover_with_distances, "./csvs/classic_layers_turnover_with_distances.csv")
 
 classic_layers_turnover_with_distances <- classic_layers_turnover_with_distances%>% mutate(distance_in_km=distance_in_meters/1000)
 
+pdf('./graphs/basic_analysis/distance_decay_species.pdf', 10, 6)
 classic_layers_turnover_with_distances %>%
   ggplot(aes(x=distance_in_km, y=turnover))+ geom_point(color = "indianred2")+ theme_classic()+ 
   stat_smooth(method= "lm", se=F, color = "indianred2")+
@@ -390,7 +447,7 @@ classic_layers_turnover_with_distances %>%
         axis.text = element_text(size=14, color='black'),
         axis.title = element_text(size=14, color='black'),
         axis.line = element_blank())
-
+dev.off()
 
 
 modules_edge_list <- NULL
@@ -401,6 +458,7 @@ for (i in (1:nrow(module_pivoted))){ #run the function for each row in the data 
   modules_edge_list <- modules_edge_list %>% mutate(module = replace_na(module, current_module)) #add module number
 }
 
+#write.csv(modules_edge_list, "csvs/modules_edge_list.csv", row.names = FALSE)
 
 #view(modules_edge_list)
 
@@ -473,6 +531,8 @@ edge_list_by_layers_modules <- edge_list_with_distances %>% group_by(layer_from,
 edge_list_by_layers_modules$count <- c(1)
 edge_list_by_layers_modules <- edge_list_by_layers_modules %>% mutate(number_of_modules= sum(count)) %>%
   select(layer_from, layer_to, module, number_of_modules) 
+
+#write.csv(edge_list_by_layers_modules, "csvs/edge_list_by_layers_modules.csv", row.names = FALSE)
 
 #version with correct average between layers
 edge_list_by_layers_ave <- edge_list_with_distances %>% group_by(layer_from, layer_to) %>%
@@ -565,6 +625,8 @@ for (i in 1:14){
   }
 }
 
+#write.csv(module_layer_turnover, "csvs/module_layer_turnover.csv", row.names = FALSE)
+
 #edge_list_by_layers_ave <- edge_list_with_distances %>% group_by(layer_from, layer_to) %>%
 #  summarise(ave_distance= mean(distance_in_meters)) %>% unique()
 
@@ -575,6 +637,9 @@ layers_turnover_with_distnace_empirical <- layers_turnover_with_distnace_empiric
   mutate(distance_in_km=distance_in_meters/1000) %>% select(layer_from, layer_to, turnover, distance_in_km) %>%
   unique() #turn to km
 
+#write.csv(layers_turnover_with_distnace_empirical, "csvs/layers_turnover_with_distnace_empirical.csv", row.names = FALSE)
+
+pdf('./graphs/modularity_analysis/distance_decay_in_modules_sites.pdf', 10, 6)
 layers_turnover_with_distnace_empirical %>%
   ggplot(aes(x=distance_in_km, y=turnover))+
   geom_point(color = "indianred2")+ scale_x_continuous()+theme_classic()+ 
@@ -588,36 +653,38 @@ layers_turnover_with_distnace_empirical %>%
         axis.text = element_text(size=14, color='black'),
         axis.title = element_text(size=14, color='black'),
         axis.line = element_blank())
+dev.off()
 
 #jaccard similarity on map
 
 #combine turnover data frame with coordinates
-empirical_turnover_for_module_island_shuf_no_self_loop_km <- read.csv("./csvs/empirical_turnover_for_module_island_shuf_no_self_loop_km.csv")
-islands_with_lon_lat_dif <- read.csv("./csvs/islands_with_lon_lat_dif.csv")
+#empirical_turnover_for_module_island_shuf_no_self_loop_km <- read.csv("./csvs/empirical_turnover_for_module_island_shuf_no_self_loop_km.csv")
+#islands_with_lon_lat_dif <- read.csv("./csvs/islands_with_lon_lat_dif.csv")
 
 #join both data frames
-jaccard_similarity_on_map <- merge(empirical_turnover_for_module_island_shuf_no_self_loop_km, islands_with_lon_lat_dif, 
-                                   by = c("layer_from", "layer_to"))
+#jaccard_similarity_on_map <- merge(empirical_turnover_for_module_island_shuf_no_self_loop_km, islands_with_lon_lat_dif, 
+#                                   by = c("layer_from", "layer_to"))
 
-worldmap <- map_data("world")
-dryad_location <- make_bbox(lon= c(-18.542076, -12.58351), lat= c(26, 30.323990))  
-dryad_map_jaccard <- get_map(location=dryad_location, zoom=10, maptype="terrain") %>% ggmap()+ #requires an API key now
-  geom_segment(aes(x= x, xend= xend, y= y, yend= yend, color = ave),
-               data= jaccard_similarity_on_map)+ scale_color_gradient(high="red",low="lightskyblue1")+
-  geom_point(aes(x=x, y=y),shape= 21 , fill= 'white', color= "black", data= lat_lon_nodes)+ 
-  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
-  theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+ 
-  labs(x = "Longitude", y = "Latitude")+ labs(color = "Jaccard Similarity")
+#worldmap <- map_data("world")
+#dryad_location <- make_bbox(lon= c(-18.542076, -12.58351), lat= c(26, 30.323990))  
+#dryad_map_jaccard <- get_map(location=dryad_location, zoom=10, maptype="terrain") %>% ggmap()+ #requires an API key now
+#  geom_segment(aes(x= x, xend= xend, y= y, yend= yend, color = ave),
+#               data= jaccard_similarity_on_map)+ scale_color_gradient(high="red",low="lightskyblue1")+
+#  geom_point(aes(x=x, y=y),shape= 21 , fill= 'white', color= "black", data= lat_lon_nodes)+ 
+#  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
+#  theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+ 
+#  labs(x = "Longitude", y = "Latitude")+ labs(color = "Jaccard Similarity")
 
-dryad_map_jaccard
+#dryad_map_jaccard
 ##---- edge list for layers and not islands-------------------------------------------------------------------------
 
 #version with # of modules in layers
 edge_list_by_layer_modules <- edge_list_with_distances %>% group_by(layer_from, layer_to, module) %>%
-  summarise(ave_distance= mean(distance_in_meters)) #maybe do it differently? should i make all distances within the same island 0?
+  summarise(ave_distance= mean(distance_in_meters)) #doesn't really change the distance as its layers
 edge_list_by_layer_modules$count <- c(1)
 edge_list_by_layer_modules <- edge_list_by_layer_modules %>% mutate(number_of_modules= sum(count)) %>%
   select(layer_from, layer_to, module, number_of_modules) 
+
 
 #version with correct average between layers
 edge_list_by_layers_ave <- edge_list_with_distances %>% group_by(layer_from, layer_to) %>%
@@ -629,6 +696,7 @@ edge_list_layers_combine <- edge_list_by_layers_ave %>%
 
 edge_list_layers_combine_no_module <- edge_list_layers_combine %>% select(-module) %>% unique() #have version where modules aren't present
 
+#write.csv(edge_list_layers_combine_no_module, "./csvs/edge_list_layers_combine_no_module.csv")
 
 #---- layers furthest apart---------------------------------------------------------------
 layers_furthest_apart <- edge_list_with_distances %>% group_by(module) %>% slice(which.max(distance_in_meters))  #get two furthest layers in each modul
@@ -646,49 +714,48 @@ layers_furthest_apart_km %>%
 
 #distance decay species turnover with regards to modules
 
-layers_turnover <- NULL
+#layers_turnover <- NULL
 
-for (i in (1:nrow(module_pivoted))){
-  if (!(i %in% edge_list_with_distances$module)) next
-  focal_module <- filter(edge_list_with_distances, module == i) #look at one module at a time
-  for (j in (1:nrow(focal_module))){
-    module <- focal_module[j,]
-    current_module <- module$module
-    current_layer <- module$layer_from
-    current_layer_to <- module$layer_to
-    current_distance <- module$distance_in_meters
-    physical_nodes_in_layer_from <- filter(modules_for_similarity, layer_id == current_layer) %>% select(node_id) %>%
-      unlist() #take the nodes that are found in the module in layer_from
-    physical_nodes_in_layer_to <- filter(modules_for_similarity, (layer_id == current_layer_to)) %>% select(node_id) %>% unlist()
+#for (i in (1:nrow(module_pivoted))){
+#  if (!(i %in% edge_list_with_distances$module)) next
+#  focal_module <- filter(edge_list_with_distances, module == i) #look at one module at a time
+#  for (j in (1:nrow(focal_module))){
+#    module <- focal_module[j,]
+#    current_module <- module$module
+#    current_layer <- module$layer_from
+#    current_layer_to <- module$layer_to
+#    current_distance <- module$distance_in_meters
+#    physical_nodes_in_layer_from <- filter(modules_for_similarity, layer_id == current_layer) %>% select(node_id) %>%
+#      unlist() #take the nodes that are found in the module in layer_from
+#    physical_nodes_in_layer_to <- filter(modules_for_similarity, (layer_id == current_layer_to)) %>% select(node_id) %>% unlist()
     #take all nodes in layer_from and all nodes in layer_to to check turnover
-    int_both <- intersect(physical_nodes_in_layer_from, physical_nodes_in_layer_to) #how many nodes are found in both layers
-    uni_both <- union(physical_nodes_in_layer_from, physical_nodes_in_layer_to)
-    turnover <- length(int_both)/length(uni_both)
-    layers_turnover <- rbind(layers_turnover, tibble(layer_from= current_layer, layer_to= current_layer_to, turnover= turnover, 
-                                                     distance= current_distance))
-  }
-}
+#    int_both <- intersect(physical_nodes_in_layer_from, physical_nodes_in_layer_to) #how many nodes are found in both layers
+#    uni_both <- union(physical_nodes_in_layer_from, physical_nodes_in_layer_to)
+#    turnover <- length(int_both)/length(uni_both)
+#    layers_turnover <- rbind(layers_turnover, tibble(layer_from= current_layer, layer_to= current_layer_to, turnover= turnover, 
+#                                                     distance= current_distance))
+#  }
+#}
 
-layers_turnover <- layers_turnover %>% unique()
-layers_turnover_km <- layers_turnover %>% mutate(distance = replace(distance, distance>0, 
-                                                              distance/1000))
+#layers_turnover <- layers_turnover %>% unique()
+#layers_turnover_km <- layers_turnover %>% mutate(distance = replace(distance, distance>0, 
+#                                                              distance/1000))
 
-names(layers_turnover_km)[4] <- "distance_in_km"
+#names(layers_turnover_km)[4] <- "distance_in_km"
 
-ggplot(layers_turnover_km, aes(x=distance_in_km, y=turnover))+
-  geom_point(color = "indianred2")+ scale_x_continuous()+theme_classic()+ 
-  stat_smooth(method= "lm", se = F, color = "indianred2")+
-  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
-  theme(axis.text.y=element_text(size=15))+
-  labs(x="Distance in Km", y="Jaccard Similarity")+
-  theme(panel.grid = element_blank(),
-        panel.border = element_rect(color = "black",fill = NA,size = 1),
-        panel.spacing = unit(0.5, "cm", data = NULL),
-        axis.text = element_text(size=14, color='black'),
-        axis.title = element_text(size=14, color='black'),
-        axis.line = element_blank())
+#ggplot(layers_turnover_km, aes(x=distance_in_km, y=turnover))+
+#  geom_point(color = "indianred2")+ scale_x_continuous()+theme_classic()+ 
+#  stat_smooth(method= "lm", se = F, color = "indianred2")+
+#  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
+#  theme(axis.text.y=element_text(size=15))+
+#  labs(x="Distance in Km", y="Jaccard Similarity")+
+#  theme(panel.grid = element_blank(),
+#        panel.border = element_rect(color = "black",fill = NA,size = 1),
+#        panel.spacing = unit(0.5, "cm", data = NULL),
+#        axis.text = element_text(size=14, color='black'),
+#        axis.title = element_text(size=14, color='black'),
+#        axis.line = element_blank())
 
-#HERE!
 
 #module size distribution
 plants_and_pols <- modules_dryad_multilayer$modules %>% count(type) 
@@ -706,14 +773,30 @@ for(i in (1:nrow(modules_count))){
 }
 
 #distribution by species
+pdf('./graphs/modularity_analysis/species_in_modules.pdf', 10, 6)
 modules_count_not_proportion %>% ggplot(aes(x=module, y=n, fill= type))+
   geom_bar(stat="identity", position= position_dodge2(preserve = "single"))+ theme_classic()+
-  scale_x_continuous(breaks=seq(1,43,2))+ labs(x= "module number", y= "number of species")
+  scale_x_continuous(breaks=seq(1,43,2))+ labs(x= "Module Number", y= "Number of Species")+
+  theme(panel.grid = element_blank(),
+                panel.border = element_rect(color = "black",fill = NA,size = 1),
+                panel.spacing = unit(0.5, "cm", data = NULL),
+                axis.text = element_text(size=10, color='black'),
+                axis.title = element_text(size=14, color='black'),
+                axis.line = element_blank())
+dev.off()
 
 #distribution by species and proportion
+pdf('./graphs/modularity_analysis/proportion_species_in_modules.pdf', 10, 6)
 modules_count %>% ggplot(aes(x=as.numeric(module), y=as.numeric(n), fill= type))+
   geom_bar(stat="identity", position= position_dodge2(preserve = "single"))+ theme_classic()+
-  scale_x_continuous(breaks=seq(1,43,2))+ labs(x= "module number", y= "proportion")
+  scale_x_continuous(breaks=seq(1,43,2))+ labs(x= "Module Number", y= "Proportion")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=9, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+dev.off()
 
 #distribution by module size
 module_sizes <- modules_dryad_multilayer$modules %>% count(module)
@@ -731,9 +814,19 @@ for (i in 1:max(modules_dryad_multilayer$modules$module)){
 }
 
 num_of_modules_over_i <- modules_over_i %>% count(i)
-num_of_modules_over_i %>% ggplot(aes(x=i, y=n))+geom_bar(stat="identity")+theme_classic()+
+
+pdf('./graphs/modularity_analysis/modules_in_x_or_more_layers.pdf', 10, 6)
+num_of_modules_over_i %>% 
+  ggplot(aes(x=i, y=n))+geom_bar(stat="identity")+theme_classic()+
   scale_x_continuous(breaks=seq(1,14,1))+ 
-  labs(x="number of layers", y="number of modules found in x or more layers")
+  labs(x="Number of Layers", y="Modules in Layers")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+dev.off()
 
 
 #number of module which are found in x layers
@@ -747,29 +840,41 @@ for (i in 1:max(modules_dryad_multilayer$modules$module)){
 }
 
 num_of_modules_in_i <- modules_in_i %>% count(i)
-num_of_modules_in_i %>% ggplot(aes(x=i, y=n))+geom_bar(stat="identity")+theme_classic()+
+
+pdf('./graphs/modularity_analysis/modules_in_exactly_x_layers.pdf', 10, 6)
+num_of_modules_in_i %>% 
+  ggplot(aes(x=i, y=n))+geom_bar(stat="identity")+theme_classic()+
   scale_x_continuous(breaks=seq(1,14,1))+ 
-  labs(x="number of layers", y="number of modules found in x layers")
+  labs(x="Number of Layers", y="Modules in Layers")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+dev.off()
 
 #modules in x layers and size
 layers_and_sizes <- right_join(modules_in_i, module_sizes, by= c("module"="module")) #combine number of modules with size of module
 
+pdf('./graphs/modularity_analysis/species_im_modules_by_layers.pdf', 10, 6)
 main_bar_plot <- ggplot(layers_and_sizes, aes(x=i, y=n, fill=factor(module)))+ 
   geom_bar(stat="identity", color="black", show.legend= FALSE)+ theme_classic()+
   scale_x_continuous(breaks=seq(1,14,1))+ 
-  labs(x="number of layers", y="number of species")
+  labs(x="Number of Layers", y="Number of Nodes")
 
 print(main_bar_plot)
+dev.off()
 
 #num of layers a module is found in as a function of the distance
-modules_layers_vs_distance <- right_join(layers_furthest_apart, modules_in_i, by= c("module"="module"))
-modules_layers_vs_distance[is.na(modules_layers_vs_distance)] <- 0
-modules_layers_vs_distance %>% 
-  ggplot(aes(x=distance_in_meters, y=i))+ geom_point()+ scale_x_continuous(breaks=seq(0,455736.67290,100000))+ theme_classic()+
-  scale_y_continuous(breaks=seq(1,14,1))+ labs(x="distance in meters", y="number of layers")+ geom_smooth(method= "lm")
+#modules_layers_vs_distance <- right_join(layers_furthest_apart, modules_in_i, by= c("module"="module"))
+#modules_layers_vs_distance[is.na(modules_layers_vs_distance)] <- 0
+#modules_layers_vs_distance %>% 
+#  ggplot(aes(x=distance_in_meters, y=i))+ geom_point()+ scale_x_continuous(breaks=seq(0,455736.67290,100000))+ theme_classic()+
+#  scale_y_continuous(breaks=seq(1,14,1))+ labs(x="distance in meters", y="number of layers")+ geom_smooth(method= "lm")
 
 #---- module partners-----------------------------------------------------------------------------------------------------------
-
+##############################from here on- irrelevant
 #jaccard similarity
 jaccard <- function(a,b){ #recieves two lists a and b
   intersection <- length(intersect(a,b)) #intersection in how many species are found both in a and b
