@@ -364,7 +364,6 @@ interlayers_with_weights_shuf_both <- interlayers_with_weights_shuf_both[!duplic
 #write.csv(interlayers_with_weights_shuf_plants, "./csvs/interlayer_shuf_file_plants.csv", row.names = FALSE)
 #write.csv(interlayers_with_weights_shuf_both, "./csvs/interlayer_shuf_file_both.csv", row.names = FALSE)
 
-
 #create inter and intra for the 1000 shuf trials
 dryad_interlayer_shuf_pols <- read.csv("./csvs/interlayer_shuf_file_pols.csv") #already has inverted
 dryad_interlayer_shuf_plants <- read.csv("./csvs/interlayer_shuf_file_plants.csv") #already has inverted
@@ -512,6 +511,11 @@ all_species_all_layers_all_trials_plants <- rbind(tot_plant_shuf_plants, tot_pol
 all_species_all_layers_all_trials_both <- rbind(tot_plant_shuf_both, tot_pol_shuf_both) %>% subset(select = -c(tot)) %>% 
   rename(node_id = node_from, layer_id = layer_from)
 
+#write.csv(all_species_all_layers_all_trials_pols, "./csvs/all_species_all_layers_all_trials_pols.csv", row.names = FALSE)
+#write.csv(all_species_all_layers_all_trials_plants, "./csvs/all_species_all_layers_all_trials_plants.csv", row.names = FALSE)
+#write.csv(all_species_all_layers_all_trials_both, "./csvs/all_species_all_layers_all_trials_both.csv", row.names = FALSE)
+
+
 classic_layers_turnover_shuf_pols <- NULL
 classic_layers_turnover_shuf_plants <- NULL
 classic_layers_turnover_shuf_both <- NULL
@@ -522,8 +526,8 @@ classic_layers_turnover_shuf_output_pols <- distnace_decay_shuf(all_species_all_
                                                                 classic_layers_turnover_shuf_pols) 
 
 #write.csv(classic_layers_turnover_shuf_output_pols, "./csvs/classic_layers_turnover_shuf_output_pols.csv", row.names = FALSE)
+#classic_layers_turnover_shuf_output_pols <- read.csv("./csvs/classic_layers_turnover_shuf_output_pols.csv")
 
-#here!
 
 #plants
 classic_layers_turnover_shuf_output_plants <- distnace_decay_shuf(all_species_all_layers_all_trials_plants, 
