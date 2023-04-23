@@ -17,6 +17,7 @@ library(taxize)
 library(taxizedb)
 library(ggpubr)
 
+
 # this portion of the code shuffles the networks between layers in one of 3 versions:
 # 1. shuffling plants among themselves
 # 2. shuffling pollinators among themselves
@@ -133,6 +134,7 @@ interlayer_edges_shuf <- rbind(interlayer_edges_from_shuf, interlayer_edges_to_s
 
 
 #write.csv(interlayer_edges_shuf, "./csvs/interlayer_edges_shuf.csv",row.names = FALSE)
+#interlayer_edges_shuf <- read.csv("./csvs/interlayer_edges_shuf.csv")
 
 ##---- shuffling plants ----------------------------------------------------------------------------------------
 intralayer_matrix_plants <- intralayer_matrix #change plants and pol- shuffling pols
@@ -215,7 +217,7 @@ interlayer_edges_shuf_plants <- rbind(interlayer_edges_from_shuf_plants, interla
 
 
 #write.csv(interlayer_edges_shuf_plants, "./csvs/interlayer_edges_shuf_plants.csv",row.names = FALSE)
-
+#interlayer_edges_shuf_plants <- read.csv("./csvs/interlayer_edges_shuf_plants.csv")
 
 ##---- shuffling both plants and pollinators -------------------------------------------------------------------
 intralayer_matrix_both <- shuf_trial_matrix #copying and now we'll change columns and not rows
@@ -298,6 +300,7 @@ interlayer_edges_to_shuf_both <- shuf_null_edge_list_both %>% group_by(trial_num
 interlayer_edges_shuf_both <- rbind(interlayer_edges_from_shuf_both, interlayer_edges_to_shuf_both) 
 
 #write.csv(interlayer_edges_shuf_both, "./csvs/interlayer_edges_shuf_both.csv",row.names = FALSE)
+#interlayer_edges_shuf_both <- read.csv("./csvs/interlayer_edges_shuf_both.csv")
 
 ##---- run oh HPC and get results for analysis -----------------------------------------------------------------
 write.csv(interlayer_edges_shuf, "./HPC/shuf_between_layers/interlayer_edges_shuf.csv", row.names = FALSE) #create to run on HPC
@@ -337,6 +340,7 @@ distances_with_weights_ids <- distances_with_weights %>%
   dplyr::select(layer_from=layer_id.x, layer_to=layer_id.y, weight)
 
 #write.csv(distances_with_weights_ids, "./csvs/distances_with_weights_ids.csv", row.names = FALSE)
+#distances_with_weights_ids <- read.csv("./csvs/distances_with_weights_ids.csv")
 
 #pols
 interlayers_with_weights_shuf_pols <- my_merged_interlayer_shuf_pol %>% inner_join(distances_with_weights_ids, 
@@ -373,21 +377,28 @@ dryad_interlayer_shuf_plants_dist <- dryad_interlayer_shuf_plants
 dryad_interlayer_shuf_both_dist <- dryad_interlayer_shuf_both
 inter_extended_dist <- inter_extended
 
+
 #add type
 dryad_interlayer_shuf_pols_dist$type <- "null_pols"
 dryad_interlayer_shuf_plants_dist$type <- "null_plants"
 dryad_interlayer_shuf_both_dist$type <- "null_both"
 inter_extended_dist$type <- "empirical"
 inter_extended_dist$trial_number <- NA
+inter_extended_dist <- inter_extended_dist %>% select(trial_number, layer_from, node_from, layer_to, node_to, weight, type)
 
-all_interlayers<- rbind(inter_extended_dist, dryad_interlayer_shuf_both_dist, 
+all_interlayers <- rbind(inter_extended_dist, dryad_interlayer_shuf_both_dist, 
                         dryad_interlayer_shuf_plants_dist, dryad_interlayer_shuf_pols_dist)
 
-
-print(head(all_interlayers))
-
+pdf('./graphs/shuffle_between_layers/interlayers_distribution_empirical_vs_shuf.pdf', 10, 6)
 all_interlayers %>% ggplot(aes(x = weight, fill = type))+ geom_density(alpha = 0.4)+ theme_classic()+
-  labs(x="Weight", y="Density")+ geom_vline(xintercept = 0.357602, linetype = "dashed", color = "tomato", size = 1)
+  labs(x="Weight", y="Density")+ geom_vline(xintercept = 0.357602, linetype = "dashed", color = "tomato", size = 1)+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+dev.off()
 
 #pols
 dryad_intralayer_shuf_pols <- read.csv("csvs/shuf_null_edge_list.csv") 
@@ -510,13 +521,23 @@ classic_layers_turnover_shuf_both <- NULL
 classic_layers_turnover_shuf_output_pols <- distnace_decay_shuf(all_species_all_layers_all_trials_pols, 
                                                                 classic_layers_turnover_shuf_pols) 
 
+#write.csv(classic_layers_turnover_shuf_output_pols, "./csvs/classic_layers_turnover_shuf_output_pols.csv", row.names = FALSE)
+
+#here!
+
 #plants
 classic_layers_turnover_shuf_output_plants <- distnace_decay_shuf(all_species_all_layers_all_trials_plants, 
                                                                   classic_layers_turnover_shuf_plants)
 
+#write.csv(classic_layers_turnover_shuf_output_plants, "./csvs/classic_layers_turnover_shuf_output_plants.csv", row.names = FALSE)
+
+
 #both
 classic_layers_turnover_shuf_output_both <- distnace_decay_shuf(all_species_all_layers_all_trials_both, 
                                                                 classic_layers_turnover_shuf_both)
+
+#write.csv(classic_layers_turnover_shuf_output_both, "./csvs/classic_layers_turnover_shuf_output_both.csv", row.names = FALSE)
+
 
 #pols
 classic_layers_turnover_with_distances_shuf_pols <- right_join(classic_layers_turnover_shuf_output_pols, 

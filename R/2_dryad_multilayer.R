@@ -194,6 +194,7 @@ inter_extended <-
 
 #write.csv(intra_nonextended, "./csvs/dryad_only_intralayer_edges.csv")
 #write.csv(inter_extended, "./csvs/dryad_only_interlayer_edges.csv")
+#inter_extended <- read.csv("./csvs/dryad_only_interlayer_edges.csv")
 
 #create modules for empirical network
 modules_dryad_multilayer <- modified_multi(dryad_multilayer, 
@@ -212,6 +213,7 @@ modules_dryad_multilayer <- modified_multi(dryad_multilayer,
 #write_csv(dryad_multilayer$nodes, './csvs/dryad_multilayer_nodes.csv')
 #write_csv(dryad_multilayer$layers, './csvs/dryad_multilayer_layers.csv')
 #write_csv(modules_dryad_multilayer$modules, './csvs/modules_dryad_multilayer.csv')
+#modules <- read.csv('./csvs/modules_dryad_multilayer.csv')
 
 #general info about modules
 num_of_nodes_in_module <- modules_dryad_multilayer$modules %>% count(module) #num of nodes in module
@@ -229,6 +231,28 @@ num_of_layers_in_module %>%
         axis.title = element_text(size=14, color='black'),
         axis.line = element_blank())
 dev.off()
+
+#number of modules 
+num_of_modules <- modules %>% select(module) %>% max() #43
+
+#size distribution of modules
+state_nodes_in_modules <- modules %>% group_by(module) %>% count()
+state_nodes_in_modules <- state_nodes_in_modules %>% rename("size_of_module" = "n")
+
+num_of_modules_in_size <- state_nodes_in_modules %>% group_by(size_of_module) %>% count()
+
+pdf('./graphs/modularity_analysis/module_size_distribution.pdf', 10, 6)
+num_of_modules_in_size %>%
+  ggplot(aes(x = size_of_module, y = n))+ geom_bar(stat="identity")+ #stacked
+  theme_classic()+ scale_x_continuous(breaks=seq(1,95,3))+ labs(x= "Size of Module", y= "Number of Modules")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=12, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+dev.off()
+
 
 #----for each layer how many nodes are found in each module-----------------------------------------------------------
 
