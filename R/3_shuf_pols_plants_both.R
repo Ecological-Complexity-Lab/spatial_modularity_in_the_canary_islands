@@ -542,6 +542,7 @@ classic_layers_turnover_shuf_output_both <- distnace_decay_shuf(all_species_all_
 
 #write.csv(classic_layers_turnover_shuf_output_both, "./csvs/classic_layers_turnover_shuf_output_both.csv", row.names = FALSE)
 
+#distances_with_ids <- read.csv("./csvs/distances_with_ids.csv")
 
 #pols
 classic_layers_turnover_with_distances_shuf_pols <- right_join(classic_layers_turnover_shuf_output_pols, 
@@ -583,6 +584,8 @@ ave_turnover_for_shuf_both <- classic_layers_turnover_with_distances_shuf_both %
   summarise(ave=mean(turnover), sd=sd(turnover)) %>% mutate(type="null_both") #create mean and sd for each point
 
 #add the emprical classical turnover
+#classic_layers_turnover_with_distances <- read.csv("./csvs/classic_layers_turnover_with_distances.csv")
+
 empirical_turnover_for_shuf <- classic_layers_turnover_with_distances %>% 
   group_by(layer_from, layer_to, distance_in_meters) %>%
   summarise(ave=mean(turnover), sd=sd(turnover)) %>% mutate(type="empirical") #make sure sd is 0 cause its the empirical and not null
@@ -593,12 +596,21 @@ turnover_shuf_and_empirical <- rbind(empirical_turnover_for_shuf, ave_turnover_f
 
 turnover_shuf_and_empirical <- turnover_shuf_and_empirical %>% mutate(distance_in_km = distance_in_meters/1000)
 
-turnover_shuf_and_empirical %>% ggplot(aes(x= distance_in_km, y= ave, group= type, color= type))+
+pdf('./graphs/shuffle_between_layers/species_distance_decay.pdf', 10, 6)
+turnover_shuf_and_empirical %>% 
+  ggplot(aes(x= distance_in_km, y= ave, group= type, color= type))+
   geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ geom_smooth(method= "lm", se=F)+
   theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
   theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13),legend.text = element_text(size = 13))+
-  labs(x="distance in km", y="Jaccard Similarity")+ stat_cor(aes(label = ..p.label..), label.x = 400)+
-  stat_cor(aes(label = ..rr.label..), label.x = 400, label.y = c(0.36, 0.34, 0.32, 0.30))
+  labs(x="Distance in Km", y="Jaccard Similarity")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())#+ stat_cor(aes(label = ..p.label..), label.x = 400)+
+  #stat_cor(aes(label = ..rr.label..), label.x = 400, label.y = c(0.36, 0.34, 0.32, 0.30))
+dev.off()
 
 turnover_shuf_and_empirical %>% ggplot(aes(x= distance_in_km, y= ave, group= type, color= type))+
   geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ geom_smooth(method= "lm", se=F)+
@@ -607,6 +619,7 @@ turnover_shuf_and_empirical %>% ggplot(aes(x= distance_in_km, y= ave, group= typ
   labs(x="distance in km", y="Jaccard Similarity")
 
 #-------making sure its significant---------------------------------------------
+
 
 lm1 = lm(ave ~ distance_in_km ,data=subset(turnover_shuf_and_empirical,
                                      turnover_shuf_and_empirical$type=="empirical")) #in empirical
@@ -631,13 +644,13 @@ b4 <- summary(lm4)$coefficients[2,1] #coef for both
 se4 <- summary(lm4)$coefficients[2,2] #sd for both
 
 p_value_pol = 2*pnorm(-abs(compare.coeff(b1,se1,b2,se2)))
-p_value_pol
+p_value_pol #1.370806e-33
 
 p_value_plants = 2*pnorm(-abs(compare.coeff(b1,se1,b3,se3)))
-p_value_plants
+p_value_plants #0.003763825
 
 p_value_both = 2*pnorm(-abs(compare.coeff(b1,se1,b4,se4)))
-p_value_both
+p_value_both #9.754109e-55
 
 ## ----multilayer_class-----------------------------------------------------------------------------------------------
 # Input: An extended edge list.

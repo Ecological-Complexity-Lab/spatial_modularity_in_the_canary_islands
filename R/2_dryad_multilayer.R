@@ -253,6 +253,24 @@ num_of_modules_in_size %>%
         axis.line = element_blank())
 dev.off()
 
+#layer distribution in modules
+local_modules <- modules %>% select(module, layer_id)
+num_of_layers_in_module <- local_modules %>% distinct() %>% count(module) #num of layers a module is found in
+num_of_layers_in_module <- num_of_layers_in_module %>% rename("number_of_layers" = "n")
+
+num_of_modules_with_layers <- num_of_layers_in_module %>% group_by(number_of_layers) %>% count()
+
+pdf('./graphs/modularity_analysis/number_of_layers_in_module.pdf', 10, 6)
+num_of_modules_with_layers %>%
+  ggplot(aes(x = number_of_layers, y = n))+ geom_bar(stat="identity")+ #stacked
+  theme_classic()+ scale_x_continuous(breaks=seq(1,14,1))+ labs(x= "Number of Layers", y= "Number of Modules")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=12, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+dev.off()
 
 #----for each layer how many nodes are found in each module-----------------------------------------------------------
 
@@ -427,7 +445,7 @@ mean(distances_with_ids$distance_in_meters)
 median(distances_with_ids$distance_in_meters)
 
 #write.csv(distances_with_ids, "./csvs/distances_with_ids.csv", row.names = FALSE)
-
+#distances_with_ids <- read.csv("./csvs/distances_with_ids.csv")
 
 # classic distnace decay
 all_species_all_layers <- rbind(tot_plant, tot_pol) %>% inner_join(physical_nodes, by= c("node_from" = "species")) %>% 
