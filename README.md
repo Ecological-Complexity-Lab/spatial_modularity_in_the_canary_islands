@@ -58,9 +58,14 @@ No heirarchical modularity
 ### Layers as sites
 
 Description of the modules:
-- Number of modules
-- Size distribution of modules **[FIGURE]**
-- Distribution of number of layers in a module **[FIGURE]**
+- Number of modules- 43
+- Size distribution of modules:
+
+![module_sizes_sites](https://github.com/Ecological-Complexity-Lab/spatial_modularity_in_the_canary_islands/blob/main/graphs/modularity_analysis/module_size_distribution.pdf)
+
+- Distribution of number of layers in a module:
+
+![layers_distribution_sites](https://github.com/Ecological-Complexity-Lab/spatial_modularity_in_the_canary_islands/blob/main/graphs/modularity_analysis/number_of_layers_in_module.pdf)
 
 We find distance decay in modules in the empirical network. Compare to null models
 - $M_1$
