@@ -30,7 +30,7 @@ Negative relationship in empirical data. We test this empirical pattern against 
 2. Shuffle pollinators ($M_1^A$)
 3. Shuffle both ($M_1^{AP}$)
 
-**[FIGURE]**
+![species_distnace_decay_sites](https://github.com/Ecological-Complexity-Lab/spatial_modularity_in_the_canary_islands/blob/main/graphs/shuffle_between_layers/species_distance_decay.pdf)
 
 ### Layers as islands
 
@@ -39,7 +39,7 @@ Negative relationship in empirical data. We test this empirical pattern against 
 2. Shuffle pollinators ($M_1^A$)
 3. Shuffle both ($M_1^{AP}$)
 
-**[FIGURE]**
+![species_distance_decay_islands](https://github.com/Ecological-Complexity-Lab/spatial_modularity_in_the_canary_islands/blob/main/graphs/layers_as_islands_and_not_sites/distance%20decay%20in%20species%20null%20vs%20empirical%20islands%20as%20layers.png)
 
 ## Distance decay in interactions
 
