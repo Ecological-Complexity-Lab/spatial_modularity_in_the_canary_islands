@@ -107,6 +107,8 @@ layer_metadata <- tibble(layer_id=c(1:14), layer_name=names_dryad_matrices)  #gi
 #write.csv(physical_nodes, "./HPC/modularity/physical_nodes.csv", row.names = FALSE)
 #write.csv(layer_metadata, "./csvs/layer_metadata.csv", row.names = FALSE)
 #write.csv(physical_nodes, "./csvs/physical_nodes.csv", row.names = FALSE)
+#physical_nodes <- read.csv("./csvs/physical_nodes.csv")
+#layer_metadata <-read.csv("./csvs/layer_metadata.csv")
 
 # Replace the node names with node_ids
 dryad_edgelist_complete_ids <- 
@@ -472,6 +474,7 @@ classic_layers_turnover_with_distances <- right_join(classic_layers_turnover, di
 classic_layers_turnover_with_distances <- na.omit(classic_layers_turnover_with_distances) #remove NA and delete layer name
 
 #write.csv(classic_layers_turnover_with_distances, "./csvs/classic_layers_turnover_with_distances.csv")
+#classic_layers_turnover_with_distances <- read.csv("./csvs/classic_layers_turnover_with_distances.csv")
 
 classic_layers_turnover_with_distances <- classic_layers_turnover_with_distances%>% mutate(distance_in_km=distance_in_meters/1000)
 
@@ -523,6 +526,8 @@ module_data_with_loc <- merge(module_data, lon_lat_data, by= c("layer_id","layer
 #how many layers are within a module
 modules_with_lat_lon <- module_data_with_loc %>% select(layer_id, module, lat, Lon, size_of_module) %>% unique() #take only certain columns
 modules_with_lat_lon$count <- c(1)
+
+#write.csv(modules_with_lat_lon, "csvs/modules_with_lat_lon.csv", row.names = FALSE)
 
 modules_with_lat_lon %>% 
   ggplot(aes(x=module, y= count ,fill= factor(layer_id)))+ geom_bar(stat= "identity")+ theme_classic()+

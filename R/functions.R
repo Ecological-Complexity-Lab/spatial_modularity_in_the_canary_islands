@@ -271,21 +271,21 @@ module_distance_decay_layer_func <- function(multilayer_1000,
     print(trial) #to keep tab on how far along we are
 
     modules_for_similarity_shuf <- multilayer_1000 %>% filter(trial_num == trial) #take only 1 trial
-
+  
     #pivot modules
     module_pivoted_shuf <- pivot_by_module(modules_for_similarity_shuf) #pivot will be done on 1 trial each time
-    
+
     
     #create edge list with distances
     modules_edge_list_shuf <- NULL
 
     for (k in (1:nrow(module_pivoted_shuf))){ #run the function for each row in the data frame
-      modules_edge_list_shuf <- edge_list_per_module(module_pivoted_shuf[k,], modules_edge_list_shuf) 
+      modules_edge_list_shuf <- edge_list_per_module(module_pivoted_shuf[k,], modules_edge_list_shuf)
+      print(modules_edge_list_shuf)
       current_module <- rownames(module_pivoted_shuf)[k]
       if (is.null(modules_edge_list_shuf)) next
       modules_edge_list_shuf <- modules_edge_list_shuf %>% mutate(module = replace_na(module, current_module)) #add module number
     }
-    
 
     edge_list_with_distances_shuf <- right_join(modules_edge_list_shuf, distances_with_ids, by= c("layer_from", "layer_to")) #combine the edge list with the distances between each two layers
     edge_list_with_distances_shuf <- na.omit(edge_list_with_distances_shuf) #remove NA
@@ -296,18 +296,21 @@ module_distance_decay_layer_func <- function(multilayer_1000,
     edge_list_by_layers_modules_shuf$count <- c(1)
     edge_list_by_layers_modules_shuf <- edge_list_by_layers_modules_shuf %>% mutate(number_of_modules= sum(count)) %>%
       select(layer_from, layer_to, module, number_of_modules) 
-    
-    #need to make sure the function is OK ############
+
+     
     for (i in 1:14){
-      for (j in 1:14){
-        modules_in_layer_from_shuf <- filter(modules_with_lat_lon, layer_id == i) %>% select(module) %>% unique() %>% unlist() #modules in layer from
-        modules_in_layer_to_shuf <- filter(modules_with_lat_lon, layer_id == j) %>% select(module) %>% unique() %>% unlist() #modules in layer to
-        int_both <- intersect(modules_in_layer_from_shuf, modules_in_layer_to_shuf) #how many modules are common in both layers
-        uni_both <- union(modules_in_layer_from_shuf, modules_in_layer_to_shuf) #how many modules are found in both layers in total
+      for (j in (1+i):13){
+        modules_in_layer_from_shuf <- filter(modules_for_similarity_shuf, layer_id == i) %>% select(module) %>% unique() %>% unlist()
+        modules_in_layer_to_shuf <- filter(modules_for_similarity_shuf, layer_id == j) %>% select(module) %>% unique() %>% unlist()
+        #take all nodes in layer_from and all nodes in layer_to to check turnover
+        int_both <- intersect(modules_in_layer_from_shuf, modules_in_layer_to_shuf) #how many nodes are found in both layers
+        uni_both <- union(modules_in_layer_from_shuf, modules_in_layer_to_shuf)
         turnover <- length(int_both)/length(uni_both)
-        module_layer_turnover_shuf <- rbind(module_layer_turnover_shuf, tibble(layer_from= i, layer_to= j, turnover= turnover, trial = trial))
+        module_layer_turnover_shuf <- rbind(module_layer_turnover_shuf, 
+                                            tibble(layer_from = i, layer_to = j, turnover = turnover, trial = trial))
       }
     }
+    
     
     edge_list_by_layers_ave_shuf <- edge_list_with_distances_shuf %>% group_by(layer_from, layer_to) %>%
       summarise(ave_distance= mean(distance_in_meters)) %>% unique()
