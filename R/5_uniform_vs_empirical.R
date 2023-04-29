@@ -252,6 +252,8 @@ jaccard_similarity_empirical_and_fixed_no_self_loop_km %>% ggplot(aes(x= ave_dis
   #stat_cor(aes(label = ..rr.label..), label.x = 400, label.y = c(0.65, 0.62))
 dev.off()
 
+#write.csv(jaccard_similarity_empirical_and_fixed_no_self_loop_km, "csvs/jaccard_similarity_empirical_and_fixed_no_self_loop_km.csv", row.names = FALSE)
+
 #version with no trendline
 jaccard_similarity_empirical_and_fixed_no_self_loop_km %>% ggplot(aes(x= ave_dist_in_km, y= ave, group= type, color= type))+
   geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ 
