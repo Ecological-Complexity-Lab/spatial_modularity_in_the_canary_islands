@@ -19,6 +19,7 @@ library(ggraph)
 library(ggpubr)
 library(readxl)
 library(reshape2)
+library(readxl)
 
 
 #this portion of code turns the data into a multilayer network with 14 layers and does
@@ -194,9 +195,10 @@ inter_extended <-
   dryad_edgelist_complete_ids %>% 
   filter(layer_from!=layer_to) #only inter
 
-#write.csv(intra_nonextended, "./csvs/dryad_only_intralayer_edges.csv")
-#write.csv(inter_extended, "./csvs/dryad_only_interlayer_edges.csv")
+#write.csv(intra_nonextended, "./csvs/dryad_only_intralayer_edges.csv", row.names = FALSE)
+#write.csv(inter_extended, "./csvs/dryad_only_interlayer_edges.csv", row.names = FALSE)
 #inter_extended <- read.csv("./csvs/dryad_only_interlayer_edges.csv")
+#intra_nonextended <- read.csv("./csvs/dryad_only_intralayer_edges.csv")
 
 #create modules for empirical network
 modules_dryad_multilayer <- modified_multi(dryad_multilayer, 

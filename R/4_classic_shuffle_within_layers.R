@@ -13,8 +13,8 @@ library(reshape2)
 library(ggforce)
 library(ggmap)
 library(ggraph)
-library(taxize)
-library(taxizedb)
+#library(taxize)
+#library(taxizedb)
 
 # This portion of code comes to prove that the interlayer
 #shuffling that breaks the distance decay in species is

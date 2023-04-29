@@ -32,8 +32,8 @@ LOG('====================\n')
 interlayer_edges_shuf <- read.csv("./interlayer_edges_shuf_classic.csv")
 
 interlayers_shuf <- NULL
-
-interlayer_edges_run <- interlayer_edges_shuf %>% filter(trial_number == trial_num)
+  
+interlayer_edges_run <- interlayer_edges_shuf %>% filter(trial_number == trial_num) 
 for (i in 1:nrow(interlayer_edges_run)){ #for every species
   current_run <- interlayer_edges_run[i,]
   for (j in 4:ncol(interlayer_edges_run)){ #for all locations
@@ -53,6 +53,7 @@ for (i in 1:nrow(interlayer_edges_run)){ #for every species
    # } 
   }
 }
+
 
 interlayers_new_shuf <- interlayers_shuf %>% subset(layer_to != "NA")
 interlayers_new_shuf <- interlayers_new_shuf %>% subset(layer_from != layer_to)
