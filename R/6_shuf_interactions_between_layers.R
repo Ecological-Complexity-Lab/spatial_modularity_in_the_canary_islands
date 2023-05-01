@@ -24,6 +24,8 @@ library(ggpubr)
 #getwd()
 #---- number of layers each species is found in------------------------------------------------------
 #plants
+dryad_edgelist_complete_ids <- read.csv("./csvs/dryad_edgelist_complete_ids.csv")
+
 plant_half <- dryad_edgelist_complete_ids %>% filter(layer_from == layer_to) %>% #take only intralayers
   filter(node_from <= 39) %>% select(layer_from, node_from) #one directed for this purpose, only plants
 
@@ -47,10 +49,10 @@ pollinator_half <- pollinator_half %>% group_by(node_to) %>% mutate(number_of_la
 
 #---- pairs of plant-pollinator------------------------------------------------------------------------
 
-#only plants found in >1 islands
+#only plants found in >1 sites
 plant_half_for_pairs <- plant_half %>% filter(number_of_layers > 1)
 
-#only pollinators found in >1 islands
+#only pollinators found in >1 sites
 pollinator_half_for_pairs <- pollinator_half %>% filter(number_of_layers > 1)
 
 #----number of times species interacted--------------------------------------------------------------
@@ -99,6 +101,7 @@ for (i in 1:39){
   }
 }
 
+write.csv(co_occurrence_count, "./csvs/co_occurrence_count.csv", row.names = FALSE)
 
 #---- combine interactions and co-occurrences--------------------------------------------
 interactions_co_occurences <- merge(co_occurrence_count, interaction_count, by = c("node_from", "node_to")) #combine two data frames
@@ -143,6 +146,8 @@ layers_for_pairs <- NULL
     common_layers_pair <- inner_join(pollinator_layers_pair, plant_layers_pair) #nodes and common layers for them
     layers_for_pairs <- rbind(layers_for_pairs, common_layers_pair) #create data frame with layers identities
   }
+
+#write.csv(layers_for_pairs, "./csvs/layers_for_pairs.csv", row.names = FALSE)
 
 intralayer_edges_ids <- 
   dryad_intralayer %>% 
