@@ -20,7 +20,7 @@ library(taxizedb)
 
 ##----get data and organize--------------------------------------------------------------------------------------------------------
 #intralayer edges
-setwd("/Users/maya/Desktop/plant_pollinator_data/dryad_network")
+setwd("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands")
 interactions_csv <- read.csv("./csvs/interactions.csv")
 
 intercations <- NULL
@@ -29,9 +29,6 @@ intercations <- interactions_csv %>% group_by(interaction_id) %>% #group 1 inter
   mutate(layer_from = value[2], node_from = value[1], layer_to = value[4], 
          node_to = value[3], weight = value[5]) %>% #create new columns based on data
   subset(select = -c(interaction_id, attribute, value)) %>% unique() #delete previous columns
-#unique also took into account species that were found in both site 1 and 2
-#of the same location that was aggregated
-#hence the number of interactions is smaller than original data
 
 #write.csv(intercations, "./csvs/intralayer_file.csv", row.names = FALSE)
 
@@ -94,7 +91,7 @@ interlayers_new <- interlayers_new %>% subset(layer_from != layer_to)
 shortest_distance <- min(distances$distance_in_meters)
 
 interlayer_weight <- function(d){
-  #recieves distance and normalizes it
+  #receieves distance and normalizes it
   weight <- (1/log(d))/(1/log(shortest_distance))
   return(weight)
 }
@@ -111,4 +108,6 @@ interlayers_with_weights <- interlayers_new %>% inner_join(distances_with_weight
 interlayers_with_weights <- interlayers_with_weights[!duplicated(interlayers_with_weights[c(2,4,5)]),]
 
 #write.csv(interlayers_with_weights, "./csvs/interlayer_file.csv", row.names = FALSE)
+
+
 

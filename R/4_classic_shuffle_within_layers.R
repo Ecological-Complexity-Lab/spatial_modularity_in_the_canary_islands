@@ -13,19 +13,19 @@ library(reshape2)
 library(ggforce)
 library(ggmap)
 library(ggraph)
-#library(taxize)
-#library(taxizedb)
 
 # This portion of code comes to prove that the interlayer
 #shuffling that breaks the distance decay in species is
 #the reason for the break in distance decay in modules.
+
+setwd("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands")
+source("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands/R/functions.R")
 
 #---- shuffle within layers---------------------------------------------------------
 # all the csvs needed to run first portion of code:
 dryad_intralayer <- read.csv("./csvs/intralayer_file.csv")
 physical_nodes <- read.csv("./csvs/physical_nodes.csv")
 layer_metadata <- read.csv("./csvs/layer_metadata.csv")
-
 
 shuf_trial_matrix_classic <- NULL
 shuf_null_edge_list_classic <- NULL
@@ -40,7 +40,6 @@ intralayers_with_ids_for_shuf <-
   left_join(layer_metadata, by=c('layer_to' = 'layer_name')) %>%  # Join for plants
   dplyr::select(-layer_from, -layer_to) %>% 
   dplyr::select(layer_from=layer_id.x, node_from, layer_to=layer_id.y, node_to, weight)
-
 
 for (i in 1:14){
   current_matrix <- intralayers_with_ids_for_shuf %>%
@@ -106,6 +105,7 @@ my_merged_interlayer_shuf_classic <- read_csv(files_classic) %>% bind_rows() #cr
 
 #write.csv(my_merged_interlayer_shuf_classic, "./csvs/my_merged_interlayer_shuf_classic.csv", row.names = FALSE) #create to run on HPC
 
+distances_with_weights_ids<- read.csv("./csvs/distances_with_weights_ids.csv")
 interlayers_with_weights_shuf_classic <- my_merged_interlayer_shuf_classic %>% inner_join(distances_with_weights_ids, 
                                                                                           by = c("layer_from", "layer_to")) %>% unique()
 
@@ -115,8 +115,6 @@ interlayers_with_weights_shuf_classic <- interlayers_with_weights_shuf_classic[!
 
 #create inter and intra for the 1000 shuf trials
 dryad_interlayer_shuf_classic <- read.csv("./csvs/interlayers_with_weights_shuf_classic.csv") #already has inverted 
-
-
 dryad_intralayer_shuf_classic <- read.csv("csvs/shuf_null_edge_list_classic.csv") 
 dryad_intralayer_shuf_classic <- dryad_intralayer_shuf_classic[, c(6,1,2,3,4,5)]
 
@@ -146,7 +144,6 @@ tot_pol_shuf_classic <- tot_pol_shuf_classic[, c(3,1,2,4)]
 
 # ----multilayer_extended_final--------------------------------------------------------------------------------------
 edgelist_intralayer_shuf_classic <- bind_rows(intralayer_weighted_shuf_classic, intralayer_weighted_inverted_shuf_classic)
-
 dryad_edgelist_complete_shuf_classic <- bind_rows(edgelist_intralayer_shuf_classic, dryad_interlayer_shuf_classic) #combine inter and intra
 
 # ----multilayer_class-----------------------------------------------------------------------------------------------
@@ -213,68 +210,77 @@ dryad_multilayer_shuf_1000_classic_output <- dryad_multilayer_shuf_1000_classic_
 
 #write.csv(dryad_multilayer_shuf_1000_classic_output, "./csvs/dryad_multilayer_shuf_1000_classic_output.csv", row.names = FALSE)
 
+
 #---- distance decay of modules shuf vs empirical----------------------
-islands_turnover_with_distnace_classic <- NULL
+dryad_multilayer_shuf_1000_classic_output <- read.csv("csvs/dryad_multilayer_shuf_1000_classic_output.csv")
+distances_with_ids <- read.csv("csvs/distances_with_ids.csv")
+sites_turnover_with_distnace_classic <- NULL
 
-module_island_turnover_shuf <- NULL
+module_layer_turnover_shuf <- NULL
 
-all_edge_list_island_combine_no_module_shuf_classic <- module_distance_decay_func(dryad_multilayer_shuf_1000_classic_output,
-                                                                                  islands_turnover_with_distnace_classic)
+all_edge_list_sites_combine_no_module_shuf_classic <- module_distance_decay_layer_func (dryad_multilayer_shuf_1000_classic_output,
+                                                                                  sites_turnover_with_distnace_classic)
 
-write.csv(all_edge_list_island_combine_no_module_shuf_classic, "./csvs/all_edge_list_island_combine_no_module_shuf_classic.csv", 
-          row.names = FALSE)
+#write.csv(all_edge_list_sites_combine_no_module_shuf_classic, "./csvs/all_edge_list_sites_combine_no_module_shuf_classic.csv", 
+  #        row.names = FALSE)
 
-#all_edge_list_island_combine_no_module_shuf_classic <- read.csv("./csvs/all_edge_list_island_combine_no_module_shuf_classic.csv")
+all_edge_list_sites_combine_no_module_shuf_classic <- read.csv("./csvs/all_edge_list_sites_combine_no_module_shuf_classic.csv")
 
-ave_module_island_turnover_shuf_classic <- all_edge_list_island_combine_no_module_shuf_classic %>% 
+ave_module_sites_turnover_shuf_classic <- all_edge_list_sites_combine_no_module_shuf_classic %>% 
   group_by(layer_from, layer_to) %>%
   summarise(ave=mean(turnover), sd=sd(turnover), ave_dist=mean(ave_distance)) %>% mutate(type="null_model_within") #create mean and sd for each point
 
 #add the empirical empirical
-empirical_turnover_for_module_island_shuf <- islands_turnover_with_distnace_empirical %>% group_by(layer_from, layer_to) %>%
-  summarise(ave=mean(turnover), sd=sd(turnover), ave_dist=mean(ave_distance)) %>% mutate(type="empirical") #make sure sd is 0 cause its the empirical and not null
+sites_turnover_with_distnace_empirical <- read.csv("csvs/sites_turnover_with_distnace_empirical.csv")
+empirical_turnover_for_module_site_shuf <- sites_turnover_with_distnace_empirical %>% group_by(layer_from, layer_to) %>%
+  summarise(ave=mean(turnover), sd=sd(turnover), ave_dist=mean(distance_in_km)) %>% mutate(ave_dist= ave_dist*1000,
+                                                                                           type="empirical") #make sure sd is 0 cause its the empirical and not null
 
-empirical_turnover_for_module_island_shuf_no_self_loop_classic <- empirical_turnover_for_module_island_shuf %>% 
+empirical_turnover_for_module_site_shuf_no_self_loop_classic <- empirical_turnover_for_module_site_shuf %>% 
   subset(layer_from != layer_to) #distance decay graph for empirical 
 
-empirical_turnover_for_module_island_shuf_no_self_loop_km_classic <- empirical_turnover_for_module_island_shuf_no_self_loop_classic %>%
-  mutate(ave_dist_in_km = ave_dist/1000)
+empirical_turnover_for_module_site_shuf_no_self_loop_km_classic <- empirical_turnover_for_module_site_shuf_no_self_loop_classic %>%
+  mutate(ave_dist_in_m = ave_dist*1000) #From km to m
 
 ##---- combine empirical and shuffle 
-
-jaccard_similarity_empirical_and_null_model <- rbind(empirical_turnover_for_module_island_shuf, ave_module_island_turnover_shuf_classic)
+jaccard_similarity_empirical_and_null_model <- rbind(empirical_turnover_for_module_site_shuf, ave_module_sites_turnover_shuf_classic)
 
 jaccard_similarity_empirical_and_null_no_self_loop_classic <- jaccard_similarity_empirical_and_null_model %>% subset(layer_from != layer_to)
 
 jaccard_similarity_empirical_and_null_no_self_loop_km_classic <- jaccard_similarity_empirical_and_null_no_self_loop_classic %>% 
-  mutate(ave_dist_in_km = ave_dist/1000)
+  mutate(ave_dist_in_km = ave_dist/1000) #all data set from m to km
 
 just_empirical_within <- jaccard_similarity_empirical_and_null_no_self_loop_km_classic %>% filter(type == "empirical")
 
 #no self loop
 #empirical and null
+pdf('./graphs/shuffle_within_layers/M2_module_distance_decay.pdf', 10, 6)
 jaccard_similarity_empirical_and_null_no_self_loop_km_classic %>% ggplot(aes(x= ave_dist_in_km, y= ave, group= type, color= type))+
   geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ geom_smooth(method= "lm", se=F)+
   theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
   theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
   labs(x="Distance in Km", y="Jaccard Similarity")+ stat_cor(aes(label = ..p.label..), label.x = 400)+
   stat_cor(aes(label = ..rr.label..), label.x = 400, label.y = c(0.57, 0.54))+ scale_color_manual(values = c("#F47069", "#c4067c"))
+dev.off()
+
 
 #no trendline
-jaccard_similarity_empirical_and_null_no_self_loop_km_classic %>% ggplot(aes(x= ave_dist_in_km, y= ave, group= type, color= type))+
-  geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ 
-  geom_smooth(data = just_empirical_within, method= "lm", se=F)+
-  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
-  theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
-  labs(x="Distance in Km", y="Jaccard Similarity")+ stat_cor( data = just_empirical_within, aes(label = ..p.label..), label.x = 400)+
-  stat_cor(data = just_empirical_within, aes(label = ..rr.label..), label.x = 400, label.y = 0.6)+ scale_color_manual(values = c("#F47069", "#c4067c"))
+#jaccard_similarity_empirical_and_null_no_self_loop_km_classic %>% ggplot(aes(x= ave_dist_in_km, y= ave, group= type, color= type))+
+ # geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ 
+#  geom_smooth(data = just_empirical_within, method= "lm", se=F)+
+#  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
+#  theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
+#  labs(x="Distance in Km", y="Jaccard Similarity")+ stat_cor( data = just_empirical_within, aes(label = ..p.label..), label.x = 400)+
+#  stat_cor(data = just_empirical_within, aes(label = ..rr.label..), label.x = 400, label.y = 0.6)+ scale_color_manual(values = c("#F47069", "#c4067c"))
+
+
 
 #---- statistical analysis--------------------------------------------------
 #---- linear regression
 lm1_module_classic = lm(ave ~ ave_dist ,data=subset(jaccard_similarity_empirical_and_null_no_self_loop_classic,
-                                                    jaccard_similarity_empirical_and_null_no_self_loop_classic$type=="Empirical")) #in empirical
+                                                    jaccard_similarity_empirical_and_null_no_self_loop_classic$type=="empirical")) #in empirical
 lm2_module_classic = lm(ave ~ ave_dist ,data=subset(jaccard_similarity_empirical_and_null_no_self_loop_classic,
-                                                    jaccard_similarity_empirical_and_null_no_self_loop_classic$type=="Null_Model")) #in null model
+                                                    jaccard_similarity_empirical_and_null_no_self_loop_classic$type=="null_model_within")) #in null model
 
 
 #get equations
@@ -294,9 +300,8 @@ p_value_module_classic
 
 
 #---- linear regression and correlation
-
 iteration_correlation_classic <- NULL
-iteration_correlation_data_classic <- all_edge_list_island_combine_no_module_shuf_classic %>% subset(layer_from != layer_to) 
+iteration_correlation_data_classic <- all_edge_list_sites_combine_no_module_shuf_classic %>% subset(layer_from != layer_to) 
 
 for (i in 1:1000){
   trial_classic = iteration_correlation_data_classic %>% filter(trial == i)
@@ -313,22 +318,19 @@ for (i in 1:1000){
                                                                          trial_num = i))
 }
 
+iteration_correlation_classic
+#write.csv(iteration_correlation_classic, "./csvs/iteration_correlation_classic.csv", row.names = FALSE)
+
 correlation_empirical_classic <- read.csv("./csvs/correlation_empirical_pols.csv")
+iteration_correlation_classic <- read.csv("./csvs/iteration_correlation_classic.csv")
 
 ##distribution of rsquared and add empirical
+pdf('./graphs/shuffle_within_layers/M2_Distribution R squared.pdf', 10, 6)
 iteration_correlation_classic %>% ggplot(aes(x = rsquared))+ 
   geom_density(fill = "#c4067c", color = "#c4067c", alpha = 0.4)+ 
   theme_classic()+ labs(x = "R squared")+
   geom_vline(xintercept = correlation_empirical_classic$rsquared, linetype = "dashed", color = "#F47069") 
+dev.off()
 
 p_rsquared_classic <- sum(iteration_correlation_classic$rsquared > correlation_empirical_classic$rsquared)/1000
 p_rsquared_classic
-
-##distribution of slope and add empirical
-iteration_correlation_classic %>% ggplot(aes(x = slope))+ 
-  geom_density(fill = "#c4067c", color = "#c4067c", alpha = 0.4)+ 
-  theme_classic()+ labs(x = "slope")+
-  geom_vline(xintercept = correlation_empirical_classic$slope, linetype = "dashed", color = "#F47069") 
-
-p_slope_classic <- sum(iteration_correlation_classic$slope < correlation_empirical_classic$slope)/1000
-p_slope_classic
