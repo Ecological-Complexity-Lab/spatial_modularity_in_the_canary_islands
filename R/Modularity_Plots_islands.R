@@ -180,3 +180,93 @@ print(main_bar_plot)
 #dev.off()
 
 
+##-- Plot modules in each island with size proportion
+
+
+#Calculate the number and proportion of species in each module
+modules_dryad_multilayer <- read.csv("./csvs/Islands/modules_in_network_islands_as_layers.csv") 
+
+#Calculate number of nodes in each module per island
+N_species_mod<-modules_dryad_multilayer %>% 
+  group_by(layer_id, module) %>% 
+  summarize(module_size=n_distinct(node_id))
+
+#Create dataframe with total number of nodes per module across islands
+Module_size <- modules_dryad_multilayer %>% count(module) #num of nodes in module. 
+
+#merge dataframes and calculate proportion of species in each module
+Prop_sp_module <- left_join(N_species_mod,Module_size)
+
+Prop_sp_module_2<-Prop_sp_module %>% 
+  mutate(Prop_sp = module_size / n)
+
+#change order accoridng to distances
+
+Prop_sp_module_island<- Prop_sp_module_2 %>% 
+  mutate(layer_name= case_when(layer_id == '1' ~ 'WesternSahara',
+                               layer_id == '2' ~ 'Fuerteventura',
+                               layer_id == '3' ~ 'GranCanaria',
+                               layer_id == '4' ~ 'TenerifeSouth',
+                               layer_id == '5' ~ 'TenerifeTeno',
+                               layer_id == '6' ~ 'Gomera',
+                               layer_id == '7' ~ 'Hierro'))
+
+
+#write.csv(Prop_sp_module_island , "./csvs/Islands/Prop_sp_module_island.csv", row.names = FALSE)
+
+pdf('./graphs/Islands/Prop_sp_modules_per_islands.pdf', 10, 6)
+ggplot(Prop_sp_module_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
+  geom_tile(color='white') +
+  theme_classic() +
+  scale_fill_viridis_c(limits = c(0, 1)) +
+  scale_x_continuous(breaks=seq(1,88,2)) +
+  scale_y_discrete(limits = c("Hierro","Gomera","TenerifeTeno","TenerifeSouth","GranCanaria","Fuerteventura","WesternSahara"))+
+  labs(x='Module ID', y="Islands")
+dev.off()
+
+
+##-- Plot modules in each island with size proportion according to island 
+
+#Calculate the number and proportion of species in each module
+modules_dryad_multilayer <- read.csv("./csvs/Islands/modules_in_network_islands_as_layers.csv") 
+
+#Calculate number of nodes in each module per island
+N_species_mod<-modules_dryad_multilayer %>% 
+  group_by(layer_id, module) %>% 
+  summarize(module_size=n_distinct(node_id))
+
+#Create dataframe with total number of nodes per module across islands
+N_sp_island <- modules_dryad_multilayer %>% count(module) #num of nodes in module. 
+
+Total_sp<- modules_dryad_multilayer %>%
+  group_by(layer_id)%>% 
+  summarise(Total_sp = n())
+
+#merge dataframes and calculate proportion of species in each module
+Prop_sp_island<- left_join(N_species_mod,Total_sp)
+
+Prop_sp_island_2<-Prop_sp_island %>% 
+  mutate(Prop_sp = module_size / Total_sp)
+
+#change order accoridng to distances
+Prop_sp_in_island<- Prop_sp_island_2 %>% 
+  mutate(layer_name= case_when(layer_id == '1' ~ 'WesternSahara',
+                               layer_id == '2' ~ 'Fuerteventura',
+                               layer_id == '3' ~ 'GranCanaria',
+                               layer_id == '4' ~ 'TenerifeSouth',
+                               layer_id == '5' ~ 'TenerifeTeno',
+                               layer_id == '6' ~ 'Gomera',
+                               layer_id == '7' ~ 'Hierro'))
+
+
+#write.csv(Prop_sp_in_island , "./csvs/Islands/Prop_sp_in_island.csv", row.names = FALSE)
+
+pdf('./graphs/Islands/Prop_sp_islands_in_modules.pdf', 10, 6)
+ggplot(Prop_sp_in_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
+  geom_tile(color='white') +
+  theme_classic() +
+  scale_fill_viridis_c(limits = c(0, 0.2)) +
+  scale_x_continuous(breaks=seq(1,88,2)) +
+  scale_y_discrete(limits = c("Hierro","Gomera","TenerifeTeno","TenerifeSouth","GranCanaria","Fuerteventura","WesternSahara"))+
+  labs(x='Module ID', y="Islands")
+dev.off()

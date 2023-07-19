@@ -262,6 +262,8 @@ jaccard_similarity_empirica_no_self_loop_km %>% ggplot(aes(x= ave_dist_in_km, y=
   labs(x="Distance in Km", y="Jaccard Similarity")
 
 #empirical and null
+jaccard_similarity_empirical_and_fixed_no_self_loop_km <- read.csv("csvs/Islands/jaccard_similarity_empirical_and_fixed_no_self_loop_km_islands.csv")
+
 pdf('./graphs/Islands/M4_Modules_DD_Islands.pdf', 10, 6)
 jaccard_similarity_empirical_and_fixed_no_self_loop_km %>% ggplot(aes(x= ave_dist_in_km, y= ave, group= type, color= type))+
   geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ geom_smooth(method= "lm", se=F)+
@@ -291,7 +293,7 @@ lm1_module = lm(ave ~ ave_dist ,data=subset(jaccard_similarity_empirical_and_fix
                                             jaccard_similarity_empirical_and_fixed_no_self_loop_km$type=="empirical")) #in empirical
 lm2_module = lm(ave ~ ave_dist ,data=subset(jaccard_similarity_empirical_and_fixed_no_self_loop_km,
                                           jaccard_similarity_empirical_and_fixed_no_self_loop_km$type=="null_fixed"))
-
+summary(lm2_module)
 #get equations
 lm1_module_equation <- paste("y=", coef(lm1_module)[[1]], "+", coef(lm1_module)[[2]], "*x")
 lm2_module_equation <- paste("y=", coef(lm2_module)[[1]], "+", coef(lm2_module)[[2]], "*x")

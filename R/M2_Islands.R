@@ -309,7 +309,7 @@ all_edge_list_islands_combine_no_module_shuf_classic_output <- module_distance_d
      #   row.names = FALSE)
 
 #---- create ave for jaccard layers-------------------------------------------------------------------------
-#all_edge_list_islands_combine_no_module_shuf_classic_output <- read.csv("./csvs/Islands/all_edge_list_islands_combine_no_module_shuf_classic.csv")
+all_edge_list_islands_combine_no_module_shuf_classic_output <- read.csv("./csvs/Islands/all_edge_list_islands_combine_no_module_shuf_classic.csv")
 
 ave_module_islands_turnover_shuf_classic <- all_edge_list_islands_combine_no_module_shuf_classic_output %>% 
   group_by(layer_from, layer_to) %>%
@@ -361,7 +361,6 @@ lm1_module_classic = lm(ave ~ ave_dist ,data=subset(jaccard_similarity_layer_emp
                                                     jaccard_similarity_layer_empirical_and_null_km_classic$type=="empirical")) #in empirical
 lm2_module_classic = lm(ave ~ ave_dist ,data=subset(jaccard_similarity_layer_empirical_and_null_km_classic,
                                                     jaccard_similarity_layer_empirical_and_null_km_classic$type=="null_model_within")) #in null model
-
 
 #get equations
 lm1_module_equation_classic <- paste("y=", coef(lm1_module_classic)[[1]], "+", coef(lm1_module_classic)[[2]], "*x")
@@ -443,3 +442,50 @@ dev.off()
 
 p_rsquared_classic <- sum(iteration_correlation_classic$rsquared > correlation_empirical_classic$rsquared)/1000
 p_rsquared_classic
+
+
+
+
+-------------------------------------
+##-- Linear Models considering trail as random factor (MAYBE REMOVE)
+all_edge_list_islands_combine_no_module_shuf_classic_output <- read.csv("./csvs/Islands/all_edge_list_islands_combine_no_module_shuf_classic.csv")
+
+ave_module_islands_turnover_shuf_classic<- all_edge_list_islands_combine_no_module_shuf_classic_output %>% 
+ mutate(ave = turnover, ave_dist = mean_distance, type="null_model_within") #make sure sd is 0 cause its the empirical and not null
+
+
+#add empirical
+islands_turnover_with_distnace_empirical <- read.csv("csvs/Islands/islands_turnover_with_distnace_empirical.csv")
+
+empirical_turnover_for_modules_layers_shuf <- islands_turnover_with_distnace_empirical %>% group_by(layer_from, layer_to) %>%
+  summarise(ave = mean(turnover), sd = sd(turnover), ave_dist = mean_distance) %>% mutate(type="empirical") #make sure sd is 0 cause its the empirical and not null
+
+#---- combine for jaccard analysis------------------------------------------------------------------------------------------------------
+#combine all layers
+jaccard_similarity_empirical_and_null_classic <- rbind(empirical_turnover_for_modules_layers_shuf, 
+                                                       ave_module_islands_turnover_shuf_classic)
+
+jaccard_similarity_layer_empirical_and_null_km_classic <- jaccard_similarity_empirical_and_null_classic %>% 
+  mutate(mean_dist_in_km = ave_dist/1000)
+
+#write.csv(jaccard_similarity_layer_empirical_and_null_km_classic, "./csvs/Islands/prueba_without_average_island.csv", row.names = FALSE) #so it can be used for classical shuffling
+
+jaccard_similarity_layer_empirical_and_null_km_classic %>% 
+  ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
+  geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ geom_smooth(method= "lm", se=F)+
+  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
+  theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
+  labs(x="Distance in Km", y="Jaccard Similarity")+ 
+  stat_cor(aes(label = after_stat(rr.label)), label.x = 400, label.y = c(0.60, 0.56, 0.52, 0.48))+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank()) + stat_cor(aes(label = ..p.label..), label.x = 400)
+
+lm2_module_classic = lm(ave ~ ave_dist ,data=subset(jaccard_similarity_layer_empirical_and_null_km_classic,
+                                                    jaccard_similarity_layer_empirical_and_null_km_classic$type=="null_model_within")) #in null model
+summary(lm2_module_classic)
+anova(lm2_module_classic )
+#

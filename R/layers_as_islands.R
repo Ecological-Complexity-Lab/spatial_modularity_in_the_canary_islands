@@ -66,6 +66,10 @@ dryad_intralayer_islands_grouped <- dryad_intralayer_islands %>%
   group_by(layer_from, node_from, layer_to, node_to) %>% 
   summarise(sum_weight = sum(weight)) #turn sums of sites to sum of island
 
+#-- Total number of interactions per island
+#Tot_int<- dryad_intralayer_islands_grouped %>% 
+#  group_by(layer_from) %>% summarise(T_int = sum(sum_weight)) 
+
 ## ----dryad intralayer interlayer both ways-------------------------------------------------------------------------------------
 intralayer_inverted <- tibble(values= dryad_intralayer_islands$layer_to, dryad_intralayer_islands$node_to, dryad_intralayer_islands$layer_from, 
                               dryad_intralayer_islands$node_from, dryad_intralayer_islands$weight) #create an inverted copy for directed intralayers
@@ -270,6 +274,7 @@ intra_weight_distribution <- intra_nonextended %>% arrange(weight) %>% select(we
 inter_intra_non_directed <- data.frame(values= c(intra_nonextended$weight, inter_extended$weight), 
                                        group= c(rep("intra", nrow(intra_nonextended)), rep("inter", nrow(inter_extended))))
 
+
 inter_intra_non_directed %>%
   ggplot(aes(x=values, fill=group))+ geom_histogram(position= "identity", alpha= 0.6, color= "black")+ theme_bw()+
   theme(panel.grid = element_blank(),
@@ -297,6 +302,8 @@ intra_inter_data_for_distibution <- data.frame(values= c(intralayer_weighted$wei
                                                group= c(rep("intra plants", nrow(intralayer_weighted)), 
                                                         rep("intra pollinators", nrow(intralayer_weighted_inverted)),
                                                         rep("inter", nrow(inter_extended))))
+
+#write.csv(intra_inter_data_for_distibution, "./csvs/Islands/intra_inter_data_for_distibution_islands_as_layers.csv",  row.names = FALSE)
 
 pdf('./graphs/Islands/intra and interlinks_islands.pdf', 10, 6)
 intra_inter_data_for_distibution %>%
@@ -1093,20 +1100,21 @@ lm2 = lm(ave ~ distance_in_km ,data=subset(turnover_shuf_and_empirical,
 lm3 = lm(ave ~ distance_in_km ,data=subset(turnover_shuf_and_empirical,
                                            turnover_shuf_and_empirical$type=="null_plants")) #in null plants
 lm4 = lm(ave ~ distance_in_km ,data=subset(turnover_shuf_and_empirical,
-                                           turnover_shuf_and_empirical$type=="null_both")) #in null pols
+                                         turnover_shuf_and_empirical$type=="null_both")) #in null pols                                                   turnover_shuf_and_empirical$type=="empirical"))
 
-
-b1 <- summary(lm1)$coefficients[2,1] #coef for empirical
+b1 <- summary(lm1)$coefficients[2,1] #coef for empirical (slope)
 se1 <- summary(lm1)$coefficients[2,2] #sd for empirical
-
+se1
 b2 <- summary(lm2)$coefficients[2,1] #coef for pols
 se2 <- summary(lm2)$coefficients[2,2] #sd for pols
 
 b3 <- summary(lm3)$coefficients[2,1] #coef for plants
 se3 <- summary(lm3)$coefficients[2,2] #sd for plants
-
+b3
+se3
 b4 <- summary(lm4)$coefficients[2,1] #coef for both
 se4 <- summary(lm4)$coefficients[2,2] #sd for both
+
 
 p_value_pol = 2*pnorm(-abs(compare.coeff(b1,se1,b2,se2)))
 p_value_pol #result is 1.752491e-07
@@ -1294,16 +1302,17 @@ all_edge_list_layer_combine_no_module_shuf_both_output <- module_distance_decay_
 #pols
 ave_module_layer_turnover_shuf_pols <- all_edge_list_layer_combine_no_module_shuf_pols_output %>% 
   group_by(layer_from, layer_to) %>%
-  summarise(ave = mean(turnover), sd = sd(turnover), mean_distance = mean_distance) %>% mutate(type="null_pollinators") #create mean and sd for each point
+  summarise(ave = mean(turnover), sd = sd(turnover), mean_distance = mean(mean_distance)) %>% mutate(type="null_pollinators") #create mean and sd for each point
+
 
 #write.csv(ave_module_layer_turnover_shuf_pols, 
-    #      "./csvs/Islands/ave_module_layer_turnover_shuf_pols_islands.csv", 
-    #      row.names = FALSE)
+       #   "./csvs/Islands/ave_module_layer_turnover_shuf_pols_islands.csv", 
+      #   row.names = FALSE)
 
 #plants
 ave_module_layer_turnover_shuf_plants <- all_edge_list_layer_combine_no_module_shuf_plants_output %>% 
   group_by(layer_from, layer_to) %>%
-  summarise(ave = mean(turnover), sd = sd(turnover), mean_distance = mean_distance) %>% mutate(type="null_plants") #create mean and sd for each point
+  summarise(ave = mean(turnover), sd = sd(turnover), mean_distance = mean(mean_distance)) %>% mutate(type="null_plants") #create mean and sd for each point
 
 
 #write.csv(ave_module_layer_turnover_shuf_plants, 
@@ -1313,11 +1322,11 @@ ave_module_layer_turnover_shuf_plants <- all_edge_list_layer_combine_no_module_s
 #both
 ave_module_layer_turnover_shuf_both <- all_edge_list_layer_combine_no_module_shuf_both_output %>% 
   group_by(layer_from, layer_to) %>%
-  summarise(ave = mean(turnover), sd = sd(turnover), mean_distance = mean_distance) %>% mutate(type="null_both") #create mean and sd for each point
+  summarise(ave = mean(turnover), sd = sd(turnover), mean_distance = mean(mean_distance)) %>% mutate(type="null_both") #create mean and sd for each point
 
 #write.csv(ave_module_layer_turnover_shuf_both, 
-      #    "./csvs/Islands/ave_module_layer_turnover_shuf_both_islands.csv", 
-       #   row.names = FALSE)
+ #         "./csvs/Islands/ave_module_layer_turnover_shuf_both_islands.csv", 
+  #        row.names = FALSE)
 
 #add empirical
 #islands_turnover_with_distnace_empirical <- read.csv("csvs/Islands/islands_turnover_with_distnace_empirical.csv")
@@ -1347,13 +1356,13 @@ jaccard_similarity_layer_empirical_and_null_km %>%
   theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
   theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
   labs(x="Distance in Km", y="Jaccard Similarity")+ 
-  stat_cor(aes(label = after_stat(rr.label)), label.x = 400, label.y = c(0.60, 0.56, 0.52, 0.48))+
+  stat_cor(aes(label = after_stat(rr.label)), label.x = 400, label.y = c(0.59, 0.56, 0.53, 0.50))+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
         panel.spacing = unit(0.5, "cm", data = NULL),
         axis.text = element_text(size=14, color='black'),
         axis.title = element_text(size=14, color='black'),
-        axis.line = element_blank()) + stat_cor(aes(label = ..p.label..), label.x = 400)
+        axis.line = element_blank()) + stat_cor(aes(label = ..p.label..), label.x = 400, label.y = c(0.76, 0.72, 0.68, 0.64))
   
 dev.off()
 

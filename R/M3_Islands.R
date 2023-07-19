@@ -442,10 +442,10 @@ dev.off()
 
 #---- statistical analysis--------------------------------------------------
 #---- linear regression
-lm1_module_interactions = lm(ave ~ ave_dist ,data=subset(jaccard_similarity_empirical_and_null_interactions_no_self_loop,
-                                                         jaccard_similarity_empirical_and_null_interactions_no_self_loop$type=="empirical")) #in empirical
-lm2_module_interactions = lm(ave ~ ave_dist ,data=subset(jaccard_similarity_empirical_and_null_interactions_no_self_loop,
-                                                         jaccard_similarity_empirical_and_null_interactions_no_self_loop$type=="null_model")) #in null model
+lm1_module_interactions = lm(ave ~ ave_dist ,data=subset(jaccard_similarity_layer_empirical_and_null_km,
+                                                         jaccard_similarity_layer_empirical_and_null_km$type=="empirical")) #in empirical
+lm2_module_interactions = lm(ave ~ ave_dist ,data=subset(jaccard_similarity_layer_empirical_and_null_km,
+                                                       jaccard_similarity_layer_empirical_and_null_km$type=="null_model")) #in null model
 
 #get equations
 lm1_module_equation_interactions <- paste("y=", coef(lm1_module_interactions)[[1]], "+", coef(lm1_module_interactions)[[2]], "*x")
