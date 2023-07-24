@@ -225,6 +225,12 @@ ggplot(Prop_sp_in_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
 ```
 \
 \
+```{r out.height = "460px", out.width='800px', fig.cap= "Regional signature structure. Structure similarity between locations is indicated by lines. Lines color represents Jaccard similarity between locations. Pie charts indicate the spatial distribution of the nine biggest modules. The color and size of portions within pie charts represent module ID and the proportion of species integrating the module", echo=F}
+knitr::include_graphics("Map_modules.jpg")
+```
+\
+\
+
 We observed modules distance decay in the empirical data ($R^2$ = 0.67, P < 0.001), which indicates that islands tended to share less modules with increasing distance. However, decay in modules was weaker than for species.
 \
 \
@@ -363,14 +369,36 @@ iteration_correlation_classic %>% ggplot(aes(x = rsquared))+
   geom_vline(xintercept = correlation_empirical_classic$rsquared, linetype = "dashed", color = "#F47069") 
 
 ```
+\
+\
+```{r}
 
+##Prueba
+jaccard_similarity_layer_empirical_and_null_km_classic <- read.csv("prueba_without_average_island.csv")
+
+jaccard_similarity_layer_empirical_and_null_km_classic %>% 
+  ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
+  geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ geom_smooth(method= "lm", se=F)+
+  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
+  theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
+  labs(x="Distance in Km", y="Jaccard Similarity")+ 
+  stat_cor(aes(label = after_stat(rr.label)), label.x = 400, label.y = c(0.60, 0.56, 0.52, 0.48))+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank()) + stat_cor(aes(label = ..p.label..), label.x = 400)
+
+```
 \
 \
 \
+
 
 ### Modules distance decay- Null model shuffling interactions between layers ($M_3$)
 \
-We tested if rewiring interaction across islands affects distance decay in structure by shuffling interactions of each pair of species between all the islands in which they co-occur. $M_3$ shuffles intralayer links between islands but conserves the interlayer links.
+We tested if interaction rewiring across islands affects distance decay in structure by shuffling interactions of each pair of species between all the islands in which they co-occur. $M_3$ shuffles intralayer links between islands but conserves the interlayer links.
 
 ```{r, message=FALSE}
 message("For example, if a plant and a pollinator co-occurred in layers 1 and 3 but interacted only in layer 1, they would still co-occur in the same layers but may interact in layer 3 after shuffling")
@@ -426,32 +454,13 @@ iteration_correlation_interactions %>% ggplot(aes(x = rsquared))+
 \
 \
 
-```{r}
-
-##Prueba
-jaccard_similarity_layer_empirical_and_null_km_classic <- read.csv("prueba_without_average_island.csv")
-
-jaccard_similarity_layer_empirical_and_null_km_classic %>% 
-  ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
-  geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ geom_smooth(method= "lm", se=F)+
-  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
-  theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
-  labs(x="Distance in Km", y="Jaccard Similarity")+ 
-  stat_cor(aes(label = after_stat(rr.label)), label.x = 400, label.y = c(0.60, 0.56, 0.52, 0.48))+
-  theme(panel.grid = element_blank(),
-        panel.border = element_rect(color = "black",fill = NA,size = 1),
-        panel.spacing = unit(0.5, "cm", data = NULL),
-        axis.text = element_text(size=14, color='black'),
-        axis.title = element_text(size=14, color='black'),
-        axis.line = element_blank()) + stat_cor(aes(label = ..p.label..), label.x = 400)
-
-```
-\
-\
 
 ### Modules distance decay- Beta diversity components
 \
-Shuffling species between islands deviates more from the empirical value than shuffling interactions between islands (t-test, $R^2_{M_3}$ > $R^2_{M_2}$, P < 0.001), which indicates species turnover is the main driver of distance decay in structure.
+Shuffling species between islands deviates more from the empirical value than shuffling interactions between islands, which indicates species turnover is the main driver of distance decay in structure.
+```{r, message=FALSE}
+message("Shuffling species between islands deviates more from the empirical value than shuffling interactions between islands (t-test, $R^2_{M_3}$ > $R^2_{M_2}$, P < 0.001), which indicates species turnover is the main driver of distance decay in structure")
+```
 \
 \
 ```{r}
@@ -521,11 +530,13 @@ kable(Description, align=c(rep('c',times=6)), digits = c(0,3,8,3,4,0))
 \
 \
 \
+
+# Main Results
 \
-\
-\
-\
-\
-\
-\
+
+* Regional signature structure using metacommunity approach
+
+* Strong distance decay pattern in structure
+
+* Distance decay pattern is mainly driven by species turnover (pollinators) and local processes occurring in each island.
 
