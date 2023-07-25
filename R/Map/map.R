@@ -60,13 +60,6 @@ pivot_by_country <- function(data) {
 pie_chart_data2 <- lon_lat_data %>% right_join(pivot_by_country(pie_chart_data2), by = c("layer_id"="layer_id")) 
 pie_chart_data2 <- pie_chart_data2 %>% group_by(lat, Lon) %>% summarise(across(everything(), sum))
 
-# Rearrange coordinates to display
-
-#pie_chart_data2$Lon<- c(-15.05,-18.35,-15.5,-17.6,-16.4,-17,-14.5)
-#pie_chart_data2$lat<- c(26,28.5,28.8,29.05,29.2,29.3,29.3)
- 
-#pie_chart_data2[1,2] <- -14.9
-#pie_chart_data2[1,1] <- 25.2
 
 #Plot
 top_10_scatterpies <- ggplot()+ geom_scatterpie(aes(x=Lon, y=lat, group=layer_id, r=0.2), alpha=0.90, data= pie_chart_data2, 
@@ -109,9 +102,9 @@ Canary_map <- ggplot() +
   geom_map(data = Canary, map = Canary, aes(long, lat, map_id = region), color = "black", 
            fill = "#c2a18b", size = 0.2) +
   geom_segment(aes(x= x, xend= xend, y= y, yend= yend, color = turnover),
-                              data= jaccard_similarity_on_map)+ scale_color_gradient(high="red",low="blue")+ #Lines indicating Jaccard similarity across islands
+                              data= jaccard_similarity_on_map)+ scale_color_viridis()+ #Lines indicating Jaccard similarity across islands
 
-  geom_segment(aes(x = Lon, y = lat, xend = xend, yend = yend), length = unit(0.2, "inches"),
+  geom_segment(aes(x = Lon, y = lat, xend = xend, yend = yend),
                color = "black", data = segm_connect) +  # Lines connecting points and pie charts
   
   geom_point(aes(x= Lon, y= lat), shape = 21, fill= 'white', color= "black", data= lon_lat_data )+ #points indicating islands
@@ -133,7 +126,7 @@ Canary_map
 ##-- Final map containing Jaccard Similarity across Islands and the scatter pies 
 top_10_scatterpies_no_legend <- top_10_scatterpies + theme(legend.position = "none")
 
-pdf('./graphs/Islands/Map_modules.pdf', 10, 6)
+pdf('./graphs/Islands/Map_modules1.pdf', 10, 6)
 
 ggdraw()+ draw_plot(Canary_map)+
   draw_plot(top_10_scatterpies_no_legend, x = -0.088, y = 0.12, scale = 0.70)

@@ -546,7 +546,9 @@ correlation_beta_diversity %>% ggplot(aes(x = rsquared, color = type, fill = typ
   geom_vline(xintercept = correlation_empirical_interactions$rsquared, linetype = "dashed", color = "#F47069") 
 dev.off()
 
-t.test(iteration_correlation_pols$rsquared, iteration_correlation_interactions$rsquared, var.equal=TRUE) 
+#non-parametric test to compare two groups
+wilcox.test(iteration_correlation_pols$rsquared,iteration_correlation_interactions$rsquared,) # where y and x are numeric
+ 
 
 
 

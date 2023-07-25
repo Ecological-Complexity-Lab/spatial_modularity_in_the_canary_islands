@@ -230,6 +230,11 @@ knitr::include_graphics("Map_modules.jpg")
 ```
 \
 \
+```{r out.height = "460px", out.width='800px', fig.cap= "Regional signature structure. Structure similarity between locations is indicated by lines. Lines color represents Jaccard similarity between locations. Pie charts indicate the spatial distribution of the nine biggest modules. The color and size of portions within pie charts represent module ID and the proportion of species integrating the module", echo=F}
+knitr::include_graphics("Map_modules1.jpg")
+```
+\
+\
 
 We observed modules distance decay in the empirical data ($R^2$ = 0.67, P < 0.001), which indicates that islands tended to share less modules with increasing distance. However, decay in modules was weaker than for species.
 \
@@ -371,28 +376,6 @@ iteration_correlation_classic %>% ggplot(aes(x = rsquared))+
 ```
 \
 \
-```{r}
-
-##Prueba
-jaccard_similarity_layer_empirical_and_null_km_classic <- read.csv("prueba_without_average_island.csv")
-
-jaccard_similarity_layer_empirical_and_null_km_classic %>% 
-  ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
-  geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ geom_smooth(method= "lm", se=F)+
-  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
-  theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
-  labs(x="Distance in Km", y="Jaccard Similarity")+ 
-  stat_cor(aes(label = after_stat(rr.label)), label.x = 400, label.y = c(0.60, 0.56, 0.52, 0.48))+
-  theme(panel.grid = element_blank(),
-        panel.border = element_rect(color = "black",fill = NA,size = 1),
-        panel.spacing = unit(0.5, "cm", data = NULL),
-        axis.text = element_text(size=14, color='black'),
-        axis.title = element_text(size=14, color='black'),
-        axis.line = element_blank()) + stat_cor(aes(label = ..p.label..), label.x = 400)
-
-```
-\
-\
 \
 
 
@@ -449,18 +432,33 @@ iteration_correlation_interactions %>% ggplot(aes(x = rsquared))+
 
 
 ```
-
 \
+```{r}
+
+interactions_co_occurences <-read.csv("interactions_co_occurences.csv")
+
+interactions_co_occurences_pot <- interactions_co_occurences %>%
+  mutate(possible_changes = co_occurrences - interactions) %>% 
+  summarise(co_occurrences = sum (co_occurrences), interactions = sum(interactions), possible_changes = sum(possible_changes)) %>% 
+              mutate(Id = c(1))
+interactions_co_occurences_pot2<- pivot_longer(interactions_co_occurences_pot, names_to = "group", values_to = "number", cols = -Id)
+
+interactions_co_occurences_pot2 %>%
+  ggplot(aes(x=group, y= number, fill=group))+ geom_bar(stat='identity', alpha= 0.6, color= "black")+ theme_bw()+
+  scale_y_continuous(limits = c(0, 1200), breaks=seq(0,1200,300)) +
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'))
+```
 \
 \
 
 
 ### Modules distance decay- Beta diversity components
 \
-Shuffling species between islands deviates more from the empirical value than shuffling interactions between islands, which indicates species turnover is the main driver of distance decay in structure.
-```{r, message=FALSE}
-message("Shuffling species between islands deviates more from the empirical value than shuffling interactions between islands (t-test, $R^2_{M_3}$ > $R^2_{M_2}$, P < 0.001), which indicates species turnover is the main driver of distance decay in structure")
-```
+Shuffling species between islands deviates more from the empirical value than shuffling interactions between islands (Mann-Whitney U test, $R^2_{M_3}$ > $R^2_{M_2}$, P < 0.001), which indicates species turnover is the main driver of distance decay in structure.
 \
 \
 ```{r}
@@ -526,6 +524,33 @@ library(knitr)
 Description <- read_excel("Table_models.xlsx", sheet = 5)
 kable(Description, align=c(rep('c',times=6)), digits = c(0,3,8,3,4,0))
 
+```
+\
+\
+\
+```{r}
+
+jaccard_similarity_empirical_and_fixed_km <- read.csv("sensitivity_nullmodel4.csv")
+
+jaccard_similarity_empirical_and_fixed_km %>% 
+  ggplot(aes(x= ave_dist_in_km , y= ave, group= trial, color= trial))+
+  geom_point()+ theme_classic()+ geom_smooth(method= "lm", se=F)+
+  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
+  theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
+  labs(x="Distance in Km", y="Jaccard Similarity")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank()) 
+```
+\
+\
+```{r}
+library(knitr)
+Description <- read_excel("Table_models.xlsx", sheet = 6)
+kable(Description, align=c(rep('c',times=6)), digits = c(0,3,8,3,4,0))
 ```
 \
 \
