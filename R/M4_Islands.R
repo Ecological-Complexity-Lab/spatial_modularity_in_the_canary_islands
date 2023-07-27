@@ -109,7 +109,7 @@ edge_list_per_module <- function(data,edge_list){
 modules_edge_list_fixed_analysis <- NULL
 
 for (k in (1:nrow(module_pivoted_fixed))){ #run the function for each row in the data frame
-  modules_edge_list_fixed_analysis <- edge_list_per_module_islands(module_pivoted_fixed[k,], modules_edge_list_fixed_analysis) 
+  modules_edge_list_fixed_analysis <- edge_list_per_module(module_pivoted_fixed[k,], modules_edge_list_fixed_analysis) 
   current_module_fixed <- rownames(module_pivoted_fixed)[k]
   if (is.null(modules_edge_list_fixed_analysis)) next
   modules_edge_list_fixed_analysis <- modules_edge_list_fixed_analysis %>% mutate(module = replace_na(module, current_module_fixed)) #add module number
@@ -120,7 +120,7 @@ for (k in (1:nrow(module_pivoted_fixed))){ #run the function for each row in the
 modules_edge_list_empirical_fixed_analysis <- NULL
 
 for (k in (1:nrow(module_pivoted_empirical_fixed_analysis))){ #run the function for each row in the data frame
-  modules_edge_list_empirical_fixed_analysis <- edge_list_per_module_islands(module_pivoted_empirical_fixed_analysis[k,], modules_edge_list_empirical_fixed_analysis) 
+  modules_edge_list_empirical_fixed_analysis <- edge_list_per_module(module_pivoted_empirical_fixed_analysis[k,], modules_edge_list_empirical_fixed_analysis) 
   current_module_empirical <- rownames(module_pivoted_empirical_fixed_analysis)[k]
   if (is.null(modules_edge_list_empirical_fixed_analysis)) next
   modules_edge_list_empirical_fixed_analysis <- modules_edge_list_empirical_fixed_analysis %>% mutate(module = replace_na(module, current_module_empirical)) #add module number
