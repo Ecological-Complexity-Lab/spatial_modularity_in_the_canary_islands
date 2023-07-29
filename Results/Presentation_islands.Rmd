@@ -611,6 +611,7 @@ jaccard_similarity_empirical_and_fixed_km <- read.csv("sensitivity_nullmodel4.cs
 
 jaccard_similarity_empirical_and_fixed_km %>% 
   ggplot(aes(x= ave_dist_in_km , y= ave, group= trial, color= trial))+
+  ggtitle("Sensitivity")+ scale_color_discrete(name = "Interedges weight")+
   geom_point()+ theme_classic()+ geom_smooth(method= "lm", se=F)+
   theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
   theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
@@ -620,7 +621,7 @@ jaccard_similarity_empirical_and_fixed_km %>%
         panel.spacing = unit(0.5, "cm", data = NULL),
         axis.text = element_text(size=14, color='black'),
         axis.title = element_text(size=14, color='black'),
-        axis.line = element_blank()) 
+        axis.line = element_blank())
 ```
 \
 \
@@ -631,6 +632,29 @@ kable(Description, align=c(rep('c',times=6)), digits = c(0,3,8,3,4,0))
 ```
 \
 \
+```{r}
+
+jaccard_similarity_empirical_and_relax_km <- read.csv("relax_nullmodel4.csv")
+
+
+jaccard_similarity_empirical_and_relax_km %>% 
+  ggplot(aes(x= ave_dist_in_km , y= ave, group= trial, color= trial))+
+  ggtitle("Relax rate")+ scale_color_discrete(name = "Relax rate")+
+  geom_point()+ theme_classic()+ geom_smooth(method= "lm", se=F)+
+  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
+  theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
+  labs(x="Distance in Km", y="Jaccard Similarity")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank()) 
+
+```
+
+
+
 \
 
 # Main Results

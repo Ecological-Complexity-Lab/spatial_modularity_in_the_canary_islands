@@ -23,6 +23,45 @@ library(ggpubr)
 setwd("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands")
 source("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands/R/functions.R")
 
+## -- Example to show Shai
+
+## -- The results are different when I change manually the interedges weight and use relax rates. For example, if I fix
+#interedges weights and relax rate of 0.9, the results are completely different.
+
+physical_nodes <- read.csv("./csvs/Islands/physical_nodes_islands.csv")
+layer_metadata <- read.csv("./csvs/Islands/layer_metadata_islands.csv")
+
+inter_extended <- read.csv("./csvs/Islands/dryad_only_interlayer_edges_islands_as_layers.csv")
+intra_nonextended <- read.csv("./csvs/Islands/dryad_only_intralayer_edges_islands_as_layers.csv")
+
+inter_extended <- inter_extended [,-1]
+intra_nonextended <- intra_nonextended [,-1]
+
+#Interedges weight
+inter_extended$weight <- 0.9
+
+man<-create_multilayer_object(intra = intra_nonextended,
+                              inter = inter_extended,
+                              nodes = physical_nodes, #nodes are always the same. we're not deleting nodes.
+                              layers = layer_metadata, #layers are always the same. we're not deleting layers.
+                              intra_output_extended = T)
+
+
+man_mod <- run_infomap_multilayer(man, relax = F, silent = T, trials = 100, seed = 497294, multilayer_relax_rate = r, multilayer_relax_limit_up = 1, multilayer_relax_limit_down = 0, temporal_network = F)
+
+#Relax rate
+r=0.9
+rel<-create_multilayer_object(intra = intra_nonextended,
+                              nodes = physical_nodes, #nodes are always the same. we're not deleting nodes.
+                              layers = layer_metadata, #layers are always the same. we're not deleting layers.
+                              intra_output_extended = F)
+
+
+rel_mod <- run_infomap_multilayer(rel, relax = T, silent = T, trials = 100, seed = 497294, multilayer_relax_rate = r, multilayer_relax_limit_up = 1, multilayer_relax_limit_down = 0, temporal_network = F)
+
+
+
+
 ##---- fixed for empirical data ---------------------------------------------------------------------------
 physical_nodes <- read.csv("./csvs/Islands/physical_nodes_islands.csv")
 layer_metadata <- read.csv("./csvs/Islands/layer_metadata_islands.csv")
@@ -211,6 +250,7 @@ pdf('./graphs/Islands/sensitivity_M4.pdf', 10, 6)
 jaccard_similarity_empirical_and_fixed_km %>% 
   ggplot(aes(x= ave_dist_in_km , y= ave, group= trial, color= trial))+
   geom_point()+ theme_classic()+ geom_smooth(method= "lm", se=F)+
+  scale_color_discrete(name = "Interedges weight")+
   theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
   theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
   labs(x="Distance in Km", y="Jaccard Similarity")+
@@ -259,7 +299,7 @@ summary(l_9)
 summary(l_10)
 
 
-#------------------------------------------------------------------------------#WE CHECK THE SENSITIVITY ANALYSIS REMOVING THE WEIGHT OF INTERLAYEREDGES AND CHANGING THE RELAX RATES
+#------#WE CHECK THE SENSITIVITY ANALYSIS REMOVING THE WEIGHT OF INTERLAYEREDGES AND CHANGING THE RELAX RATES
 
   ##---- fixed for empirical data ---------------------------------------------------------------------------
 
@@ -418,6 +458,7 @@ pdf('./graphs/Islands/relaxrate_M4.pdf', 10, 6)
 jaccard_similarity_empirical_and_relax_km %>% 
   ggplot(aes(x= ave_dist_in_km , y= ave, group= trial, color= trial))+
   geom_point()+ theme_classic()+ geom_smooth(method= "lm", se=F)+
+ scale_color_discrete(name = "Relax rate")+
   theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
   theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
   labs(x="Distance in Km", y="Jaccard Similarity")+
