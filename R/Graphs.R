@@ -7,6 +7,7 @@ library(igraph)
 library(bipartite)
 library(tidyverse)
 library(magrittr)
+
 library(betalink)
 library(readxl)
 library(ggalluvial)
@@ -334,8 +335,10 @@ modules_with_lat_lon_id$module <- fct_inorder(modules_with_lat_lon_id$module)
 
 pdf('./graphs/Islands/Distribution_modules_islands.pdf', 10, 6)
 modules_with_lat_lon_id %>% 
-  ggplot(aes(x=module, y= count ,fill= factor(layer_name)))+ geom_bar(stat= "identity")+ theme_classic()+ labs(y="Number of islands", x="Module number")+
-  guides(fill=guide_legend(title="Island"))+ theme(axis.text.x = element_blank())
+  ggplot(aes(x=module, y= count ,fill= factor(layer_name)))+ geom_bar(stat= "identity")+ theme_classic()+ labs(y="Number of locations", x="Modules")+
+  guides(fill=guide_legend(title="Location"))+ theme(axis.text.x = element_blank(),
+                                                   axis.text.y=element_text(size=15), axis.title = element_text(size=17),
+                                                   legend.text=element_text(size=12.5),legend.title =element_text(size=14))
 dev.off()
 
 
@@ -487,12 +490,17 @@ Prop_sp_in_island<- Prop_sp_island_2 %>%
 pdf('./graphs/Islands/Prop_sp_islands_in_modules.pdf', 10, 6)
 ggplot(Prop_sp_in_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
   geom_tile(color='white') +
-  theme_classic() +
-  scale_fill_viridis_c(limits = c(0, 0.2)) +
-  scale_x_continuous(breaks=seq(1,88,2)) +
+  theme(panel.grid = element_blank(),panel.background = element_blank(), 
+    axis.text.x = element_text(size=12, colour = "black"),
+        axis.text.y=element_text(size=13, colour = "black"), axis.title = element_text(size=14),
+        legend.text=element_text(size=11.5),legend.title =element_text(size=12),
+    axis.line = element_line(colour = "black")) +
+  scale_fill_viridis(name = "Prop. sp",limits = c(0, 0.2)) +
+  scale_x_continuous(breaks=seq(1,88,4)) +
   scale_y_discrete(limits = c("Hierro","Gomera","TenerifeTeno","TenerifeSouth","GranCanaria","Fuerteventura","WesternSahara"))+
-  labs(x='Module ID', y="Islands")
+  labs(x='Module ID', y="Locations")
 dev.off()
+
 
 
 ## ---- Plot of total possibilities of interaction rewiring to test null model 3
@@ -518,5 +526,166 @@ dev.off()
 
 
 
+######## ------ Final figures manuscript (except for the map) ##########
+
+## -- Figure 3
+jaccard_similarity_layer_empirical_and_null_km <- read.csv("csvs/Islands/jaccard_similarity_layer_empirical_and_null_km_islands_m1.csv")
+
+# Panel A
+Panel_A <- jaccard_similarity_layer_empirical_and_null_km %>% 
+  ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
+  geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+
+  labs(x="Distance (Km)", y="Jaccard Similarity")+  
+  scale_color_manual(name = "Null Model",  labels = c("E",expression("M"[1]^P),expression("M"[1]^A),
+                                                      expression("M"[1]^AP)), values = c("#FB3B1E", "#15B7BC", 
+                                                                                         "#72A323", "#BE75FA" )) +
+  theme_classic()+ geom_smooth(method= "lm", se=F) +
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
+Panel_A
+
+#Panel B
+jaccard_similarity_layer_empirical_and_null_km_M2 <- read.csv("./csvs/Islands/jaccard_similarity_layer_empirical_and_null_km_islands.csv") #need to read this to run next part
+
+Panel_B<- jaccard_similarity_layer_empirical_and_null_km_M2%>% 
+  ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
+  geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ 
+  theme_classic()+ geom_smooth(method= "lm", se=F)+
+  scale_color_manual (name = "Null Model", labels = c("E",expression("M"[2])),
+                      values = c("#FB3B1E",  "#E6AB02" ))+
+  labs(x="Distance (Km)", y="Jaccard Similarity")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
+Panel_B
 
 
+#Panel C
+jaccard_similarity_layer_empirical_and_null_km_classic_M3 <- read.csv("./csvs/Islands/jaccard_similarity_layer_empirical_and_null_km_classic_islands.csv") #need to read this to run next part
+
+Panel_C<- jaccard_similarity_layer_empirical_and_null_km_classic_M3 %>% 
+  ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
+  geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ geom_smooth(method= "lm", se=F)+
+  scale_color_manual (name = "Null Model", labels = c("E",expression("M"[3])),
+                      values = c("#FB3B1E","#FA86F2"))+
+  labs(x="Distance (Km)", y="Jaccard Similarity")+ 
+  
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
+Panel_C
+
+# Figure 3 (all panels together)
+pdf('./graphs/Islands/Figure_3.pdf', 10, 8)
+upper_row<- plot_grid(Panel_A + theme(plot.margin = unit(c(0.2,0.25,0.2,0.5), "cm")),
+                      Panel_B + theme(plot.margin = unit(c(0.2,0.25,0.2,0.5), "cm")), 
+                      ncol = 2, labels = c('(A)', "(B)"))
+
+bottom_row<- plot_grid(NULL,Panel_C + theme(plot.margin = unit(c(0.75,0.25,0.5,0.5), "cm")), NULL,
+                       ncol = 3, labels = c("","(C)",""), rel_widths = c(0.48,1,0.48))
+
+plot_grid(upper_row, bottom_row, ncol = 1, rel_heights = c(1, 1))
+dev.off()
+
+
+
+
+## -- Figure 4
+
+# Panel A
+correlation_empirical_pols <- read.csv("./csvs/Islands/correlation_empirical_pols.csv")
+rqsuares_M1_all <- read.csv("./csvs/Islands/rqsuares_M1_all.csv")
+rqsuares_M1_all$type <- factor(rqsuares_M1_all$type, levels = c("shuf_plants","shuf_pollinators","shuf_both"))
+
+Panel_A <- rqsuares_M1_all %>% 
+  ggplot(aes(x = rsquared, fill = type))+ 
+  geom_density(alpha = 0.5)+ 
+  geom_vline(xintercept = correlation_empirical_pols$rsquared, linetype = "dashed", color = "#FB3B1E")+
+  labs(x= expression("R"^2), y="Density")+  
+  scale_fill_manual(name = "Null Model",  labels = c(expression("M"[1]^P),expression("M"[1]^A),
+                                                     expression("M"[1]^AP)), values = c("#72A323","#15B7BC", "#A44CD3" ))+
+  theme_classic()+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
+Panel_A
+
+#Panel B
+correlation_empirical_interactions <- read.csv("./csvs/Islands/correlation_empirical_interactions.csv")
+iteration_correlation_interactions <- read.csv("./csvs/Islands/iteration_correlation_interactions_islands.csv")
+iteration_correlation_interactions2<-iteration_correlation_interactions %>% mutate(Type = "null_int")
+
+Panel_B<- iteration_correlation_interactions2 %>% ggplot(aes(x = rsquared, fill= Type))+ 
+  geom_density(alpha = 0.6)+ 
+  geom_vline(xintercept = correlation_empirical_interactions$rsquared, linetype = "dashed", color = "#FB3B1E") +
+  labs(x= expression("R"^2), y="Density")+  
+  scale_fill_manual(name = "Null Model",  label = expression("M"^2), values= "#E6AB02")+
+  theme_classic()+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
+
+#Panel C
+correlation_empirical_classic <- read.csv("./csvs/Islands/correlation_empirical_classic_islands.csv")
+iteration_correlation_classic <- read.csv("./csvs/Islands/iteration_correlation_classic_islands.csv")
+iteration_correlation_classic2<-iteration_correlation_classic %>% mutate(Type = "null_class")
+
+Panel_C<- iteration_correlation_classic2 %>% ggplot(aes(x = rsquared, fill= Type))+ 
+  geom_density(alpha = 0.6)+ 
+  geom_vline(xintercept = correlation_empirical_classic$rsquared, linetype = "dashed", color = "#FB3B1E") +
+  labs(x= expression("R"^2), y="Density")+  
+  scale_fill_manual(name = "Null Model",  label = expression("M"^3), values= "#FA86F2")+
+  theme_classic()+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
+Panel_C
+
+# Figure 4 (all panels together)
+pdf('./graphs/Islands/Figure_4.pdf', 10, 8)
+upper_row<- plot_grid(Panel_A + theme(plot.margin = unit(c(0.2,0.25,0.2,0.5), "cm")),
+                      Panel_B + theme(plot.margin = unit(c(0.2,0.25,0.2,0.5), "cm")), 
+                      ncol = 2, labels = c('(A)', "(B)"))
+
+bottom_row<- plot_grid(NULL,Panel_C + theme(plot.margin = unit(c(0.75,0.25,0.5,0.5), "cm")), NULL,
+                       ncol = 3, labels = c("","(C)",""), rel_widths = c(0.48,1,0.48))
+
+plot_grid(upper_row, bottom_row, ncol = 1, rel_heights = c(1, 1))
+dev.off()

@@ -1,6 +1,14 @@
 ########### --------- EXTRA ANALYSIS --------
 
-## -- 1. SENSITIVTY ANALYSIS NULL MODEL 3 
+#In this code we did a sensitivity analysis of the null model 4 but the pattern we got was the opposite (lower interedges
+#gave us lower number of modules and higher jaccard similarity). Therefore, we did a relax rate which gave us the normal
+#pattern we expected (lower relax rate ->higher number of modules and lower jaccard similarity). 
+
+#To try to understand why we get this pattern in the empirical network, we look into the distribution of modules across layers
+#with lower (0.1) and higher (0.9) interedges values.
+
+
+## -- 1. SENSITIVTY ANALYSIS NULL MODEL 4 
 
 ##---load_libraries-------------------------------------------------------------------------------------------------
 options(rgl.useNULL = TRUE)
@@ -23,44 +31,9 @@ library(ggpubr)
 setwd("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands")
 source("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands/R/functions.R")
 
-## -- Example to show Shai
-
-## -- The results are different when I change manually the interedges weight and use relax rates. For example, if I fix
-#interedges weights and relax rate of 0.9, the results are completely different.
-
-physical_nodes <- read.csv("./csvs/Islands/physical_nodes_islands.csv")
-layer_metadata <- read.csv("./csvs/Islands/layer_metadata_islands.csv")
-
-inter_extended <- read.csv("./csvs/Islands/dryad_only_interlayer_edges_islands_as_layers.csv")
-intra_nonextended <- read.csv("./csvs/Islands/dryad_only_intralayer_edges_islands_as_layers.csv")
-
-inter_extended <- inter_extended [,-1]
-intra_nonextended <- intra_nonextended [,-1]
-
-#Interedges weight
-inter_extended$weight <- 0.9
-
-man<-create_multilayer_object(intra = intra_nonextended,
-                              inter = inter_extended,
-                              nodes = physical_nodes, #nodes are always the same. we're not deleting nodes.
-                              layers = layer_metadata, #layers are always the same. we're not deleting layers.
-                              intra_output_extended = T)
 
 
-man_mod <- run_infomap_multilayer(man, relax = F, silent = T, trials = 100, seed = 497294, multilayer_relax_rate = r, multilayer_relax_limit_up = 1, multilayer_relax_limit_down = 0, temporal_network = F)
-
-#Relax rate
-r=0.9
-rel<-create_multilayer_object(intra = intra_nonextended,
-                              nodes = physical_nodes, #nodes are always the same. we're not deleting nodes.
-                              layers = layer_metadata, #layers are always the same. we're not deleting layers.
-                              intra_output_extended = F)
-
-
-rel_mod <- run_infomap_multilayer(rel, relax = T, silent = T, trials = 100, seed = 497294, multilayer_relax_rate = r, multilayer_relax_limit_up = 1, multilayer_relax_limit_down = 0, temporal_network = F)
-
-
-
+#######################-- Sensitivity analysis
 
 ##---- fixed for empirical data ---------------------------------------------------------------------------
 physical_nodes <- read.csv("./csvs/Islands/physical_nodes_islands.csv")
@@ -299,7 +272,7 @@ summary(l_9)
 summary(l_10)
 
 
-#------#WE CHECK THE SENSITIVITY ANALYSIS REMOVING THE WEIGHT OF INTERLAYEREDGES AND CHANGING THE RELAX RATES
+#######################-- Relax rate
 
   ##---- fixed for empirical data ---------------------------------------------------------------------------
 
@@ -469,5 +442,374 @@ jaccard_similarity_empirical_and_relax_km %>%
         axis.title = element_text(size=14, color='black'),
         axis.line = element_blank()) 
 dev.off()
+
+
+#######################-- Example to show Shai
+
+## -- The results are different when I change manually the interedges weight and use relax rates. For example, if I fix
+#interedges weights and relax rate of 0.9, the results are completely different.
+
+physical_nodes <- read.csv("./csvs/Islands/physical_nodes_islands.csv")
+layer_metadata <- read.csv("./csvs/Islands/layer_metadata_islands.csv")
+
+inter_extended <- read.csv("./csvs/Islands/dryad_only_interlayer_edges_islands_as_layers.csv")
+intra_nonextended <- read.csv("./csvs/Islands/dryad_only_intralayer_edges_islands_as_layers.csv")
+
+inter_extended <- inter_extended [,-1]
+intra_nonextended <- intra_nonextended [,-1]
+
+#Interedges weight
+inter_extended$weight <- 0.9
+
+man<-create_multilayer_object(intra = intra_nonextended,
+                              inter = inter_extended,
+                              nodes = physical_nodes, #nodes are always the same. we're not deleting nodes.
+                              layers = layer_metadata, #layers are always the same. we're not deleting layers.
+                              intra_output_extended = T)
+
+
+man_mod <- run_infomap_multilayer(man, relax = F, silent = T, trials = 100, seed = 497294, multilayer_relax_rate = r, multilayer_relax_limit_up = 1, multilayer_relax_limit_down = 0, temporal_network = F)
+
+
+#Now we try to look for a pattern in the shared modules
+
+##-- Plot modules in each island with size proportion
+#arrange data to include  modules sizes
+size <- count(man_mod$modules, module)  #create a data frame of all modules and how many nodes are in each (size of module)
+module_data <- merge(man_mod$modules , size, by=c("module","module")) #merge size of module with all the other info about the modules
+colnames(module_data)[7] <- "size_of_module" #rename column
+
+#Calculate number of nodes in each module per island
+N_species_mod<-module_data %>% 
+  group_by(layer_id, module) %>% 
+  summarize(module_size=n_distinct(node_id))
+
+#Create dataframe with total number of nodes per module across islands
+Module_size <- module_data %>% count(module) #num of nodes in module. 
+
+#merge dataframes and calculate proportion of species in each module
+Prop_sp_module <- left_join(N_species_mod,Module_size)
+
+Prop_sp_module_2<-Prop_sp_module %>% 
+  mutate(Prop_sp = module_size / n)
+
+#change order accoridng to distances
+Prop_sp_module_island<- Prop_sp_module_2 %>% 
+  mutate(layer_name= case_when(layer_id == '1' ~ 'WesternSahara',
+                               layer_id == '2' ~ 'Fuerteventura',
+                               layer_id == '3' ~ 'GranCanaria',
+                               layer_id == '4' ~ 'TenerifeSouth',
+                               layer_id == '5' ~ 'TenerifeTeno',
+                               layer_id == '6' ~ 'Gomera',
+                               layer_id == '7' ~ 'Hierro'))
+
+#write.csv(Prop_sp_module_island, "R/Extra_analysis_results/Prop_sp_module_island_higher.csv", row.names = FALSE)
+
+Interedges_weight<- ggplot(Prop_sp_module_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
+  geom_tile(color='white') +
+  theme_classic() +
+  scale_fill_viridis_c(limits = c(0, 1)) +
+  scale_x_continuous(breaks=seq(1,83,4)) +
+  scale_y_discrete(limits = c("Hierro","Gomera","TenerifeTeno","TenerifeSouth","GranCanaria","Fuerteventura","WesternSahara"))+
+  labs(x='Module ID', y="Islands")
+Interedges_weight  
+
+## Distribution of modules across islands
+module_data $layer_id<- as.character(module_data $layer_id)
+
+module_data_id  <- module_data  %>% 
+  mutate(layer_name= case_when(layer_id == '1' ~ 'WesternSahara',
+                               layer_id == '2' ~ 'Fuerteventura',
+                               layer_id == '3' ~ 'GranCanaria',
+                               layer_id == '4' ~ 'TenerifeSouth',
+                               layer_id == '5' ~ 'TenerifeTeno',
+                               layer_id == '6' ~ 'Gomera',
+                               layer_id == '7' ~ 'Hierro'))
+module_data_id2<-module_data_id %>% select(layer_name, module, size_of_module) %>% unique() 
+module_data_id2$count <- c(1)
+
+module_data_id3<- module_data_id2%>% unique()  %>% group_by(module) %>%  
+  mutate(tot_island = sum (count)) %>% arrange(desc(tot_island))
+
+# Convert module to an ordered factor and change the order according to number of islands
+module_data_id3$module<- as.factor(module_data_id3$module)
+module_data_id3$module <- fct_inorder(module_data_id3$module)
+
+
+#write.csv(module_data_id3, "R/Extra_analysis_results/module_data_id3_higher.csv", row.names = FALSE)
+Dist_Inter<-module_data_id3 %>% 
+  ggplot(aes(x=module, y= count ,fill= factor(layer_name)))+ geom_bar(stat= "identity")+ theme_classic()+ labs(y="Number of locations", x="Modules")+
+  guides(fill=guide_legend(title="Location"))+ theme(axis.text.x = element_blank(),
+                                                     axis.text.y=element_text(size=15), axis.title = element_text(size=17),
+                                                     legend.text=element_text(size=12.5),legend.title =element_text(size=14))
+
+Dist_Inter
+
+
+###    Relax rate
+r=0.9
+rel<-create_multilayer_object(intra = intra_nonextended,
+                              nodes = physical_nodes, #nodes are always the same. we're not deleting nodes.
+                              layers = layer_metadata, #layers are always the same. we're not deleting layers.
+                              intra_output_extended = F)
+
+
+rel_mod <- run_infomap_multilayer(rel, relax = T, silent = T, trials = 100, seed = 497294, multilayer_relax_rate = r, multilayer_relax_limit_up = 1, multilayer_relax_limit_down = 0, temporal_network = F)
+
+#Now we try to look for a pattern in the shared modules
+
+## Plot modules in each island with size proportion
+
+#arrange data to include  modules sizes
+size <- count(rel_mod $modules, module)  #create a data frame of all modules and how many nodes are in each (size of module)
+module_data <- merge(rel_mod $modules , size, by=c("module","module")) #merge size of module with all the other info about the modules
+colnames(module_data)[7] <- "size_of_module" #rename column
+
+#Calculate number of nodes in each module per island
+N_species_mod<-module_data %>% 
+  group_by(layer_id, module) %>% 
+  summarize(module_size=n_distinct(node_id))
+
+#Create dataframe with total number of nodes per module across islands
+Module_size <- module_data %>% count(module) #num of nodes in module. 
+
+#merge dataframes and calculate proportion of species in each module
+Prop_sp_module <- left_join(N_species_mod,Module_size)
+
+Prop_sp_module_2<-Prop_sp_module %>% 
+  mutate(Prop_sp = module_size / n)
+
+#change order accoridng to distances
+Prop_sp_module_island<- Prop_sp_module_2 %>% 
+  mutate(layer_name= case_when(layer_id == '1' ~ 'WesternSahara',
+                               layer_id == '2' ~ 'Fuerteventura',
+                               layer_id == '3' ~ 'GranCanaria',
+                               layer_id == '4' ~ 'TenerifeSouth',
+                               layer_id == '5' ~ 'TenerifeTeno',
+                               layer_id == '6' ~ 'Gomera',
+                               layer_id == '7' ~ 'Hierro'))
+
+Relaxrate<- ggplot(Prop_sp_module_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
+  geom_tile(color='white') +
+  theme_classic() +
+  scale_fill_viridis_c(limits = c(0, 1)) +
+  scale_x_continuous(breaks=seq(1,83,4)) +
+  scale_y_discrete(limits = c("Hierro","Gomera","TenerifeTeno","TenerifeSouth","GranCanaria","Fuerteventura","WesternSahara"))+
+  labs(x='Module ID', y="Islands")
+Relaxrate 
+
+## Distribution of modules across islands
+
+module_data $layer_id<- as.character(module_data $layer_id)
+
+module_data_id  <- module_data  %>% 
+  mutate(layer_name= case_when(layer_id == '1' ~ 'WesternSahara',
+                               layer_id == '2' ~ 'Fuerteventura',
+                               layer_id == '3' ~ 'GranCanaria',
+                               layer_id == '4' ~ 'TenerifeSouth',
+                               layer_id == '5' ~ 'TenerifeTeno',
+                               layer_id == '6' ~ 'Gomera',
+                               layer_id == '7' ~ 'Hierro'))
+module_data_id2<-module_data_id %>% select(layer_name, module, size_of_module) %>% unique() 
+module_data_id2$count <- c(1)
+
+module_data_id3<- module_data_id2%>% unique()  %>% group_by(module) %>%  
+  mutate(tot_island = sum (count)) %>% arrange(desc(tot_island))
+
+# Convert module to an ordered factor and change the order according to number of islands
+module_data_id3$module<- as.factor(module_data_id3$module)
+module_data_id3$module <- fct_inorder(module_data_id3$module)
+
+Dist_relax<-module_data_id3 %>% 
+  ggplot(aes(x=module, y= count ,fill= factor(layer_name)))+ geom_bar(stat= "identity")+ theme_classic()+ labs(y="Number of locations", x="Modules")+
+  guides(fill=guide_legend(title="Location"))+ theme(axis.text.x = element_blank(),
+                                                     axis.text.y=element_text(size=15), axis.title = element_text(size=17),
+                                                     legend.text=element_text(size=12.5),legend.title =element_text(size=14))
+
+Dist_relax
+
+
+
+
+################----- Comparison between lower and higher interedges values
+
+physical_nodes <- read.csv("./csvs/Islands/physical_nodes_islands.csv")
+layer_metadata <- read.csv("./csvs/Islands/layer_metadata_islands.csv")
+
+inter_extended <- read.csv("./csvs/Islands/dryad_only_interlayer_edges_islands_as_layers.csv")
+intra_nonextended <- read.csv("./csvs/Islands/dryad_only_intralayer_edges_islands_as_layers.csv")
+
+inter_extended <- inter_extended [,-1]
+intra_nonextended <- intra_nonextended [,-1]
+
+##- High interedges value
+inter_extended$weight <- 0.9
+
+man<-create_multilayer_object(intra = intra_nonextended,
+                              inter = inter_extended,
+                              nodes = physical_nodes, #nodes are always the same. we're not deleting nodes.
+                              layers = layer_metadata, #layers are always the same. we're not deleting layers.
+                              intra_output_extended = T)
+
+
+man_mod <- run_infomap_multilayer(man, relax = F, silent = T, trials = 100, seed = 497294, multilayer_relax_rate = r, multilayer_relax_limit_up = 1, multilayer_relax_limit_down = 0, temporal_network = F)
+
+
+#Now we try to look for a pattern in the shared modules
+
+##-- Plot modules in each island with size proportion
+#arrange data to include  modules sizes
+size <- count(man_mod$modules, module)  #create a data frame of all modules and how many nodes are in each (size of module)
+module_data <- merge(man_mod$modules , size, by=c("module","module")) #merge size of module with all the other info about the modules
+colnames(module_data)[7] <- "size_of_module" #rename column
+
+#Calculate number of nodes in each module per island
+N_species_mod<-module_data %>% 
+  group_by(layer_id, module) %>% 
+  summarize(module_size=n_distinct(node_id))
+
+#Create dataframe with total number of nodes per module across islands
+Module_size <- module_data %>% count(module) #num of nodes in module. 
+
+#merge dataframes and calculate proportion of species in each module
+Prop_sp_module <- left_join(N_species_mod,Module_size)
+
+Prop_sp_module_2<-Prop_sp_module %>% 
+  mutate(Prop_sp = module_size / n)
+
+#change order accoridng to distances
+Prop_sp_module_island<- Prop_sp_module_2 %>% 
+  mutate(layer_name= case_when(layer_id == '1' ~ 'WesternSahara',
+                               layer_id == '2' ~ 'Fuerteventura',
+                               layer_id == '3' ~ 'GranCanaria',
+                               layer_id == '4' ~ 'TenerifeSouth',
+                               layer_id == '5' ~ 'TenerifeTeno',
+                               layer_id == '6' ~ 'Gomera',
+                               layer_id == '7' ~ 'Hierro'))
+
+Interedges_weight_high<- ggplot(Prop_sp_module_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
+  geom_tile(color='white') +
+  theme_classic() +
+  scale_fill_viridis_c(limits = c(0, 1)) +
+  scale_x_continuous(breaks=seq(1,83,4)) +
+  scale_y_discrete(limits = c("Hierro","Gomera","TenerifeTeno","TenerifeSouth","GranCanaria","Fuerteventura","WesternSahara"))+
+  labs(x='Module ID', y="Islands")
+Interedges_weight_high
+
+## Distribution of modules across islands
+module_data $layer_id<- as.character(module_data $layer_id)
+
+module_data_id  <- module_data  %>% 
+  mutate(layer_name= case_when(layer_id == '1' ~ 'WesternSahara',
+                               layer_id == '2' ~ 'Fuerteventura',
+                               layer_id == '3' ~ 'GranCanaria',
+                               layer_id == '4' ~ 'TenerifeSouth',
+                               layer_id == '5' ~ 'TenerifeTeno',
+                               layer_id == '6' ~ 'Gomera',
+                               layer_id == '7' ~ 'Hierro'))
+module_data_id2<-module_data_id %>% select(layer_name, module, size_of_module) %>% unique() 
+module_data_id2$count <- c(1)
+
+module_data_id3<- module_data_id2%>% unique()  %>% group_by(module) %>%  
+  mutate(tot_island = sum (count)) %>% arrange(desc(tot_island))
+
+# Convert module to an ordered factor and change the order according to number of islands
+module_data_id3$module<- as.factor(module_data_id3$module)
+module_data_id3$module <- fct_inorder(module_data_id3$module)
+
+Dist_Inter_high<-module_data_id3 %>% 
+  ggplot(aes(x=module, y= count ,fill= factor(layer_name)))+ geom_bar(stat= "identity")+ theme_classic()+ labs(y="Number of locations", x="Modules")+
+  guides(fill=guide_legend(title="Location"))+ theme(axis.text.x = element_blank(),
+                                                     axis.text.y=element_text(size=15), axis.title = element_text(size=17),
+                                                     legend.text=element_text(size=12.5),legend.title =element_text(size=14))
+
+Dist_Inter_high
+
+##- Low interedges value
+inter_extended$weight <- 0.1
+
+man<-create_multilayer_object(intra = intra_nonextended,
+                              inter = inter_extended,
+                              nodes = physical_nodes, #nodes are always the same. we're not deleting nodes.
+                              layers = layer_metadata, #layers are always the same. we're not deleting layers.
+                              intra_output_extended = T)
+
+
+man_mod <- run_infomap_multilayer(man, relax = F, silent = T, trials = 100, seed = 497294, multilayer_relax_rate = r, multilayer_relax_limit_up = 1, multilayer_relax_limit_down = 0, temporal_network = F)
+
+
+#Now we try to look for a pattern in the shared modules
+
+##-- Plot modules in each island with size proportion
+#arrange data to include  modules sizes
+size <- count(man_mod$modules, module)  #create a data frame of all modules and how many nodes are in each (size of module)
+module_data <- merge(man_mod$modules , size, by=c("module","module")) #merge size of module with all the other info about the modules
+colnames(module_data)[7] <- "size_of_module" #rename column
+
+#Calculate number of nodes in each module per island
+N_species_mod<-module_data %>% 
+  group_by(layer_id, module) %>% 
+  summarize(module_size=n_distinct(node_id))
+
+#Create dataframe with total number of nodes per module across islands
+Module_size <- module_data %>% count(module) #num of nodes in module. 
+
+#merge dataframes and calculate proportion of species in each module
+Prop_sp_module <- left_join(N_species_mod,Module_size)
+
+Prop_sp_module_2<-Prop_sp_module %>% 
+  mutate(Prop_sp = module_size / n)
+
+#change order accoridng to distances
+Prop_sp_module_island<- Prop_sp_module_2 %>% 
+  mutate(layer_name= case_when(layer_id == '1' ~ 'WesternSahara',
+                               layer_id == '2' ~ 'Fuerteventura',
+                               layer_id == '3' ~ 'GranCanaria',
+                               layer_id == '4' ~ 'TenerifeSouth',
+                               layer_id == '5' ~ 'TenerifeTeno',
+                               layer_id == '6' ~ 'Gomera',
+                               layer_id == '7' ~ 'Hierro'))
+
+
+#write.csv(Prop_sp_module_island, "R/Extra_analysis_results/Prop_sp_module_island_lower.csv", row.names = FALSE)
+
+Interedges_weight_low<- ggplot(Prop_sp_module_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
+  geom_tile(color='white') +
+  theme_classic() +
+  scale_fill_viridis_c(limits = c(0, 1)) +
+  scale_x_continuous(breaks=seq(1,83,4)) +
+  scale_y_discrete(limits = c("Hierro","Gomera","TenerifeTeno","TenerifeSouth","GranCanaria","Fuerteventura","WesternSahara"))+
+  labs(x='Module ID', y="Islands")
+Interedges_weight_low
+
+## Distribution of modules across islands
+module_data $layer_id<- as.character(module_data $layer_id)
+
+module_data_id  <- module_data  %>% 
+  mutate(layer_name= case_when(layer_id == '1' ~ 'WesternSahara',
+                               layer_id == '2' ~ 'Fuerteventura',
+                               layer_id == '3' ~ 'GranCanaria',
+                               layer_id == '4' ~ 'TenerifeSouth',
+                               layer_id == '5' ~ 'TenerifeTeno',
+                               layer_id == '6' ~ 'Gomera',
+                               layer_id == '7' ~ 'Hierro'))
+module_data_id2<-module_data_id %>% select(layer_name, module, size_of_module) %>% unique() 
+module_data_id2$count <- c(1)
+
+module_data_id3<- module_data_id2%>% unique()  %>% group_by(module) %>%  
+  mutate(tot_island = sum (count)) %>% arrange(desc(tot_island))
+
+# Convert module to an ordered factor and change the order according to number of islands
+module_data_id3$module<- as.factor(module_data_id3$module)
+module_data_id3$module <- fct_inorder(module_data_id3$module)
+
+#write.csv(module_data_id3, "R/Extra_analysis_results/module_data_id3_lower.csv", row.names = FALSE)
+Dist_Inter_low<-module_data_id3 %>% 
+  ggplot(aes(x=module, y= count ,fill= factor(layer_name)))+ geom_bar(stat= "identity")+ theme_classic()+ labs(y="Number of locations", x="Modules")+
+  guides(fill=guide_legend(title="Location"))+ theme(axis.text.x = element_blank(),
+                                                     axis.text.y=element_text(size=15), axis.title = element_text(size=17),
+                                                     legend.text=element_text(size=12.5),legend.title =element_text(size=14))
+
+Dist_Inter_low
 
 

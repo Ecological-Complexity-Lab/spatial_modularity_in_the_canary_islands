@@ -506,12 +506,11 @@ islands_turnover_with_distnace_empirical <- islands_turnover_with_distnace_empir
 pdf('./graphs/Islands/Modules distance decay alone_islands.pdf', 10, 6)
 islands_turnover_with_distnace_empirical %>%
   ggplot(aes(x=distance_in_km, y=turnover))+
-  geom_point(color = "indianred2")+ 
-  scale_x_continuous()+ stat_smooth(method= "lm", se=F, color = "indianred2")+
+  geom_point(color = "#FB3B1E")+ 
+  scale_x_continuous()+ stat_smooth(method= "lm", se=F, color = "#FB3B1E")+
   theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
   theme(axis.text.y=element_text(size=15))+
   labs(x="Distance in Km", y="Jaccard Similarity")+ theme_bw()+
-  stat_cor(aes(label = after_stat(rr.label)), label.x = 400, label.y = c(0.36, 0.34, 0.32, 0.30))+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
         panel.spacing = unit(0.5, "cm", data = NULL),
@@ -1352,29 +1351,56 @@ jaccard_similarity_layer_empirical_and_null_km <- read.csv("csvs/Islands/jaccard
 pdf('./graphs/Islands/M1_Modules_DD_Islands.pdf', 10, 6)
 jaccard_similarity_layer_empirical_and_null_km %>% 
   ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
-  geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ geom_smooth(method= "lm", se=F)+
-  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
-  theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
-  labs(x="Distance in Km", y="Jaccard Similarity")+ 
-  stat_cor(aes(label = after_stat(rr.label)), label.x = 400, label.y = c(0.59, 0.56, 0.53, 0.50))+
+  geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+
+  labs(x="Distance (Km)", y="Jaccard Similarity")+  
+  scale_color_manual(name = "Null Model",  labels = c("E",expression("M"[1]^P),expression("M"[1]^A),
+                                  expression("M"[1]^AP)), values = c("#FB3B1E", "#15B7BC", "#72A323", "#BE75FA" )) +
+
+  theme_classic()+ geom_smooth(method= "lm", se=F)+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
         panel.spacing = unit(0.5, "cm", data = NULL),
-        axis.text = element_text(size=14, color='black'),
-        axis.title = element_text(size=14, color='black'),
-        axis.line = element_blank()) + stat_cor(aes(label = ..p.label..), label.x = 400, label.y = c(0.76, 0.72, 0.68, 0.64))
-  
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
+        
 dev.off()
 
+
+
 #------check if its significant for islands----------------------------------------------------------------
-lm1_module = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km,
-                                            jaccard_similarity_layer_empirical_and_null_km$type=="empirical")) #in empirical
-lm2_module = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km,
-                                            jaccard_similarity_layer_empirical_and_null_km$type=="null_pollinators")) #in null pols
-lm3_module = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km,
-                                            jaccard_similarity_layer_empirical_and_null_km$type=="null_plants")) #in null plants
-lm4_module = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km,
-                                            jaccard_similarity_layer_empirical_and_null_km$type=="null_both")) #in null both
+
+## check normality
+emp<-jaccard_similarity_layer_empirical_and_null_km %>% filter(type=="empirical")
+pol<-jaccard_similarity_layer_empirical_and_null_km %>% filter(type=="null_pollinators")
+pla<-jaccard_similarity_layer_empirical_and_null_km %>% filter(type=="null_plants")
+both<-jaccard_similarity_layer_empirical_and_null_km %>% filter(type=="null_both")
+
+shapiro.test(emp$ave)
+shapiro.test(pol$ave)#not normal
+shapiro.test(pla$ave)
+shapiro.test(both$ave)#not normal
+
+max(emp$ave)
+min(emp$ave)
+
+##models
+lm1_module = lm(ave ~ mean_dist_in_km ,data=emp) #in empirical
+lm2_module = lm(ave ~ mean_dist_in_km ,data=pol) #in null pols
+lm3_module = lm(ave ~ mean_dist_in_km ,data=pla) #in null plants
+lm4_module = lm(ave ~ mean_dist_in_km ,data=both) #in null both
+
+#glm2_module = glm(ave ~ mean_dist_in_km, family= Gamma, data=pol) #in null pols
+#summary(glm2_module)
+#with(summary(glm2_module), 1 - deviance/null.deviance) #Rsquared for glm
+
+#glm4_module = glm(ave ~ mean_dist_in_km, family= Gamma, data=both) #in null pols
+#summary(glm4_module)
+#with(summary(glm4_module), 1 - deviance/null.deviance) #Rsquared for glm
+
 summary(lm1_module)
 summary(lm2_module)
 summary(lm3_module)
@@ -1583,24 +1609,26 @@ rqsuares_M1_all <- rbind(iteration_correlation_pols_M1, iteration_correlation_pl
 #rqsuares_M1_all <- read.csv("./csvs/Islands/rqsuares_M1_all.csv")
 
 
-group_color <- c(shuf_pollinators = "#BE75FA", 
-                 shuf_plants = "#15B7BC",
-                 shuf_both = "#72A323")
-
+rqsuares_M1_all$type <- factor(rqsuares_M1_all$type, levels = c("shuf_plants","shuf_pollinators","shuf_both"))
+str(rqsuares_M1_all$type)
 
 pdf('./graphs/Islands/M1_r_squares_module_DD.pdf', 10, 6)
 rqsuares_M1_all %>% 
   ggplot(aes(x = rsquared, fill = type))+ 
-  geom_density(alpha = 0.4)+ 
-  theme_classic()+ labs(x = "R squared")+
-  geom_vline(xintercept = correlation_empirical_pols$rsquared, linetype = "dashed", color = "#F47069")+
-  theme(axis.title=element_text(size=22))+
+  geom_density(alpha = 0.5)+ 
+  geom_vline(xintercept = correlation_empirical_pols$rsquared, linetype = "dashed", color = "#FB3B1E")+
+  labs(x= expression("R"^2), y="Density")+  
+  scale_fill_manual(name = "Null Model",  labels = c(expression("M"[1]^P),expression("M"[1]^A),
+                                                     expression("M"[1]^AP)), values = c("#72A323","#15B7BC", "#A44CD3" ))+
+  theme_classic()+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
         panel.spacing = unit(0.5, "cm", data = NULL),
-        axis.text = element_text(size=14, color='black'),
-        axis.title = element_text(size=14, color='black'),
-        axis.line = element_blank())+
-  scale_fill_manual(values = group_color)
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
 dev.off()
 
