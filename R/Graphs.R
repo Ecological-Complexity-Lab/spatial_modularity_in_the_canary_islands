@@ -232,7 +232,18 @@ co_occurrence_pol%>%
   ggplot(aes(x=node_id, y= n ,fill= factor(layer_name)))+ geom_bar(stat= "identity")+ theme_classic()+ labs(y="Number of islands", x="Species ID")+
   guides(fill=guide_legend(title="Island"))+ theme(axis.text.x=element_blank())
 dev.off()
-  
+
+
+
+## #---- Number of interedges  between layers
+
+co_occurrence_count <- NULL
+co_occurrence <- dryad_edgelist_complete_ids %>% filter(layer_from != layer_to) #only intra as we need just pollination interactions to change
+co_occurrence <- co_occurrence %>% select(layer_from, node_from, layer_to, node_to) %>% unique() #remove doubles created due to aggregation
+
+
+layer2_1<- co_occurrence %>% filter(layer_from==6, layer_to==7) %>% count() %>% print()#piloto
+
 
 ##--- Exploratory graphs modules
 
@@ -522,8 +533,6 @@ interactions_co_occurences_pot2 %>%
         axis.text = element_text(size=14, color='black'),
         axis.title = element_text(size=14, color='black'))
 dev.off()  
-
-
 
 
 ######## ------ Final figures manuscript (except for the map) ##########
