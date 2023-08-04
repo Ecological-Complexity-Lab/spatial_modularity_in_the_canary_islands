@@ -1042,6 +1042,7 @@ layer_metadata <- read.csv("./R/Extra_analysis_results/layers.csv",row.names = 1
 inter_extended <- read.csv("./R/Extra_analysis_results/inter_edges.csv", row.names = 1)
 intra_nonextended <- read.csv("./R/Extra_analysis_results/intra_edges.csv", row.names = 1)
 
+
 ## - Set fixed interlayer value to median of interlayer distribution
 interlayer_edges_change <- select(inter_extended, -weight) #create data frame where weight doesn't exist
 
@@ -1097,6 +1098,9 @@ dryad_multilayer_complete_fixed_output <- modularity_for_fixed(dryad_edgelist_co
 
 dryad_multilayer_complete_fixed_output <- dryad_multilayer_complete_fixed_output %>% drop_na() 
 
+#write.csv(dryad_multilayer_complete_fixed_output, "./R/Extra_analysis_results/inter_klil.csv", row.names = FALSE)
+
+
 #Plot number of modules according to interedges values
 N_modules_inter <- dryad_multilayer_complete_fixed_output %>% 
   group_by(trial_num) %>% summarise(Num_modules = max(module)) %>% rename(inter_edges = 1)
@@ -1129,6 +1133,8 @@ for (r in seq(0.1,1, by = 0.1)){
   modules_relax_rate$modules$relax_rate <- r
   relaxrate_modules <- rbind(relaxrate_modules, modules_relax_rate$modules)
 }
+
+#write.csv(relaxrate_modules, "./R/Extra_analysis_results/relax_klil.csv", row.names = FALSE)
 
 #Plot number of modules according to relax rate
 N_modules_relax <- relaxrate_modules %>% 

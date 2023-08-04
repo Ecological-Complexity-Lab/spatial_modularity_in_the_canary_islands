@@ -70,11 +70,20 @@ kable(Description, align=c(rep('c',times=7)))
 ## Number of interlayer edges across layers
 \
 \
-```{r}
 
-library(knitr)
-Description <- read_excel("Location_description.xlsx", sheet = 3)
-kable(Description, align=c(rep('c',times=8)))
+```{r, message=FALSE}
+message("
+
+|------------|----------|----------|-----------|-----------|-----------|------------|------------|
+|   **1**    |     -    |          |           |           |           |            |            |
+|   **2**    |    15    |    -     |           |           |           |            |            |
+|   **3**    |    9     |    17    |    -      |           |           |            |            |
+|   **4**    |    12    |    19    |    30     |    -      |           |            |            |
+|   **5**    |    10    |    14    |    27     |    36     |    -      |            |            |
+|   **6**    |    10    |    20    |    27     |    33     |    27     |     -      |            |
+|   **7**    |    4     |    11    |    19     |    22     |    26     |     27     |     -      |
+| **Layers** |  **1**   |  **2**   |  **3**    |  **4**    |  **5**    |  ** 6**    |   **7**    |
+")
 
 ```
 
@@ -102,9 +111,11 @@ intra_inter_data_for_distibution %>%
 \
 \
 
-# Sensitivity analysis: Change interedges manually vs. using relax rate 
+# Sensitivity analysis: Change interedges manually vs. using relax rate  {.tabset}
 \
 \
+
+## Empirical data
 ```{r}
 
 #Inter
@@ -134,6 +145,44 @@ N_modules_relax_empirical<- ggplot(N_modules_relax, aes(x = relax_rate, y = Num_
 #Plot together  (ver si hacer grafico de distribucion)
 plot_grid(N_modules_inter_empirical,
           N_modules_relax_empirical, 
+          nrow = 2)
+
+```
+
+## Example Klil's code
+\
+\
+
+```{r}
+
+#Inter
+dryad_multilayer_complete_fixed_output <- read.csv("inter_klil.csv")
+
+#Plot number of modules according to interedges values
+N_modules_inter <- dryad_multilayer_complete_fixed_output %>% 
+  group_by(trial_num) %>% summarise(Num_modules = max(module)) %>% rename(inter_edges = 1)
+
+N_modules_inter_Klil<- ggplot(N_modules_inter, aes(x = inter_edges, y = Num_modules)) +  geom_bar(stat= "identity")+
+  theme_classic() +  scale_x_continuous(breaks=seq(0.1,1,0.1))+ scale_y_continuous(breaks=seq(0,35,5))+
+  labs(x='Interedges', y="Number of modules")+ theme(axis.text.x = element_text(size=13),
+                                                     axis.text.y=element_text(size=13), axis.title = element_text(size=15))
+
+#Relax rate
+relaxrate_modules <- read.csv("relax_klil.csv")
+
+#Plot number of modules according to relax rate
+N_modules_relax <- relaxrate_modules %>% 
+  group_by(relax_rate) %>% summarise(Num_modules = max(module)) 
+
+N_modules_relax_Klil<- ggplot(N_modules_relax, aes(x = relax_rate, y = Num_modules)) +  geom_bar(stat= "identity")+
+  theme_classic() +  scale_x_continuous(breaks=seq(0.1,1,0.1))+scale_y_continuous(limits= c(0,35),breaks=seq(0,35,5))+
+  labs(x='Relax rate', y="Number of modules")+ theme(axis.text.x = element_text(size=13),
+                                                     axis.text.y=element_text(size=13), axis.title = element_text(size=15))
+
+
+#Plot together  (ver si hacer grafico de distribucion)
+plot_grid(N_modules_inter_Klil,
+          N_modules_relax_Klil, 
           nrow = 2)
 
 ```
