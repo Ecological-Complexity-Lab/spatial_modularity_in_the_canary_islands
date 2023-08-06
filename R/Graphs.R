@@ -241,8 +241,27 @@ co_occurrence_count <- NULL
 co_occurrence <- dryad_edgelist_complete_ids %>% filter(layer_from != layer_to) #only intra as we need just pollination interactions to change
 co_occurrence <- co_occurrence %>% select(layer_from, node_from, layer_to, node_to) %>% unique() #remove doubles created due to aggregation
 
+#layer2_1<- co_occurrence %>% filter(layer_from==6, layer_to==7) %>% count() %>% print()#piloto
 
-layer2_1<- co_occurrence %>% filter(layer_from==6, layer_to==7) %>% count() %>% print()#piloto
+
+co_occurrence <- read_excel("./R/Extra_analysis_results/Location_description.xlsx", sheet = "Co_occurrence between layers")
+co_occurrence$x<-as.factor(co_occurrence$x)
+
+
+#Plot co-occurrence between layers
+co_occurrence %>% ggplot(aes(x,y, fill = z)) + geom_tile()+
+labs(x= "Layer", y="Layer")+ 
+  scale_fill_gradient(name = "No. Interedges", low="green", high="red", limits=c(0, 40))+ 
+  geom_text(aes(label = z), size = 2)+
+  theme_classic()+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
 
 
 ##--- Exploratory graphs modules
