@@ -26,6 +26,7 @@ library(ggmap)
 library(ggraph)
 library(ggpubr)
 library(reshape2)
+library(extRC)
 
 
 
@@ -66,14 +67,11 @@ dryad_intralayer_islands_grouped <- dryad_intralayer_islands %>%
   group_by(layer_from, node_from, layer_to, node_to) %>% 
   summarise(sum_weight = sum(weight)) #turn sums of sites to sum of island
 
-#-- Total number of interactions per island
-#Tot_int<- dryad_intralayer_islands_grouped %>% 
-#  group_by(layer_from) %>% summarise(T_int = sum(sum_weight)) 
-
 ## ----dryad intralayer interlayer both ways-------------------------------------------------------------------------------------
 intralayer_inverted <- tibble(values= dryad_intralayer_islands$layer_to, dryad_intralayer_islands$node_to, dryad_intralayer_islands$layer_from, 
                               dryad_intralayer_islands$node_from, dryad_intralayer_islands$weight) #create an inverted copy for directed intralayers
 colnames(intralayer_inverted) <- c("layer_from", "node_from", "layer_to", "node_to", "weight")
+
 
 ## ---- normalize intralayer weights--------------------------------------------------------------------------
 #plants in from
@@ -90,57 +88,60 @@ tot_pol <- intralayer_inverted %>%
 intralayer_weighted_inverted <- intralayer_inverted %>% left_join(tot_pol) %>% mutate(rel_weight=weight/tot) %>% 
   select(-weight,-tot) %>% dplyr::rename(weight=rel_weight) 
 
-## ----interlayers as islands -----------------------------------------------------------------------
-interlayers_new <- read.csv("./csvs/interlayers_new.csv")
+### Not directed
+#tot_sp<- dryad_intralayer_islands_grouped %>% 
+ # group_by(layer_from) %>% 
+#  dplyr::summarise(tot=sum(sum_weight))
+#intralayer_weighted <- dryad_intralayer_islands_grouped %>% left_join(tot_sp) %>% mutate(rel_weight=sum_weight/tot)
 
-interlayers_new_islands <- interlayers_new
+#Create intraedgelist
+edgelist_intralayers_both <- bind_rows(intralayer_weighted, intralayer_weighted_inverted) #combine inverted and non inverted versions of intra
 
-interlayers_new_islands$layer_from[interlayers_new_islands$layer_from %in% old_names] <- 
-  new_names[match(interlayers_new_islands$layer_from, old_names)] #change to reflect layer = island
 
-interlayers_new_islands$layer_to[interlayers_new_islands$layer_to %in% old_names] <- 
-  new_names[match(interlayers_new_islands$layer_to, old_names)] #change to reflect layer = island
+##---- create interedges according to jaccard similarity between partners --------------------------------------------------------
+edgelist_intralayers_both <- bind_rows(intralayer_weighted, intralayer_weighted_inverted) #combine inverted and non inverted versions of intra
 
-interlayers_new_islands <- interlayers_new_islands %>% unique()
+# keep only species that occur in 2 or more layers
 
-##---- create weight for interlayer edges --------------------------------------------------------
-distances <- read.csv("./csvs/distances_file.csv")
+prueba2<-edgelist_intralayers_both %>% filter()
+co_occurrence<- edgelist_intralayers_both %>% 
+  group_by(node_to) %>%
+  mutate(num_layers_from=n_distinct(layer_from)) %>%
+  filter(num_layers_from>=2)
 
-distances$layer_from[distances$layer_from %in% old_names] <- 
-  new_names[match(distances$layer_from, old_names)] #change to reflect layer = island
-
-distances$layer_to[distances$layer_to %in% old_names] <- 
-  new_names[match(distances$layer_to, old_names)] #change to reflect layer = island
-
-distances_normalized <- distances %>% filter(layer_from != layer_to) %>% #delete distances between sites in the same island
-  group_by(layer_to, layer_from) %>% #group will contain 4 sites- site 1 and 1 of layer from and site 1 and 2 or layer to
-  summarise(mean_distance = mean(distance_in_meters)) %>%unique() #use an average distance of the 4 sites in 2 different islands to determine the distance between the islands
-
-distances_normalized <- distances_normalized[c("layer_from", "layer_to", "mean_distance")]
-
-shortest_distance <- min(distances_normalized$mean_distance) #the shortest distance between islands
-
-interlayer_weight <- function(d){
-  #receives distance and normalizes it
-  weight <- (1/log(d))/(1/log(shortest_distance))
-  return(weight)
+# a for loop that calculates all the interlayer edges based on jaccard index
+interlayers_with_weights_islands <- NULL
+for (i in unique(co_occurrence$node_from)) {
+  print(i)
+  partners_sp <- 
+    co_occurrence %>%
+    filter(node_from==i) %>%
+    group_by(node_to) %>%
+    select(c(node_to,layer_from)) %>%
+    distinct() %>% 
+    mutate(present=1) %>%
+    spread(node_to, present, fill = 0) %>%
+    column_to_rownames("layer_from")
+  
+  #Put and if ot stop (if partners_sp has more than 1 row then continue)
+  if (row_number(partners_sp)>1){
+    beta_layers_sp <- 1-as.matrix(vegdist(partners_sp, "jaccard"))
+    beta_layers_sp_m <- melt(as.matrix(extRC::tril(beta_layers_sp)))
+    inter_fid <- beta_layers_sp_m  %>%
+      tibble() %>%
+      filter(value!=0) %>%
+      subset(Var1 != Var2) %>%
+      mutate(node_from=i, node_to =i) %>%
+      select(c(node_from,layer_from=Var1, layer_to=Var2,node_to, weight=value))
+  }
+  
+  interlayers_with_weights_islands <- rbind(interlayers_with_weights_islands,inter_fid)
 }
 
-distances_with_weights <- distances_normalized %>% 
-  mutate(weight = interlayer_weight(mean_distance)) %>% #add weight using the function
-  subset(select = -mean_distance)
 
-#write.csv(distances_with_weights, "./csvs/Islands/distances_with_weights_islands_as_layers.csv", row.names = FALSE)
-
-interlayers_with_weights_islands <- interlayers_new_islands %>% inner_join(distances_with_weights, 
-                                                           by = c("layer_from", "layer_to")) %>% unique()
-
-#write.csv(interlayers_with_weights_islands, "./csvs/Islands/interlayers_with_weights_islands.csv", row.names = FALSE)
 
 
 ## ----multilayer_extended_final--------------------------------------------------------------------------------------
-edgelist_intralayers_both <- bind_rows(intralayer_weighted, intralayer_weighted_inverted) #combine inverted and non inverted versions of intra
-
 dryad_edgelist_complete <- bind_rows(edgelist_intralayers_both, interlayers_with_weights_islands) #combine weighted version of intra with inter
 
 ## ----node_metadata--------------------------------------------------------------------------------------------------                                            
@@ -183,26 +184,29 @@ dryad_edgelist_complete_ids <-
 
 #write.csv(dryad_edgelist_complete_ids, "./csvs/Islands/dryad_edgelist_complete_ids_islands.csv", row.names = FALSE)
 
-#---- basic analysis for richness in island --------------------------------------------------------------------------------
-tot_plant_ids <- tot_plant %>% inner_join(layer_metadata, by= c("layer_from" = "layer_name")) %>%
-  subset(select = -layer_from) %>% count(layer_id)
-tot_plant_ids$type <- "plant"
+#Plot links distribution
+inter_extended<- dryad_edgelist_complete_ids %>% filter(layer_from!=layer_to)
+#new df with inter and intra in same df with grouping to create distribution
+intra_inter_data_for_distibution <- data.frame(values= c(intralayer_weighted$weight, 
+                                                         intralayer_weighted_inverted$weight, 
+                                                         inter_extended$weight),
+                                               group= c(rep("intra plants", nrow(intralayer_weighted)), 
+                                                        rep("intra pollinators", nrow(intralayer_weighted_inverted)),
+                                                        rep("inter", nrow(inter_extended))))
 
-tot_pol_ids <- tot_pol %>% inner_join(layer_metadata, by= c("layer_from" = "layer_name")) %>%
-  subset(select = -layer_from) %>% count(layer_id)
-tot_pol_ids$type <- "pollinator"
+#write.csv(intra_inter_data_for_distibution, "./csvs/Islands/intra_inter_data_for_distibution_islands_as_layers_jaccard.csv",  row.names = FALSE)
 
-richness_in_islands <- rbind(tot_plant_ids, tot_pol_ids)
-
-richness_in_islands %>%
-  ggplot(aes(x= layer_id, y=n, fill=type))+ geom_bar(stat="identity", position= position_dodge2(preserve = "single"))+ 
-  scale_x_continuous(breaks=seq(1,7,1))+ labs(x= "Island ID", y= "Number of Species")+ theme_bw()+
+pdf('./graphs/Islands/intra and interlinks_islands_jaccard.pdf', 10, 6)
+intra_inter_data_for_distibution %>%
+  ggplot(aes(x=values, fill=group))+ geom_histogram(position= "identity", alpha= 0.6, color= "black")+ theme_bw()+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
         panel.spacing = unit(0.5, "cm", data = NULL),
         axis.text = element_text(size=14, color='black'),
         axis.title = element_text(size=14, color='black'),
         axis.line = element_blank())
+dev.off()
+
 
 ## ----multilayer_class-----------------------------------------------------------------------------------------------
 # Input: An extended edge list.
@@ -233,161 +237,13 @@ modules_dryad_multilayer <- modified_multi(dryad_multilayer,
                                            seed = 497294, 
                                            temporal_network = F)
 
-#general info about modules
-num_of_nodes_in_module <- modules_dryad_multilayer$modules %>% count(module) #num of nodes in module. biggest module has 44 nodes and smallest has 2
-local_modules <- modules_dryad_multilayer$modules %>% select(module, layer_id)
-num_of_layers_in_module <- local_modules %>% distinct() %>% count(module) #num of layers a module is found in
-mean_num_of_layers_in_module <- mean(num_of_layers_in_module$n) #average number of layers (islands) a module is found in is 3.193
+modules<-modules_dryad_multilayer$modules
 
-modules_in_network <- modules_dryad_multilayer$modules
-#write.csv(modules_in_network, "./csvs/Islands/modules_in_network_islands_as_layers.csv",  row.names = FALSE)
-
-#layer distribution in modulesn
-num_of_layers_in_module <- num_of_layers_in_module %>% rename("number_of_layers" = "n")
-num_of_modules_with_layers <- num_of_layers_in_module %>% group_by(number_of_layers) %>% count()
-
-pdf('./graphs/modularity_analysis/number_of_layers_in_module.pdf', 10, 6)
-num_of_modules_with_layers %>%
-  ggplot(aes(x = number_of_layers, y = n))+ geom_bar(stat="identity")+ #stacked
-  theme_classic()+ scale_x_continuous(breaks=seq(1,14,1))+ labs(x= "Number of Layers", y= "Number of Modules")+
-  theme(panel.grid = element_blank(),
-        panel.border = element_rect(color = "black",fill = NA,size = 1),
-        panel.spacing = unit(0.5, "cm", data = NULL),
-        axis.text = element_text(size=12, color='black'),
-        axis.title = element_text(size=14, color='black'),
-        axis.line = element_blank())
-dev.off()
-
-
-
-
-
-
-#---- interlayer and intralayer distribution-----------------------------------------------------------------------------------------------------
-#interlayer distribution
-inter_weight_distribution <- inter_extended %>% arrange(weight) %>% select(weight) 
-
-#intralayer distribution
-intra_weight_distribution <- intra_nonextended %>% arrange(weight) %>% select(weight) 
-
-#inter and intra non directed together
-inter_intra_non_directed <- data.frame(values= c(intra_nonextended$weight, inter_extended$weight), 
-                                       group= c(rep("intra", nrow(intra_nonextended)), rep("inter", nrow(inter_extended))))
-
-
-inter_intra_non_directed %>%
-  ggplot(aes(x=values, fill=group))+ geom_histogram(position= "identity", alpha= 0.6, color= "black")+ theme_bw()+
-  theme(panel.grid = element_blank(),
-        panel.border = element_rect(color = "black",fill = NA,size = 1),
-        panel.spacing = unit(0.5, "cm", data = NULL),
-        axis.text = element_text(size=14, color='black'),
-        axis.title = element_text(size=14, color='black'),
-        axis.line = element_blank())
-
-#directed intralayer weights distribution
-directed_weight_distribution_plants <- intralayer_weighted %>% arrange(weight) %>% select(weight)
-
-mean(unlist(directed_weight_distribution_plants))
-median(unlist(directed_weight_distribution_plants))
-
-directed_weight_distribution_pols <- intralayer_weighted_inverted %>% arrange(weight) %>% select(weight)
-
-mean(unlist(directed_weight_distribution_pols))
-median(unlist(directed_weight_distribution_pols))
-
-# new df with inter and intra in same df with grouping to create distribution
-intra_inter_data_for_distibution <- data.frame(values= c(intralayer_weighted$weight, 
-                                                         intralayer_weighted_inverted$weight, 
-                                                         inter_extended$weight),
-                                               group= c(rep("intra plants", nrow(intralayer_weighted)), 
-                                                        rep("intra pollinators", nrow(intralayer_weighted_inverted)),
-                                                        rep("inter", nrow(inter_extended))))
-
-#write.csv(intra_inter_data_for_distibution, "./csvs/Islands/intra_inter_data_for_distibution_islands_as_layers.csv",  row.names = FALSE)
-
-pdf('./graphs/Islands/intra and interlinks_islands.pdf', 10, 6)
-intra_inter_data_for_distibution %>%
-  ggplot(aes(x=values, fill=group))+ geom_histogram(position= "identity", alpha= 0.6, color= "black")+ theme_bw()+
-  theme(panel.grid = element_blank(),
-        panel.border = element_rect(color = "black",fill = NA,size = 1),
-        panel.spacing = unit(0.5, "cm", data = NULL),
-        axis.text = element_text(size=14, color='black'),
-        axis.title = element_text(size=14, color='black'),
-        axis.line = element_blank())
-dev.off()
-
-
-
-
-# ---- DISTANCE DECAY IN SPECIES- EMPIRICAL DATA ------------------------------------------------------------------------
-#distances data
-distances_with_ids <- distances_normalized %>% left_join(layer_metadata, by= c("layer_from"="layer_name")) %>% 
-  left_join(layer_metadata, by= c("layer_to"="layer_name")) %>% #add correct id to layer name
-  select(mean_distance, layer_id.x, layer_id.y) #discard actual names of layers
-names(distances_with_ids)[3] <- "layer_from" 
-names(distances_with_ids)[4] <- "layer_to"
-names(distances_with_ids)[1] <- "layer_name_to"
-
-distances_with_ids <- distances_with_ids[c("layer_from", "layer_to", "mean_distance")]
-
-#write.csv(distances_with_ids, "./csvs/Islands/distances_with_ids_islands_as_layers.csv", row.names = FALSE)
-distances_with_ids <- read.csv("./csvs/Islands/distances_with_ids_islands_as_layers.csv")
-
-# classic distance decay
-physical_nodes <- read.csv("./csvs/Islands/physical_nodes_islands.csv")
-layer_metadata <- read.csv("./csvs/Islands/layer_metadata_islands.csv")
-
-all_species_all_layers <- rbind(tot_plant, tot_pol) %>% inner_join(physical_nodes, by= c("node_from" = "species")) %>% 
-  inner_join(layer_metadata, by= c("layer_from" = "layer_name")) %>% subset(select = -c(layer_from, node_from, tot, type)) 
-#change node names to ids and layer names to ids and remove unwanted columns
-
-classic_layers_turnover <- NULL
-
-for (i in (1:6)){
-  for (j in ((i+1):7)){
-    physical_nodes_in_layer_from <- filter(all_species_all_layers, layer_id == i) %>% select(node_id) %>% unlist()
-    physical_nodes_in_layer_to <- filter(all_species_all_layers, (layer_id == j)) %>% select(node_id) %>% unlist()
-    #take all nodes in layer_from and all nodes in layer_to to check turnover
-    int_both <- intersect(physical_nodes_in_layer_from, physical_nodes_in_layer_to) #how many nodes are found in both layers
-    uni_both <- union(physical_nodes_in_layer_from, physical_nodes_in_layer_to)
-    turnover <- length(int_both)/length(uni_both)
-    classic_layers_turnover <- rbind(classic_layers_turnover, tibble(layer_from= i, layer_to= j, turnover= turnover))
-  }
-}
-
-classic_layers_turnover <- classic_layers_turnover %>% unique()
-
-classic_layers_turnover_with_distances <- right_join(classic_layers_turnover, distances_with_ids, by= c("layer_from", "layer_to"))
-classic_layers_turnover_with_distances <- na.omit(classic_layers_turnover_with_distances) #remove NA and delete layer name
-
-#write.csv(classic_layers_turnover_with_distances, "./csvs/Islands/classic_layers_turnover_with_distances_islands_as_layers.csv")
-#classic_layers_turnover_with_distances <- read.csv("./csvs/Islands/classic_layers_turnover_with_distances_islands_as_layers.csv")
-
-classic_layers_turnover_with_distances <- classic_layers_turnover_with_distances %>% 
-  mutate(distance_in_km=mean_distance/1000) #turn to km
-
-#distance decay in species empirical alone
-pdf('./graphs/Islands/species distance decay alone_islands.pdf', 10, 6)
-classic_layers_turnover_with_distances %>%
-  ggplot(aes(x=distance_in_km, y=turnover))+ geom_point(color = "indianred2")+ theme_classic()+ 
-  stat_smooth(method= "lm", se=F, color = "indianred2")+
-  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
-  theme(axis.text.y=element_text(size=15))+
-  labs(x="Distance in Km", y="Jaccard Similarity")+
-  stat_cor(aes(label = after_stat(rr.label)), label.x = 400, label.y = c(0.36, 0.34, 0.32, 0.30))+
-  theme(panel.grid = element_blank(),
-        panel.border = element_rect(color = "black",fill = NA,size = 1),
-        panel.spacing = unit(0.5, "cm", data = NULL),
-        axis.text = element_text(size=14, color='black'),
-        axis.title = element_text(size=14, color='black'),
-        axis.line = element_blank())
-dev.off()
-
+#check if same modules are integrated by the same species across layers
 
 # ---- DISTANCE DECAY IN MODULES - EMPIRICAL DATA ------------------------------------------------------------------------
-
 #---- jaccard on islands---------------------------------------------------------------------------------------------------
-modules<- read.csv("./csvs/Islands/modules_in_network_islands_as_layers.csv")
+#modules<- read.csv("./csvs/Islands/modules_in_network_islands_as_layers.csv")
 
 #write.csv(modules_in_network, "./csvs/Islands/modules_in_network_islands_as_layers.csv")
 #similarity check 2 furthest apart
@@ -468,7 +324,7 @@ modules_with_lat_lon <- module_data_with_loc %>% select(layer_id, module, lat, L
 modules_with_lat_lon$count <- c(1)
 
 #write.csv(modules_with_lat_lon, "csvs/Islands/modules_with_lat_lon_islands_as_layers.csv", row.names = FALSE)
-modules_with_lat_lon <- read.csv("csvs/Islands/modules_with_lat_lon_islands_as_layers.csv")
+#modules_with_lat_lon <- read.csv("csvs/Islands/modules_with_lat_lon_islands_as_layers.csv")
 
 #version with # of modules in layers
 edge_list_by_islands_modules <- edge_list_with_distances
@@ -519,7 +375,11 @@ islands_turnover_with_distnace_empirical %>%
         axis.line = element_blank())
 dev.off()
 
-
+#model
+##models
+shapiro.test(islands_turnover_with_distnace_empirical$turnover)#normal
+lm1_module = lm(turnover ~ distance_in_km ,data=islands_turnover_with_distnace_empirical) #in empirical
+summary(lm1_module)
 
 # ---- NULL MODEL M1: SHUFFLING SPECIES BETWEEN ISLANDS ------------------------------------------------------------------------
 
