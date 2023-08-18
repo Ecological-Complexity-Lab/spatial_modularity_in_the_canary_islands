@@ -82,16 +82,8 @@ tot_pol <- intralayer_inverted %>%
 intralayer_weighted_inverted <- intralayer_inverted %>% left_join(tot_pol) %>% mutate(rel_weight=weight/tot) %>% 
   select(-weight,-tot) %>% dplyr::rename(weight=rel_weight) 
 
-### Not directed (if we decided to keep undirected - i dont think so)
-#tot_sp<- dryad_intralayer_islands_grouped %>% 
-# group_by(layer_from) %>% 
-#  dplyr::summarise(tot=sum(sum_weight))
-#intralayer_weighted_tot <- dryad_intralayer_islands_grouped %>% left_join(tot_sp) %>% mutate(rel_weight=sum_weight/tot)
-
-
 #Create intraedgelist
 edgelist_intralayers_both <- bind_rows(intralayer_weighted, intralayer_weighted_inverted) #combine inverted and non inverted versions of intra
-
 
 ##---- create interedges according to jaccard similarity between partners --------------------------------------------------------
 # keep only species that occur in 2 or more layers
@@ -102,6 +94,7 @@ co_occurrence<- edgelist_intralayers_both%>%
 
 # a for loop that calculates all the interlayer edges based on jaccard index
 interlayers_with_weights_islands <- NULL
+
 
 for (i in unique(co_occurrence$node_from)) {
   print(i)
@@ -152,8 +145,9 @@ physical_nodes <- tibble(node_id=1:S, #1 till the last species
                          species=c(plants,pollinators)) #add species from plants and pollinators in accordance
 layer_metadata <- tibble(layer_id=c(1:7), layer_name=island_names)  #give num to each layer
 
-#write.csv(physical_nodes, "./csvs/Islands/physical_nodes_islands.csv", row.names = FALSE)
-#write.csv(layer_metadata, "./csvs/Islands/layer_metadata_islands.csv", row.names = FALSE)
+
+#write.csv(physical_nodes, "./csvs/Islands/Jac/physical_nodes_islands.csv", row.names = FALSE)
+#write.csv(layer_metadata, "./csvs/Islands/Jac/layer_metadata_islands.csv", row.names = FALSE)
 
 
 # Replace the node names with node_ids
@@ -228,7 +222,7 @@ co_occurrence_species<- dryad_edgelist_complete_ids %>% filter(layer_from == lay
 co_occurrence_species<- left_join(co_occurrence_species,physical_nodes, by="node_id") %>% select(-species) %>% 
   group_by(layer_id,node_id,type,layer_name) %>% unique() %>% count()
 
-#write.csv(co_occurrence_species, "./Results/co_occurrence_species.csv", row.names = FALSE)
+#write.csv(co_occurrence_species, "./Results/Jac/co_occurrence_species.csv", row.names = FALSE)
 
 ## -- Comparision between species co-occurrence and number of interedges
 
@@ -255,7 +249,7 @@ interedges_comp<-cbind(pot_interedge,real_interedge, col=1)
 interedges_comp2<- pivot_longer(interedges_comp, names_to = "group", values_to = "Count", cols = -col)
 
 pdf('./graphs/Islands/Jac/realized_interedges.pdf', 10, 6)
-Pot_inter_edges<- interedges_comp2%>%
+interedges_comp2%>%
   ggplot(aes(x=group, y= Count, fill=group))+ geom_bar(stat='identity', alpha= 0.6, color= "black")+ theme_bw()+
   scale_y_continuous(limits = c(0, 500), breaks=seq(0,500,50)) +
   theme(panel.grid = element_blank(),
@@ -295,113 +289,35 @@ dev.off()
 
 
 
-## #---- Number of interedges  between layers
-
-co_occurrence_count <- NULL
-co_occurrence <- dryad_edgelist_complete_ids %>% filter(layer_from != layer_to) #only intra as we need just pollination interactions to change
-co_occurrence <- co_occurrence %>% select(layer_from, node_from, layer_to, node_to) %>% unique() #remove doubles created due to aggregation
-
-#layer2_1<- co_occurrence %>% filter(layer_from==6, layer_to==7) %>% count() %>% print()#piloto
-
-
-co_occurrence <- read_excel("./R/Extra_analysis_results/Location_description.xlsx", sheet = "Co_occurrence between layers")
-co_occurrence$x<-as.factor(co_occurrence$x)
-
-
-#Plot co-occurrence between layers
-co_occurrence %>% ggplot(aes(x,y, fill = z)) + geom_tile()+
-labs(x= "Layer", y="Layer")+ 
-  scale_fill_gradient(name = "No. Interedges", low="green", high="red", limits=c(0, 40))+ 
-  geom_text(aes(label = z), size = 2)+
-  theme_classic()+
-  theme(panel.grid = element_blank(),
-        panel.border = element_rect(color = "black",fill = NA,size = 1),
-        panel.spacing = unit(0.5, "cm", data = NULL),
-        axis.text = element_text(size=15, color='black'),
-        axis.title = element_text(size=17, color='black'),
-        legend.text.align = 0,
-        legend.title =  element_text(size = 13, color = "black"),
-        legend.text = element_text(size = 11))
-
-
 ##--- Exploratory graphs modules
 
-##----upload data frame islands -------
-modules_dryad_multilayer <- read.csv("./csvs/Islands/Jac/modules_in_network_islands_as_layers.csv") 
+##----upload data frame islands  -------
+modules_dryad_multilayer <- read.csv("./csvs/Islands/Jac/modules_in_network_islands_as_layers.csv",row.names = 1) 
 
-#general info about modules
-num_of_nodes_in_module <- modules_dryad_multilayer %>% count(module) #num of nodes in module. biggest module has 44 nodes and smallest has 2
-local_modules <- modules_dryad_multilayer %>% select(module, layer_id)
-num_of_layers_in_module <- local_modules %>% distinct() %>% count(module) #num of layers a module is found in
-mean_num_of_layers_in_module <- mean(num_of_layers_in_module$n) #average number of layers (islands) a module is found in is 3.193
+##-- Check if modules are integrated by the same species across layers
+same_species_mod<-modules_dryad_multilayer  %>% select(-flow,-species) %>% 
+  group_by(module) %>% distinct(node_id) %>% count() #all modules have two or more different species
 
-#number of module which are found in x islands
-modules_with_lat_lon <- read.csv("csvs/Islands/Jac/modules_with_lat_lon_islands_as_layers.csv") 
+df<-data.frame(Group= c("Self-species per module","Multi-species per module"),
+               Count = c(0,30))
 
-modules_in_i_islands <- NULL
-for (i in 1:7){
-  modules_for_similarity_in_i_islands_num <- modules_with_lat_lon %>% select(module, layer_id) %>%
-    unique() %>% group_by(module) %>% filter(n()==i) %>% select(module) %>% unique() #check which modules occur in i or more layers
-  modules_for_similarity_in_i_islands <- modules_with_lat_lon %>%
-    filter(module %in% modules_for_similarity_in_i_islands_num$module) %>% count(module)#only save the modules that are found in i or more layers
-  modules_in_i_islands <- rbind(modules_in_i_islands, tibble(module= modules_for_similarity_in_i_islands$module, i=i))
-}
-
-num_of_modules_in_i_islands <- modules_in_i_islands %>% count(i)
-num_of_modules_in_i_islands %>% ggplot(aes(x=i, y=n))+geom_bar(stat="identity")+theme_classic()+
-  scale_x_continuous(breaks=seq(1,7,1))+ 
-  labs(x="Number of Spatial Locations", y="Number of Modules")
-
-#number of modules found in each island with names
-modules_with_lat_lon$layer_id<- as.character(modules_with_lat_lon$layer_id)
-
-modules_with_lat_lon_id <- modules_with_lat_lon %>% 
-  mutate(layer_name= case_when(layer_id == '1' ~ 'WesternSahara',
-                                layer_id == '2' ~ 'Fuerteventura',
-                                layer_id == '3' ~ 'GranCanaria',
-                                layer_id == '4' ~ 'TenerifeSouth',
-                                layer_id == '5' ~ 'TenerifeTeno',
-                                layer_id == '6' ~ 'Gomera',
-                                layer_id == '7' ~ 'Hierro'))
-
-modules_with_lat_lon_id <- modules_with_lat_lon_id %>% unique() #delete doubles caused by layers turning to islands
-
-modules_per_island <- modules_with_lat_lon_id %>% group_by(layer_name) %>% count() #number of modules found per island
-
-modules_per_island %>% ggplot(aes(x=layer_name, y=n))+geom_bar(stat="identity")+theme_classic()+
-  scale_x_discrete()+ 
-  labs(x="Island Name", y="Number of Modules in Island")+ 
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.55, hjust = 0.4))
-
-
-#how many islands are within a module
-islands_in_modules<-modules_with_lat_lon_id %>% 
-  ggplot(aes(x=module, y= count ,fill= factor(layer_name)))+ geom_bar(stat= "identity")+ 
-  scale_x_continuous(breaks=seq(1,88,5))+ labs(y="Number of Physical Nodes", x="Module Number")+
-  guides(fill=guide_legend(title="Layer\nNumber"))+ theme_bw()+
+pdf('./graphs/Islands/Jac/Modules_self-species.pdf', 10, 6)
+df%>%
+  ggplot(aes(x=Group, y= Count, fill=Group))+ geom_bar(stat='identity', alpha= 0.6, color= "black")+ theme_bw()+
+  scale_y_continuous(limits = c(0, 50), breaks=seq(0,50,10)) +
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
         panel.spacing = unit(0.5, "cm", data = NULL),
         axis.text = element_text(size=14, color='black'),
-        axis.title = element_text(size=14, color='black'),
-        axis.line = element_blank())
+        axis.title = element_text(size=14, color='black'))
+dev.off()  
 
-modules_in_islands <- modules_with_lat_lon_id %>% 
-  ggplot(aes(x=layer_name, y= module))+ geom_bar(stat= "identity")+ 
-  scale_x_continuous(breaks=seq(1,7,5))+ labs(y="Number of Physical Nodes", x="Module Number")+
-  guides(fill=guide_legend(title="Layer\nNumber"))+ theme_bw()+
-  theme(panel.grid = element_blank(),
-        panel.border = element_rect(color = "black",fill = NA,size = 1),
-        panel.spacing = unit(0.5, "cm", data = NULL),
-        axis.text = element_text(size=14, color='black'),
-        axis.title = element_text(size=14, color='black'),
-        axis.line = element_blank())
 
 
 #-----------Final Plots -------------
 
 #Distribution of modules in islands
-#modules_with_lat_lon <- read.csv("csvs/Islands/modules_with_lat_lon_islands_as_layers.csv") 
+#modules_with_lat_lon <- read.csv("csvs/Islands/Jac/modules_with_lat_lon_islands_as_layers.csv") 
 
 modules_with_lat_lon$layer_id<- as.character(modules_with_lat_lon$layer_id)
 
@@ -421,17 +337,13 @@ modules_with_lat_lon_id <- modules_with_lat_lon_id %>% unique()  %>% group_by(mo
 modules_with_lat_lon_id$module<- as.factor(modules_with_lat_lon_id$module)
 modules_with_lat_lon_id$module <- fct_inorder(modules_with_lat_lon_id$module)
 
-
-
-pdf('./graphs/Islands/Distribution_modules_islands.pdf', 10, 6)
+pdf('./graphs/Islands/Jac/Distribution_modules_islands.pdf', 10, 6)
 modules_with_lat_lon_id %>% 
   ggplot(aes(x=module, y= count ,fill= factor(layer_name)))+ geom_bar(stat= "identity")+ theme_classic()+ labs(y="Number of locations", x="Modules")+
   guides(fill=guide_legend(title="Location"))+ theme(axis.text.x = element_blank(),
                                                    axis.text.y=element_text(size=15), axis.title = element_text(size=17),
                                                    legend.text=element_text(size=12.5),legend.title =element_text(size=14))
 dev.off()
-
-
 
 
 ### ---Module size distribution
@@ -451,7 +363,7 @@ for(i in (1:nrow(modules_count))){
 
 
 #distribution by species and proportion
-pdf('./graphs/modularity_analysis/proportion_species_in_modules.pdf', 10, 6)
+pdf('./graphs/modularity_analysis/proportion_species_in_modules_Jac.pdf', 10, 6)
 modules_count %>% ggplot(aes(x=as.numeric(module), y=as.numeric(n), fill= type))+
   geom_bar(stat="identity", position= position_dodge2(preserve = "single"))+ theme_classic()+
   scale_x_continuous(breaks=seq(1,88,2))+ labs(x= "Module Number", y= "Proportion")+
@@ -467,37 +379,13 @@ dev.off()
 library(plotrix)
 module_sizes <- modules_dryad_multilayer %>% count(module)
 min(module_sizes$n) #2 species
-max(module_sizes$n) #44 species
-mean(module_sizes$n) #5.56 sp
-std.error(module_sizes$n)#1 sp
-sd(module_sizes$n)
-
-###-- Plot modules in x islands and size
-modules_in_i <- NULL
-for (i in 1:max(modules_dryad_multilayer$module)){
-  modules_for_similarity_in_i_num <- modules_dryad_multilayer %>% select(module, layer_id) %>%
-    unique() %>% group_by(module) %>% filter(n()==i) %>% select(module) %>% unique() #check which modules occur in i or more layers
-  modules_for_similarity_in_i <- modules_dryad_multilayer %>%
-    filter(module %in% modules_for_similarity_in_i_num$module) %>% count(module)#only save the modules that are found in i or more layers
-  modules_in_i <- rbind(modules_in_i, tibble(module= modules_for_similarity_in_i$module, i=i))
-}
-
-num_of_modules_in_i <- modules_in_i %>% count(i)
-
-layers_and_sizes <- right_join(modules_in_i, module_sizes, by= c("module"="module")) #combine number of modules with size of module
-
-#pdf('./graphs/modularity_analysis/species_im_modules_by_layers.pdf', 10, 6)
-main_bar_plot <- ggplot(layers_and_sizes, aes(x=i, y=n, fill=factor(module)))+ 
-  geom_bar(stat="identity", color="black", show.legend= FALSE)+ theme_classic()+
-  scale_x_continuous(breaks=seq(1,14,1))+ 
-  labs(x="Number of Islands", y="Number of Nodes")
-
-print(main_bar_plot)
-#dev.off()
+max(module_sizes$n) #109 species
+mean(module_sizes$n) #16.33 sp
+std.error(module_sizes$n)#4 sp
+sd(module_sizes$n)#21
 
 
 ##-- Plot modules in each island with size proportion
-
 
 #Calculate the number and proportion of species in each module
 modules_dryad_multilayer <- read.csv("./csvs/Islands/Jac/modules_in_network_islands_as_layers.csv") 
@@ -527,17 +415,17 @@ Prop_sp_module_island<- Prop_sp_module_2 %>%
                                layer_id == '7' ~ 'Hierro'))
 
 
-#write.csv(Prop_sp_module_island , "./csvs/Islands/Prop_sp_module_island.csv", row.names = FALSE)
+#write.csv(Prop_sp_module_island , "./csvs/Islands/Jac/Prop_sp_module_island.csv", row.names = FALSE)
 
-pdf('./graphs/Islands/Prop_sp_modules_per_islands.pdf', 10, 6)
-ggplot(Prop_sp_module_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
-  geom_tile(color='white') +
-  theme_classic() +
-  scale_fill_viridis_c(limits = c(0, 1)) +
-  scale_x_continuous(breaks=seq(1,88,2)) +
-  scale_y_discrete(limits = c("Hierro","Gomera","TenerifeTeno","TenerifeSouth","GranCanaria","Fuerteventura","WesternSahara"))+
-  labs(x='Module ID', y="Islands")
-dev.off()
+#pdf('./graphs/Islands/Jac/Prop_sp_modules_per_islands.pdf', 10, 6)
+#ggplot(Prop_sp_module_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
+#  geom_tile(color='white') +
+#  theme_classic() +
+#  scale_fill_viridis_c(limits = c(0, 1)) +
+#  scale_x_continuous(breaks=seq(1,88,2)) +
+#  scale_y_discrete(limits = c("Hierro","Gomera","TenerifeTeno","TenerifeSouth","GranCanaria","Fuerteventura","WesternSahara"))+
+#  labs(x='Module ID', y="Islands")
+#dev.off()
 
 
 ##-- Plot modules in each island with size proportion according to island 
@@ -574,9 +462,9 @@ Prop_sp_in_island<- Prop_sp_island_2 %>%
                                layer_id == '7' ~ 'Hierro'))
 
 
-#write.csv(Prop_sp_in_island , "./csvs/Islands/Prop_sp_in_island.csv", row.names = FALSE)
+#write.csv(Prop_sp_in_island , "./csvs/Islands/Jac/Prop_sp_in_island.csv", row.names = FALSE)
 
-pdf('./graphs/Islands/Prop_sp_islands_in_modules.pdf', 10, 6)
+pdf('./graphs/Islands/Jac/Prop_sp_islands_in_modules.pdf', 10, 6)
 ggplot(Prop_sp_in_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
   geom_tile(color='white') +
   theme(panel.grid = element_blank(),panel.background = element_blank(), 
@@ -589,7 +477,6 @@ ggplot(Prop_sp_in_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
   scale_y_discrete(limits = c("Hierro","Gomera","TenerifeTeno","TenerifeSouth","GranCanaria","Fuerteventura","WesternSahara"))+
   labs(x='Module ID', y="Locations")
 dev.off()
-
 
 
 ## ---- Plot of total possibilities of interaction rewiring to test null model 3
