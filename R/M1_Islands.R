@@ -558,12 +558,10 @@ distances_with_ids <- read.csv("./csvs/Islands/distances_with_ids_islands_as_lay
 
 #pivot modules function for islands as layers
 pivot_by_module_islands <- function(data){ #creates a data frame with module on the side and layer_id on the top
-  s1 = melt( data, id = c("layer_id", "module"))
+  s1 = melt(data , id = c("layer_id", "module"))
   s2 = dcast(s1, layer_id ~ module, length)
   s2<-na.omit(s2)
-  s3 <-s2%>%
-    select(where(~ any(. != 0)))
-  s4 = t(s3) 
+  s4 = t(s2) 
   s4 <- s4[-1,]
   colnames(s4) <- c(1,2,3,4,5,6,7)
   return(s4)
@@ -572,10 +570,10 @@ pivot_by_module_islands <- function(data){ #creates a data frame with module on 
 # this function calculates the Jaccard Similarity in modules between islands
 module_distance_decay_islands_func <- function(multilayer_1000, 
                                                layers_turnover_with_distnace){
-  for (trial in 1:3){
+  for (trial in 1:1000){
     print(trial) #to keep tab on how far along we are
     
-    modules_for_similarity_shuf <- multilayer_1000 %>% filter(trial_num ==trial) #take only 1 trial
+    modules_for_similarity_shuf <- multilayer_1000  %>% filter(trial_num ==trial) #take only 1 trial
     
     #pivot modules
     module_pivoted_shuf <- pivot_by_module_islands(modules_for_similarity_shuf) #pivot will be done on 1 trial each time
@@ -642,9 +640,7 @@ layers_turnover_with_distnace<-NULL
 #shuff pols
 all_edge_list_layer_combine_no_module_shuf_pols_output <- module_distance_decay_islands_func(dryad_multilayer_shuf_1000_pols_output,
                                                                                              turnover_with_distance_pols)
-comb<-all_edge_list_layer_combine_no_module_shuf_pols_output %>% arrange(trial)
-res1<-all_edge_list_layer_combine_no_module_shuf_pols_output
-res2<-all_edge_list_layer_combine_no_module_shuf_pols_output
+
 
 #write.csv(all_edge_list_layer_combine_no_module_shuf_pols_output, "./csvs/Islands/Jac/all_edge_list_layer_combine_no_module_shuf_pols_output_islands.csv", row.names = FALSE)
 
@@ -674,9 +670,7 @@ ave_module_layer_turnover_shuf_pols <- all_edge_list_layer_combine_no_module_shu
   summarise(ave = mean(turnover), sd = sd(turnover), mean_distance = mean(mean_distance)) %>% mutate(type="null_pollinators") #create mean and sd for each point
 
 
-#write.csv(ave_module_layer_turnover_shuf_pols, 
-#   "./csvs/Islands/ave_module_layer_turnover_shuf_pols_islands.csv", 
-#   row.names = FALSE)
+#write.csv(ave_module_layer_turnover_shuf_pols, "./csvs/Islands/Jac/ave_module_layer_turnover_shuf_pols_islands.csv", row.names = FALSE)
 
 #plants
 ave_module_layer_turnover_shuf_plants <- all_edge_list_layer_combine_no_module_shuf_plants_output %>% 
@@ -684,26 +678,84 @@ ave_module_layer_turnover_shuf_plants <- all_edge_list_layer_combine_no_module_s
   summarise(ave = mean(turnover), sd = sd(turnover), mean_distance = mean(mean_distance)) %>% mutate(type="null_plants") #create mean and sd for each point
 
 
-#write.csv(ave_module_layer_turnover_shuf_plants, 
-#         "./csvs/Islands/ave_module_layer_turnover_shuf_plants_islands.csv", 
-#        row.names = FALSE)
+#write.csv(ave_module_layer_turnover_shuf_plants, "./csvs/Islands/Jac/ave_module_layer_turnover_shuf_plants_islands.csv", row.names = FALSE)
 
 #both
 ave_module_layer_turnover_shuf_both <- all_edge_list_layer_combine_no_module_shuf_both_output %>% 
   group_by(layer_from, layer_to) %>%
   summarise(ave = mean(turnover), sd = sd(turnover), mean_distance = mean(mean_distance)) %>% mutate(type="null_both") #create mean and sd for each point
 
-#write.csv(ave_module_layer_turnover_shuf_both, 
-#         "./csvs/Islands/ave_module_layer_turnover_shuf_both_islands.csv", 
-#        row.names = FALSE)
+#write.csv(ave_module_layer_turnover_shuf_both,  "./csvs/Islands/Jac/ave_module_layer_turnover_shuf_both_islands.csv",  row.names = FALSE)
 
 #add empirical
-#islands_turnover_with_distnace_empirical <- read.csv("csvs/Islands/islands_turnover_with_distnace_empirical.csv")
+#islands_turnover_with_distnace_empirical <- read.csv("csvs/Islands/Jac/islands_turnover_with_distnace_empirical.csv")
 
 empirical_turnover_for_modules_layers_shuf <- islands_turnover_with_distnace_empirical %>% group_by(layer_from, layer_to) %>%
   summarise(ave = mean(turnover), sd = sd(turnover), mean_distance = mean_distance) %>% mutate(type="empirical") #make sure sd is 0 cause its the empirical and not null
 
+#combine empirical and null
+jaccard_similarity_islands_empirical_and_null <- rbind(empirical_turnover_for_modules_layers_shuf, ave_module_layer_turnover_shuf_pols,
+                                                       ave_module_layer_turnover_shuf_plants, ave_module_layer_turnover_shuf_both)
 
+jaccard_similarity_layer_empirical_and_null_km <- jaccard_similarity_islands_empirical_and_null %>% 
+  mutate(mean_dist_in_km = mean_distance/1000)
+
+#write.csv(jaccard_similarity_layer_empirical_and_null_km,  "./csvs/Islands/Jac/jaccard_similarity_layer_empirical_and_null_km_islands_m1.csv", row.names = FALSE)
+
+#---- graphs for distance decay in modules shuf vs empirical--------------------------------
+jaccard_similarity_layer_empirical_and_null_km <- read.csv("csvs/Islands/Jac/jaccard_similarity_layer_empirical_and_null_km_islands_m1.csv")
+
+pdf('./graphs/Islands/Jac/M1_Modules_DD_Islands.pdf', 10, 6)
+jaccard_similarity_layer_empirical_and_null_km %>% 
+  ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
+  geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+
+  labs(x="Distance (Km)", y="Jaccard Similarity")+  
+  scale_color_manual(name = "Null Model",  labels = c("E",expression("M"[1]^A), expression("M"[1]^P),
+                                                      expression("M"[1]^AP)),values = c("#FB3B1E", "#15B7BC", 
+                                                                                        "#72A323", "#BE75FA" )) +
+
+  theme_classic()+ geom_smooth(method= "lm", se=F)+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
+
+dev.off()
+
+#------check if its significant for islands----------------------------------------------------------------
+
+## check normality
+emp<-jaccard_similarity_layer_empirical_and_null_km %>% filter(type=="empirical")
+pol<-jaccard_similarity_layer_empirical_and_null_km %>% filter(type=="null_pollinators")
+pla<-jaccard_similarity_layer_empirical_and_null_km %>% filter(type=="null_plants")
+both<-jaccard_similarity_layer_empirical_and_null_km %>% filter(type=="null_both")
+
+shapiro.test(emp$ave)
+shapiro.test(pol$ave)#not normal
+shapiro.test(pla$ave)
+shapiro.test(both$ave)#not normal
+
+max(emp$ave)
+min(emp$ave)
+
+##models
+lm1_module = lm(ave ~ mean_dist_in_km ,data=emp) #in empirical
+lm2_module = lm(ave ~ mean_dist_in_km ,data=pol) #in null pols
+lm3_module = lm(ave ~ mean_dist_in_km ,data=pla) #in null plants
+lm4_module = lm(ave ~ mean_dist_in_km ,data=both) #in null both
+
+summary(lm1_module)
+summary(lm2_module)
+summary(lm3_module)
+summary(lm4_module)
+
+
+#CORRELATION!!
 
 
 
