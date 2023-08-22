@@ -503,16 +503,17 @@ dev.off()
 ######## ------ Final figures manuscript (except for the map) ##########
 
 ## -- Figure 3
-jaccard_similarity_layer_empirical_and_null_km <- read.csv("csvs/Islands/jaccard_similarity_layer_empirical_and_null_km_islands_m1.csv")
+jaccard_similarity_layer_empirical_and_null_km <- read.csv("csvs/Islands/Jac/jaccard_similarity_layer_empirical_and_null_km_islands_m1.csv")
 
 # Panel A
 Panel_A <- jaccard_similarity_layer_empirical_and_null_km %>% 
   ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
   geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+
   labs(x="Distance (Km)", y="Jaccard Similarity")+  
-  scale_color_manual(name = "Null Model",  labels = c("E",expression("M"[1]^P),expression("M"[1]^A),
-                                                      expression("M"[1]^AP)), values = c("#FB3B1E", "#15B7BC", 
-                                                                                         "#72A323", "#BE75FA" )) +
+  scale_color_manual(name = "Null Model",  labels = c("E",expression("M"[1]^AP), expression("M"[1]^P),
+                                                      expression("M"[1]^A)),values = c("#FB3B1E", "#15B7BC", 
+                                                                                       "#72A323", "#BE75FA" )) +
+  
   theme_classic()+ geom_smooth(method= "lm", se=F) +
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
@@ -586,8 +587,8 @@ dev.off()
 ## -- Figure 4
 
 # Panel A
-correlation_empirical_pols <- read.csv("./csvs/Islands/correlation_empirical_pols.csv")
-rqsuares_M1_all <- read.csv("./csvs/Islands/rqsuares_M1_all.csv")
+correlation_empirical_pols <- read.csv("./csvs/Islands/Jac/correlation_empirical_pols.csv")
+rqsuares_M1_all <- read.csv("./csvs/Islands/Jac/rqsuares_M1_all.csv")
 rqsuares_M1_all$type <- factor(rqsuares_M1_all$type, levels = c("shuf_plants","shuf_pollinators","shuf_both"))
 
 Panel_A <- rqsuares_M1_all %>% 
@@ -596,7 +597,7 @@ Panel_A <- rqsuares_M1_all %>%
   geom_vline(xintercept = correlation_empirical_pols$rsquared, linetype = "dashed", color = "#FB3B1E")+
   labs(x= expression("R"^2), y="Density")+  
   scale_fill_manual(name = "Null Model",  labels = c(expression("M"[1]^P),expression("M"[1]^A),
-                                                     expression("M"[1]^AP)), values = c("#72A323","#15B7BC", "#A44CD3" ))+
+                                                     expression("M"[1]^AP)), values = c("#72A323","#A44CD3", "#15B7BC"))+
   theme_classic()+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),

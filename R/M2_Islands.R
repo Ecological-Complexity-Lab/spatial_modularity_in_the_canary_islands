@@ -33,7 +33,7 @@ setwd("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in
 source("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands/R/functions.R")
 physical_nodes <- read.csv("./csvs/Islands/physical_nodes_islands.csv")
 layer_metadata <- read.csv("./csvs/Islands/layer_metadata_islands.csv")
-dryad_edgelist_complete_ids <- read.csv("./csvs/Islands/dryad_edgelist_complete_ids_islands.csv")
+dryad_edgelist_complete_ids <- read.csv("./csvs/Islands/Jac/dryad_edgelist_complete_ids_islands.csv")
 
 #---- number of layers each species is found in------------------------------------------------------
 #plants
@@ -94,7 +94,7 @@ for (i in 1:39){
   }
 }
 
-#write.csv(co_occurrence_count, "./csvs/Islands/co_occurrence_count.csv", row.names = FALSE)
+#write.csv(co_occurrence_count, "./csvs/Islands/Jac/co_occurrence_count.csv", row.names = FALSE)
 
 #---- combine interactions and co-occurrences--------------------------------------------
 interactions_co_occurences <- merge(co_occurrence_count, interaction_count, by = c("node_from", "node_to")) #combine two data frames
@@ -114,7 +114,7 @@ for (j in 1:nrow(interactions_co_occurences)){ #every pair
   layers_for_pairs <- rbind(layers_for_pairs, common_layers_pair) #create data frame with layers identities
 }
 
-#write.csv(layers_for_pairs, "./csvs/Islands/layers_for_pairs.csv", row.names = FALSE)
+#write.csv(layers_for_pairs, "./csvs/Islands/Jac/layers_for_pairs.csv", row.names = FALSE)
 
 
 ##---- Calculate the raw weight of intraedges using layers as islands -------------------------------------------------------------------------------
@@ -162,8 +162,6 @@ intralayer_edges_ids <- # Replace the node names with node_ids
   dplyr::select(-layer_from, -layer_to) %>% 
   dplyr::select(layer_from=layer_id.x, node_from, layer_to=layer_id.y, node_to, weight = sum_weight)
 
-prueba1<- dryad_edgelist_complete_ids %>% filter(layer_from == layer_to) %>% filter (layer_from ==1)  #recheck porque tengo mas interacciones
-#en dryad (por ejemolo sp1 en capa 1)
   
 #---- shuffle the interactions between layers---------------------------------------------------------
 pair_layer <- left_join(layers_for_pairs, interactions_co_occurences, by = c("node_from", "node_to")) #join layer ids with the pair 
@@ -193,8 +191,8 @@ for (i in 1:1000){ #1000 iterations
   }
 }
 
-#write.csv(interactions_shuf, "./csvs/Islands/interactions_shuf.csv", row.names = FALSE)
-interactions_shuf <- read.csv("./csvs/Islands/interactions_shuf.csv")
+#write.csv(interactions_shuf, "./csvs/Islands/Jac/interactions_shuf.csv", row.names = FALSE)
+interactions_shuf <- read.csv("./csvs/Islands/Jac/interactions_shuf.csv")
 interactions_shuf$layer_to <- interactions_shuf$layer_from #add layer_to which is identical to layer_from as we're only dealing with intralayers
 interactions_shuf_intralayers <- interactions_shuf %>% select(layer_from, node_from, layer_to, node_to, weight, trial_num) #organize
 interactions_shuf_intralayers <- interactions_shuf_intralayers %>% filter(weight != 0) #delete all 0 weights
@@ -225,10 +223,96 @@ intralayer_weighted_inverted_shuf <- interactions_shuf_intralayers_inverted %>% 
 
 intralayer_weighted_inverted_shuf <- intralayer_weighted_inverted_shuf[, c(1,2,3,4,6,5)] #make sure weight is col number 5
 
-intralayer_edges_shuf <- rbind(intralayer_weighted_shuf, intralayer_weighted_inverted_shuf) #combine inverted and non-inverted versions
+intralayer_edges_shuf_interactions <- rbind(intralayer_weighted_shuf, intralayer_weighted_inverted_shuf) #combine inverted and non-inverted versions
 
-#write.csv(intralayer_edges_shuf, "./csvs/Islands/intralayer_edges_shuf.csv", row.names = FALSE) #create file to run interlayers on HPC
+#write.csv(intralayer_edges_shuf_interactions, "./csvs/Islands/Jac/intralayer_edges_shuf_interactions.csv", row.names = FALSE) #create file to run interlayers on HPC
+#intralayer_edges_shuf_interactions <- read.csv("./csvs/Islands/Jac/intralayer_edges_shuf_interactions.csv")
+
+##---- create interedges  -------------------------------------------------------- CHEQUEAR CODIGO
+# keep only species that occur in 2 or more layers
+co_occurrence_from_shuf<- intralayer_edges_shuf_interactions%>% 
+  group_by(trial_number,node_from) %>%
+  mutate(num_layers_from=n_distinct(layer_from)) %>% 
+  filter(num_layers_from>="2")
+
+# a for loop that calculates all the interlayer edges based on jaccard index
+interlayers_with_weights_islands <- NULL
+
+for (trial in 1:1000){
+  print(trial) #to keep tab on how far along we are
+  
+  co_occurrence_from_shuf2 <- co_occurrence_from_shuf %>% filter(trial_number == trial) #take only 1 trial
+  
+  for (i in unique(co_occurrence_from_shuf2$node_from)) {
+    print(i)
+    partners_sp <- 
+      co_occurrence_from_shuf2 %>% 
+      filter(node_from== i) %>%
+      group_by(node_to) %>%
+      select(c(node_to,layer_from)) %>%
+      distinct() %>% 
+      mutate(present=1) %>%
+      spread(node_to, present, fill = 0) %>%
+      column_to_rownames("layer_from")
+    
+    beta_layers_sp <- 1-as.matrix(vegdist(partners_sp, "jaccard"))
+    beta_layers_sp_m <- melt(as.matrix(extRC::tril(beta_layers_sp)))
+    inter_fid <- beta_layers_sp_m  %>%
+      tibble() %>%
+      filter(value!=0) %>%
+      subset(Var1 != Var2) %>%
+      mutate(node_from=i, node_to =i, trial_num=trial) %>%
+      select(c(node_from,layer_from=Var1, layer_to=Var2,node_to, weight=value,trial_num))
+    interlayers_with_weights_islands <- rbind(interlayers_with_weights_islands,inter_fid)
+  }
+}
+
+interlayers_with_weights_shuf_interactions<-interlayers_with_weights_islands 
+#write.csv(interlayers_with_weights_shuf_interactions, "./csvs/Islands/Jac/interlayers_with_weights_shuf_interactions.csv", row.names = FALSE)
+
+## ----multilayer_extended_final--------------------------------------------------------------------------------------
+#CHEQUEAR NOMBRES Y FORMATO ANTES DE CREAR LA VERSION FINAL
+
+
+dryad_edgelist_complete_shuf_interactions <- bind_rows(intralayer_edges_shuf_interactions, 
+                                                       interlayers_with_weights_shuf_interactions) #combine inter and intra
+
+
+edgelist_intralayer_shuf_both <- bind_rows(intralayer_weighted_shuf_both, intralayer_weighted_inverted_shuf_both)#intraedges
+edgelist_intralayer_shuf_both<-edgelist_intralayer_shuf_both[,c(1,2,3,4,6,5)]#change order columns
+colnames(edgelist_intralayer_shuf_both)[6]<-"trial_num"
+
+dryad_interlayer_shuf_both<-interlayer_edges_shuf_both#interedges
+dryad_interlayer_shuf_both<-interlayer_edges_shuf_both[,c(2,1,3,4,5,6)]#change order columns
+dryad_interlayer_shuf_both$node_from<-as.integer(dryad_interlayer_shuf_both$node_from)
+dryad_interlayer_shuf_both$node_to<-as.integer(dryad_interlayer_shuf_both$node_to)
+
+dryad_edgelist_complete_shuf_both <- bind_rows(edgelist_intralayer_shuf_both, dryad_interlayer_shuf_both) #combine inter and intra
+#write.csv(dryad_edgelist_complete_shuf_both, "./csvs/Islands/Jac/dryad_edgelist_complete_shuf_both_islands_as_layers.csv", row.names = FALSE)
+
+
+## ----multilayer_extended_final--------------------------------------------------------------------------------------
+layer_metadata <- read.csv("./csvs/Islands/layer_metadata_islands.csv")
+physical_nodes <- read.csv("./csvs/Islands/physical_nodes_islands.csv")
 #intralayer_edges_shuf <- read.csv("./csvs/Islands/intralayer_edges_shuf.csv")
+
+# Input: An extended edge list.
+names(intralayer_edges_shuf)[6] <- "trial_number" #change name of column so inter and intra correspond
+
+dryad_edgelist_complete_shuf_interactions <- bind_rows(intralayer_edges_shuf, 
+                                                       interlayers_with_weights_shuf_interactions) #combine inter and intra
+
+#write.csv(dryad_edgelist_complete_shuf_interactions, "./csvs/Islands/dryad_edgelist_complete_shuf_interactions_islands_as_layers.csv", row.names = FALSE)
+#dryad_edgelist_complete_shuf_interactions <- read.csv("./csvs/Islands/dryad_edgelist_complete_shuf_interactions_islands_as_layers.csv")
+
+
+
+
+
+
+
+
+
 
 #---- interlayer edges-------------------------------------------------------------------------------------- # see if should copy the script of m2
 interlayer_interactions_from_shuf <- intralayer_edges_shuf %>% group_by(trial_num, node_from) %>%
