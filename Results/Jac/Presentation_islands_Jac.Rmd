@@ -15,7 +15,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, results = "asis", message=FALSE, warning=FALSE, cache=TRUE, eval = TRUE, dev = c('png'), out.width = '100%', out.height='40%')
+knitr::opts_chunk$set(echo = FALSE, results = "asis", message=FALSE, warning=FALSE, cache=FALSE, eval = TRUE, dev = c('png'), out.width = '100%', out.height='40%')
 ```
 
 
@@ -83,7 +83,7 @@ Contained four components:
 
 3. Intralayer directed weighted links representing pollinator-plant interactions within layers.
 
-4. Interlayer weighted links connecting any species i to itself between two layers when they shared at least one partner. Greater values indicate higher similarity between the same species across locations. 
+4. Interlayer weighted links connecting any species i to itself between two layers when they shared at least one partner. Greater values indicate higher similarity of partners between the same species across locations. 
 \
 \
 \
@@ -223,7 +223,7 @@ co_occurrence_plants%>%
 \
 
 
-### Prop. sps in each island that integrate each module
+### Prop. sps of each island that integrate each module
 \
 \
 
@@ -281,3 +281,258 @@ df<-data.frame(Group= c("Self-species per module","Multi-species per module"),
 
 # Results {.tabset}
 \
+\
+
+## Distance decay - Empirical 
+We observed modules distance decay in the empirical data ($R^2$ = 0.538, P < 0.001), which indicates that islands tended to share less modules with increasing distance.
+
+```{r}
+
+islands_turnover_with_distnace_empirical<-read.csv("islands_turnover_with_distnace_empirical.csv")
+
+islands_turnover_with_distnace_empirical %>%
+  ggplot(aes(x=distance_in_km, y=turnover))+
+  geom_point(color = "#FB3B1E")+ 
+  scale_x_continuous()+ stat_smooth(method= "lm", se=F, color = "#FB3B1E")+
+  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
+  theme(axis.text.y=element_text(size=15))+
+  labs(x="Distance in Km", y="Jaccard Similarity")+ theme_bw()+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+```
+\
+\
+\
+
+
+## Structure distande decay - Species turnover 
+Redistributing pollinator and pollinator and plant species among locations broke structure distance decay ($R^2_{M_1^A}$= 0.123, P = 0.066; $R^2_{M_1^{AP}}$ = 0.049, P = 0.834) but not the redistribution of plants ($R^2_{M_1^P}$ = 0.319, P < 0.005).
+\
+\
+
+```{r}
+jaccard_similarity_layer_empirical_and_null_km <- read.csv("jaccard_similarity_layer_empirical_and_null_km_islands_m1.csv")
+
+jaccard_similarity_layer_empirical_and_null_km %>% 
+  ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
+  geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+
+  labs(x="Distance (Km)", y="Jaccard Similarity")+  
+  scale_color_manual(name = "Null Model",  labels = c("E",expression("M"[1]^AP), expression("M"[1]^P),
+                     expression("M"[1]^A)),values = c("#FB3B1E", "#15B7BC", 
+                                                                                        "#72A323", "#BE75FA" )) +
+
+  theme_classic()+ geom_smooth(method= "lm", se=F)+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
+ 
+```
+\
+\
+
+Similarly, the amount of structure variation explained by distance between locations was lower when we shuffled pollinators and both plants and pollinators than in the empirical network (P < 0.001). Altogether, these results indicate that the spatial distribution of pollinator species contribute to the distance decay pattern found in the empirical network. 
+\
+\
+
+```{r}
+
+rqsuares_M1_all <- read.csv("rqsuares_M1_all.csv")
+correlation_empirical_pols <- read.csv("correlation_empirical_pols.csv")
+
+
+rqsuares_M1_all$type <- factor(rqsuares_M1_all$type, levels = c("shuf_plants","shuf_pollinators","shuf_both"))
+
+
+rqsuares_M1_all %>% 
+  ggplot(aes(x = rsquared, fill = type))+ 
+  geom_density(alpha = 0.5)+ 
+  geom_vline(xintercept = correlation_empirical_pols$rsquared, linetype = "dashed", color = "#FB3B1E")+
+  labs(x= expression("R"^2), y="Density")+  
+  scale_fill_manual(name = "Null Model",  labels = c(expression("M"[1]^P),expression("M"[1]^A),
+                                                     expression("M"[1]^AP)), values = c("#72A323","#A44CD3", "#15B7BC"))+
+  theme_classic()+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
+```
+\
+```{r}
+library(knitr)
+Description <- read_excel("Table_models.xlsx", sheet = 2)
+kable(Description, align=c(rep('c',times=6)), digits = c(0,3,5,3,3,0), format.args = list(scientific = FALSE))
+
+```
+\
+\
+
+
+## Structure distande decay - Interaction rewiring
+Shuffling interactions between locations did not break the distance decay pattern in structure ($R^2_{M_2}$ = 0.766, P < 0.001), suggesting that interaction rewiring does not contribute substantially to the pattern found.
+\
+\
+
+```{r}
+jaccard_similarity_layer_empirical_and_null_km_interactions <- read.csv("jaccard_similarity_layer_empirical_and_null_km_interactions_islands.csv") 
+
+jaccard_similarity_layer_empirical_and_null_km_interactions %>% 
+  ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
+  geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ geom_smooth(method= "lm", se=F)+
+  scale_color_manual (name = "Null Model", labels = c("E",expression("M"[2])),
+                      values = c("#FB3B1E",  "#E6AB02" ))+
+  labs(x="Distance (Km)", y="Jaccard Similarity")+  #stat_cor(aes(label = ..rr.label..))+
+  
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
+```
+\
+\
+
+Similarly, it did not affect the overall structure variation explained by distance (P = 0.066)
+\
+\
+
+```{r}
+correlation_empirical_interactions <- read.csv("correlation_empirical_pols.csv")
+iteration_correlation_interactions <- read.csv("iteration_correlation_interactions_islands.csv")
+iteration_correlation_interactions2<-iteration_correlation_interactions %>% mutate(Type = "null_int")
+
+iteration_correlation_interactions2 %>% ggplot(aes(x = rsquared, fill= Type))+ 
+  geom_density(alpha = 0.6)+ 
+  geom_vline(xintercept = correlation_empirical_interactions$rsquared, linetype = "dashed", color = "#FB3B1E") +
+  labs(x= expression("R"^2), y="Density")+  
+  scale_fill_manual(name = "Null Model",  label = expression("M"^2), values= "#E6AB02")+
+  theme_classic()+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
+
+```
+\
+\
+```{r}
+library(knitr)
+Description <- read_excel("Table_models.xlsx", sheet = 3)
+kable(Description, align=c(rep('c',times=6)), digits = c(0,3,5,3,3,0), format.args = list(scientific = FALSE))
+
+```
+\
+\
+
+
+## Structure distande decay - Local Factors
+Shuffling interactions within locations did not break the distance decay pattern in structure ($R^2_{M_3}$ = 0.60, P < 0.001), suggesting that local factors does not contribute substantially to the pattern found. 
+\
+\
+
+```{r}
+jaccard_similarity_layer_empirical_and_null_km_classic <- read.csv("jaccard_similarity_layer_empirical_and_null_km_classic_islands.csv") #need to read this to run next part
+
+jaccard_similarity_layer_empirical_and_null_km_classic %>% 
+  ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
+  geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ geom_smooth(method= "lm", se=F)+
+  scale_color_manual (name = "Null Model", labels = c("E",expression("M"[3])),
+                      values = c("#FB3B1E","#FA86F2"))+
+  labs(x="Distance (Km)", y="Jaccard Similarity")+  #stat_cor(aes(label = ..rr.label..))+
+  
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
+```
+\
+\
+
+However, it had a significant effect on the overall structure variation explained by distance (P < 0.005) and reduced the magnitude of the effect of distance decay in structure (Slope$_{M_3}$ = -0.000053 vs. Slope$_{Empirical}$ = -0.001).
+\
+\
+
+```{r}
+correlation_empirical_classic <- read.csv("correlation_empirical_pols.csv")
+iteration_correlation_classic <- read.csv("iteration_correlation_classic_islands.csv")
+iteration_correlation_classic2<-iteration_correlation_classic %>% mutate(Type = "null_class")
+
+iteration_correlation_classic2 %>% ggplot(aes(x = rsquared, fill= Type))+ 
+  geom_density(alpha = 0.6)+ 
+  geom_vline(xintercept = correlation_empirical_classic$rsquared, linetype = "dashed", color = "#FB3B1E") +
+  labs(x= expression("R"^2), y="Density")+  
+  scale_fill_manual(name = "Null Model",  label = expression("M"^3), values= "#FA86F2")+
+  theme_classic()+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
+
+```
+\
+\
+```{r}
+library(knitr)
+Description <- read_excel("Table_models.xlsx", sheet = 4)
+kable(Description, align=c(rep('c',times=6)), digits = c(0,3,5,3,3,0), format.args = list(scientific = FALSE))
+
+```
+\
+\
+
+## Structure distance decay - Changes in partner similarity 
+In addition, modifying partner similarity of species across locations ($M_4$) produces a similar pattern of distance decay in modules as the empirical network, suggesting that partner fidelity is not an important driver of distance decay in structure.
+\
+\
+
+```{r}
+jaccard_similarity_empirical_and_fixed_km <- read.csv("sensitivity_nullmodel4.csv")
+
+jaccard_similarity_empirical_and_fixed_km %>% 
+  ggplot(aes(x= ave_dist_in_km , y= ave, group= trial, color= trial))+
+  geom_point()+ theme_classic()+ geom_smooth(method= "lm", se=F)+
+  scale_color_discrete(name = "Interedges weight")+
+  #geom_smooth(jaccard_similarity_empirical_and_fixed_km = subset(trial == "empirical"), method = "lm", se = FALSE, color = "#FB3B1E")+
+  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
+  theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
+  labs(x="Distance in Km", y="Jaccard Similarity")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank()) 
+```

@@ -26,9 +26,9 @@ source("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_i
 
 
 #-- Plots containing 10% biggest modules 
-modules_dryad_multilayer <- read.csv("./csvs/Islands/modules_in_network_islands_as_layers.csv") 
-module_data_with_loc <- read.csv("./csvs/Islands/modules_with_lat_lon_islands_as_layers.csv")
-lon_lat_data <- read.csv("./csvs/Islands/lon_lat_data_islands_as_layers.csv")
+modules_dryad_multilayer <- read.csv("./csvs/Islands/Jac/modules_in_network_islands_as_layers.csv") 
+module_data_with_loc <- read.csv("./csvs/Islands/Jac/modules_with_lat_lon_islands_as_layers.csv")
+lon_lat_data <- read.csv("./csvs/Islands/Jac/lon_lat_data_islands_as_layers.csv")
 
 #Calculate number of nodes in each module per island
 N_species_mod<-modules_dryad_multilayer %>% 
@@ -36,12 +36,12 @@ N_species_mod<-modules_dryad_multilayer %>%
   summarize(module_size=n_distinct(node_id))
 
 
-# Calculate 10% biggest modules 
-top_10_percent <- select(module_data_with_loc, c("module", "size_of_module")) %>% distinct %>% arrange(desc(size_of_module)) %>%
-  filter(quantile(size_of_module, probs=0.9) < size_of_module) #arrange all modules to see 90 percentile and filter by them
-top_10_percent$size_of_module <- top_10_percent$module #don't need the sizes anymore
-names(top_10_percent)[names(top_10_percent)=="size_of_module"] <- "group" #change name to group- only the top percentile
-pie_chart_data <- top_10_percent %>% right_join(module_data_with_loc, by=c("module"="module")) #join to have coordinates as well
+# Calculate 30% biggest modules 
+top_30_percent <- select(module_data_with_loc, c("module", "size_of_module")) %>% distinct %>% arrange(desc(size_of_module)) %>%
+  filter(quantile(size_of_module, probs=0.7) < size_of_module) #arrange all modules to see 90 percentile and filter by them
+top_30_percent$size_of_module <- top_30_percent$module #don't need the sizes anymore
+names(top_30_percent)[names(top_30_percent)=="size_of_module"] <- "group" #change name to group- only the top percentile
+pie_chart_data <- top_30_percent %>% right_join(module_data_with_loc, by=c("module"="module")) #join to have coordinates as well
 pie_chart_data$group <- as.character(pie_chart_data$group) 
 pie_chart_data <- pie_chart_data %>% drop_na()
 
@@ -62,10 +62,10 @@ pie_chart_data2 <- pie_chart_data2 %>% group_by(lat, Lon) %>% summarise(across(e
 
 
 #Plot
-top_10_scatterpies <- ggplot()+ geom_scatterpie(aes(x=Lon, y=lat, group=layer_id, r=0.2), alpha=0.90, data= pie_chart_data2, 
-                                                cols=colnames(pie_chart_data2[,c(4:12)]))+
+top_30_scatterpies <- ggplot()+ geom_scatterpie(aes(x=Lon, y=lat, group=layer_id, r=0.2), alpha=0.90, data= pie_chart_data2, 
+                                                cols=colnames(pie_chart_data2[,c(4:11)]))+
   theme_void()+ coord_fixed()+ theme(legend.text = element_text(size = 13), legend.title = element_text(size = 13))
-top_10_scatterpies
+top_30_scatterpies
 
 
 ##-- Map of Canary Island region with Jaccard Similarity 
@@ -124,11 +124,11 @@ Canary_map
 
 
 ##-- Final map containing Jaccard Similarity across Islands and the scatter pies 
-top_10_scatterpies_no_legend <- top_10_scatterpies + theme(legend.position = "none")
+top_30_scatterpies_no_legend <- top_30_scatterpies + theme(legend.position = "none")
 
 pdf('./graphs/Islands/Map_modules1.pdf', 10, 6)
 
 ggdraw()+ draw_plot(Canary_map)+
-  draw_plot(top_10_scatterpies_no_legend, x = -0.088, y = 0.12, scale = 0.70)
+  draw_plot(top_30_scatterpies_no_legend, x = -0.088, y = 0.12, scale = 0.70)
 dev.off()
 

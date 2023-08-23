@@ -322,6 +322,8 @@ ave_module_islands_turnover_shuf_classic <- all_edge_list_islands_combine_no_mod
   group_by(layer_from, layer_to) %>%
   summarise(ave=mean(turnover), sd=sd(turnover), ave_dist=mean(mean_distance)) %>% mutate(type="null_model_within") #create mean and sd for each point
 
+
+
 #add empirical
 islands_turnover_with_distnace_empirical <- read.csv("csvs/Islands/Jac/islands_turnover_with_distnace_empirical.csv")
 
@@ -365,16 +367,34 @@ dev.off()
 emp<-jaccard_similarity_layer_empirical_and_null_km_classic %>% filter(type=="empirical")
 null<-jaccard_similarity_layer_empirical_and_null_km_classic %>% filter(type=="null_model_within")
 
-
 shapiro.test(emp$ave)
 shapiro.test(null$ave)#normal
 
 #---- linear regression
 lm1_module_classic = lm(ave ~ mean_dist_in_km ,data=emp) #in empirical
 lm2_module_classic = lm(ave ~ mean_dist_in_km, data=null) #in null model
-
 summary(lm1_module_classic)
 summary(lm2_module_classic)
+
+
+#lm_module_classic_prueba = lm(turnover ~ mean_distance, data=all_edge_list_islands_combine_no_module_shuf_classic_output)
+
+#all_edge_list_islands_combine_no_module_shuf_classic_output %>% 
+#  ggplot(aes(x= mean_distance, y= turnover))+
+#  geom_point()+ theme_classic()+ geom_smooth(method= "lm", se=F)+
+#  labs(x="Distance (Km)", y="Jaccard Similarity")+  #stat_cor(aes(label = ..rr.label..))+
+  
+#  theme(panel.grid = element_blank(),
+ #       panel.border = element_rect(color = "black",fill = NA,size = 1),
+  #      panel.spacing = unit(0.5, "cm", data = NULL),
+   #     axis.text = element_text(size=15, color='black'),
+    #    axis.title = element_text(size=17, color='black'),
+    #    axis.line = element_blank(),
+    #    legend.text.align = 0,
+    #    legend.title =  element_text(size = 13, color = "black"),
+    #    legend.text = element_text(size = 11))
+
+#summary(lm_module_classic_prueba)
 
 #----correlation and r sqaured between jaccard and distance for each run
 #all_edge_list_islands_combine_no_module_shuf_classic <- read.csv("./csvs/Islands/Jac/all_edge_list_islands_combine_no_module_shuf_classic.csv")
