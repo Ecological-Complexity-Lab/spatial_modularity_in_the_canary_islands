@@ -1,0 +1,410 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Drivers of structure distance decay in a spatial multilayer plant-pollinator network},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifluatex
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Drivers of structure distance decay in a spatial multilayer
+plant-pollinator network}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\hfill\break
+\hfill\break
+\hfill\break
+
+\hypertarget{distance-decay}{%
+\section{Distance decay}\label{distance-decay}}
+
+A well-documented phenomenon in nature is distance decay--- the
+decreasing species similarity between two locations as the distance
+between them increase. However, studies addressing distance decay in
+community structure are rare.\\
+~\\
+~\\
+
+\hypertarget{goal}{%
+\section{Goal}\label{goal}}
+
+We studied how distance affects the modular structure of a multilayer
+plant-pollinator network in the Canary Islands. In addition, we
+performed null models that explicitly control different components to
+disentangle the mechanisms behind distance decay patterns.\\
+~\\
+~\\
+
+\hypertarget{data}{%
+\section{Data}\label{data}}
+
+The study was conducted in The Canary Islands, where six islands and one
+location on the mainland were sampled. Distances between locations
+ranged from 52 to 450 kilometers. On each location, pollinator-plant
+interactions were recorded in two adjacent sites (from 50 to 500 meters
+apart) for a total of 14 sites. We aggregated data from any two adjacent
+sites on an island or mainland because we were interested in
+between-location spatial scale.
+
+\begin{longtable}[]{@{}
+  >{\centering\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.14}}
+  >{\centering\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.07}}
+  >{\centering\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.14}}
+  >{\centering\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.19}}
+  >{\centering\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.12}}
+  >{\centering\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.12}}
+  >{\centering\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.21}}@{}}
+\toprule
+Location & Scale & Plant richness & Pollinator richness & α - richness &
+γ - richness & Number of interactions \\
+\midrule
+\endhead
+Western Sahara & Local & 12 & 60 & 72 & - & 541 \\
+Fuerte ventura & Local & 9 & 56 & 65 & - & 598 \\
+Gran Canaria & Local & 12 & 50 & 62 & - & 727 \\
+Tenerife South & Local & 16 & 68 & 84 & - & 699 \\
+Tenerife Teno & Local & 19 & 59 & 78 & - & 1019 \\
+Gomera & Local & 15 & 52 & 67 & - & 632 \\
+Hierro & Local & 11 & 54 & 65 & - & 511 \\
+Canary Islands & Region & 39 & 248 & - & 287 & 4727 \\
+\bottomrule
+\end{longtable}
+
+\hfill\break
+\hfill\break
+\hfill\break
+
+\hypertarget{plant-pollinator-multilayer-network}{%
+\section{Plant-pollinator multilayer
+network}\label{plant-pollinator-multilayer-network}}
+
+Contained four components:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Seven layers (six islands and the mainland).
+\item
+  Two sets of nodes representing pollinator and plant species.
+\item
+  Intralayer directed weighted links representing pollinator-plant
+  interactions within layers.
+\item
+  Interlayer weighted links connecting any species i to itself between
+  two layers. Closer two layers are, the stronger is the interlayer
+  link. Ecologically, closer distance increases the likelihood that
+  spatial processes such as dispersal occur between two sites\\
+  ~\\
+  ~\\
+\end{enumerate}
+
+\hypertarget{distribution-of-intra-and-interlayer-links}{%
+\subsection{Distribution of intra and interlayer
+links}\label{distribution-of-intra-and-interlayer-links}}
+
+\hfill\break
+
+\includegraphics[width=1\linewidth,height=0.4\textheight]{Presentation_islands_files/figure-latex/unnamed-chunk-2-1}\\
+~\\
+
+\hypertarget{null-models-overview}{%
+\section{Null models overview}\label{null-models-overview}}
+
+\hfill\break
+
+\includegraphics[width=800px,height=460px]{null_models}
+
+\hypertarget{island-level}{%
+\section{Island level}\label{island-level}}
+
+\hfill\break
+\hfill\break
+
+\hypertarget{species-distance-decay}{%
+\subsection{Species distance decay}\label{species-distance-decay}}
+
+\hfill\break
+We calculated Jaccard similarity of species identity between islands and
+tested distance decay using a linear regression model.\\
+~\\
+
+\hypertarget{species-distance-decay---empirical-data}{%
+\subsubsection{Species distance decay - Empirical
+data}\label{species-distance-decay---empirical-data}}
+
+\hfill\break
+We observed species distance decay between islands in the empirical data
+(\(R^2\) = 0.74, P \textless{} 0.001), which indicates that islands
+tended to share less species with increasing distance.\\
+~\\
+
+\includegraphics[width=1\linewidth,height=0.4\textheight]{Presentation_islands_files/figure-latex/unnamed-chunk-4-1}
+
+\hfill\break
+\hfill\break
+\hfill\break
+
+\hypertarget{species-distance-decay--null-model-shuffling-species-between-layers-m_1}{%
+\subsubsection{\texorpdfstring{Species distance decay- Null model
+shuffling species between layers
+(\(M_1\))}{Species distance decay- Null model shuffling species between layers (M\_1)}}\label{species-distance-decay--null-model-shuffling-species-between-layers-m_1}}
+
+\hfill\break
+We compared the observed distance decay to that obtained using three
+versions of null model where we shuffled species (plants, pollinators
+and both) between layers. \(M_1\) changes species labels and interlayer
+structure but not intralayer structure.\\
+~\\
+~\\
+
+Redistributing plant, pollinator and both species among sites did not
+break species distance decay (\(R^2_{M_1^P}\) = 0.68, P \textless{}
+0.001; \(R^2_{M_1^A}\) = 0.71, P \textless{} 0.001; \(R^2_{M_1^{AP}}\) =
+0.35, P = 0.004). The difference was more pronounced when shuffling both
+plant and pollinator species, which indicates that both species together
+have a stronger effect in distance decay.\\
+~\\
+
+\includegraphics[width=1\linewidth,height=0.4\textheight]{Presentation_islands_files/figure-latex/unnamed-chunk-5-1}
+
+\hfill\break
+\hfill\break
+\hfill\break
+
+\hypertarget{modules-distance-decay}{%
+\subsection{Modules distance decay}\label{modules-distance-decay}}
+
+\hfill\break
+We calculated distance decay in structure in the same way as for
+species, but using module identities. In addition, we used multiple null
+models to disentangle the mechanisms behind the pattern found because
+differences in structure could emerge due to turnover in species
+composition or interaction rewiring.
+
+\hypertarget{modules-distance-decay---empirical-data}{%
+\subsubsection{Modules distance decay - Empirical
+data}\label{modules-distance-decay---empirical-data}}
+
+\hfill\break
+The spatial network was partitioned to 88 modules. Most (85) modules
+were found in more than one island, while 3 modules were confined to a
+single island. Modules varied in size, ranging from 2 to 44 species,
+with an average of 7±1 species per module.\\
+~\\
+
+\includegraphics[width=1\linewidth,height=0.4\textheight]{Presentation_islands_files/figure-latex/unnamed-chunk-6-1}
+
+\hfill\break
+\hfill\break
+We observed modules distance decay in the empirical data (\(R^2\) =
+0.67, P \textless{} 0.001), which indicates that islands tended to share
+less modules with increasing distance. However, decay in modules was
+weaker than for species.\\
+~\\
+
+\includegraphics[width=1\linewidth,height=0.4\textheight]{Presentation_islands_files/figure-latex/unnamed-chunk-7-1}
+
+\hfill\break
+\hfill\break
+\hfill\break
+
+\hypertarget{modules-distance-decay--null-model-shuffling-species-between-layers-m_1}{%
+\subsubsection{\texorpdfstring{Modules distance decay- Null model
+shuffling species between layers
+(\(M_1\))}{Modules distance decay- Null model shuffling species between layers (M\_1)}}\label{modules-distance-decay--null-model-shuffling-species-between-layers-m_1}}
+
+\hfill\break
+Similarly to distance decay in species, redistributing plant, pollinator
+and both species among islands did not break structure distance decay
+(\(R^2_{M_1^P}\) = 0.59, P \textless{} 0.001; \(R^2_{M_1^A}\) = 0.097, P
+\textless{} 0.001; \(R^2_{M_1^{AP}}\) = 0.14, P \textless{} 0.001).\\
+~\\
+
+\includegraphics[width=1\linewidth,height=0.4\textheight]{Presentation_islands_files/figure-latex/unnamed-chunk-8-1}\\
+~\\
+~\\
+In particular, redistributing pollinators and both plants and
+pollinators between islands affected the amount of variation explained
+by distance (P \textless{} 0.001); but not the redistribution of plant
+species (P = 0.997).\\
+~\\
+
+\includegraphics[width=1\linewidth,height=0.4\textheight]{Presentation_islands_files/figure-latex/unnamed-chunk-9-1}
+
+\hfill\break
+\hfill\break
+\hfill\break
+
+\hypertarget{modules-distance-decay--null-model-shuffling-interactions-within-layers-m_2}{%
+\subsubsection{\texorpdfstring{Modules distance decay- Null model
+shuffling interactions within layers
+(\(M_2\))}{Modules distance decay- Null model shuffling interactions within layers (M\_2)}}\label{modules-distance-decay--null-model-shuffling-interactions-within-layers-m_2}}
+
+\hfill\break
+We tested if local structure affects distance decay in structure by
+shuffling interactions within layers. \(M_2\) changes the intralayer
+structure but conserves the interlayer structure of the network.
+
+Shuffling local structure broke distance decay pattern in structure
+(\(R^2_{M_2}\) = 0.12, P = 0.12) and had a significant effect on the
+overall structure variation explained by distance (P \textless{}
+0.001).\\
+~\\
+
+\includegraphics[width=1\linewidth,height=0.4\textheight]{Presentation_islands_files/figure-latex/unnamed-chunk-10-1}\\
+~\\
+
+\includegraphics[width=1\linewidth,height=0.4\textheight]{Presentation_islands_files/figure-latex/unnamed-chunk-11-1}
+
+\hfill\break
+\hfill\break
+\hfill\break
+
+\hypertarget{modules-distance-decay--null-model-shuffling-interactions-between-layers-m_3}{%
+\subsubsection{\texorpdfstring{Modules distance decay- Null model
+shuffling interactions between layers
+(\(M_3\))}{Modules distance decay- Null model shuffling interactions between layers (M\_3)}}\label{modules-distance-decay--null-model-shuffling-interactions-between-layers-m_3}}
+
+\hfill\break
+We tested if rewiring interaction across islands affects distance decay
+in structure by shuffling interactions of each pair of species between
+all the islands in which they co-occur. \(M_3\) shuffles intralayer
+links between islands but conserves the interlayer links.
+
+\hfill\break
+Shuffling interactions between islands did not break distance decay
+pattern in structure (\(R^2_{M_3}\) = 0.33, P = 0.006) but had a
+significant effect on the overall structure variation explained by
+distance (P \textless{} 0.001).\\
+~\\
+
+\includegraphics[width=1\linewidth,height=0.4\textheight]{Presentation_islands_files/figure-latex/unnamed-chunk-13-1}\\
+~\\
+
+\includegraphics[width=1\linewidth,height=0.4\textheight]{Presentation_islands_files/figure-latex/unnamed-chunk-14-1}
+
+\hfill\break
+\hfill\break
+\hfill\break
+
+\hypertarget{modules-distance-decay--beta-diversity-components}{%
+\subsubsection{Modules distance decay- Beta diversity
+components}\label{modules-distance-decay--beta-diversity-components}}
+
+\hfill\break
+Shuffling species between islands deviates more from the empirical value
+than shuffling interactions between islands (t-test, \(R^2_{M_3}\)
+\textgreater{} \(R^2_{M_2}\), P \textless{} 0.001), which indicates
+species turnover is the main driver of distance decay in structure.\\
+~\\
+
+\includegraphics[width=1\linewidth,height=0.4\textheight]{Presentation_islands_files/figure-latex/unnamed-chunk-15-1}
+
+\hfill\break
+\hfill\break
+\hfill\break
+
+\hypertarget{modules-distance-decay--null-model-uniform-value-interlayerlinks-m_4}{%
+\subsubsection{\texorpdfstring{Modules distance decay- Null model
+uniform value interlayerlinks
+(\(M_4\))}{Modules distance decay- Null model uniform value interlayerlinks (M\_4)}}\label{modules-distance-decay--null-model-uniform-value-interlayerlinks-m_4}}
+
+\hfill\break
+To test the effect of distance between islands, we fixed the weight of
+all interlayer links to a uniform value equal to the median of all the
+interlayer weights in the network. \(M_4\) maintains intralayer
+structure and the presence of interlayer links.
+
+\hfill\break
+Contrary to what we expected, fixing the same distance between islands
+produced a similar pattern of distance decay in modules as the empirical
+network (\(R^2_{M_4}\) = 0.68, P \textless{} 0.001).\\
+~\\
+
+\includegraphics[width=1\linewidth,height=0.4\textheight]{Presentation_islands_files/figure-latex/unnamed-chunk-17-1}\\
+~\\
+~\\
+~\\
+~\\
+~\\
+~\\
+~\\
+~\\
+~\\
+~\\
+~\\
+
+\end{document}

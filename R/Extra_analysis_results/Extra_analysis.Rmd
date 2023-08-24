@@ -1,0 +1,257 @@
+---
+title: "Untitled"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    collapse: no
+    number_sections: yes
+    code_folding: hide
+    theme: united
+    highlight: tango
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, results = "asis", message=FALSE, warning=FALSE, cache=TRUE, eval = TRUE, dev = c('png'), out.width = '100%', out.height='40%')
+```
+
+
+```{r load libraries, echo=FALSE, message=FALSE, warning=FALSE}
+library(infomapecology)
+library(igraph)
+library(bipartite)
+library(tidyverse)
+library(magrittr)
+library(betalink)
+library(readxl)
+library(ggalluvial)
+library(scatterpie)
+library(reshape2)
+library(ggforce)
+library(ggmap)
+library(ggraph)
+library(ggpubr)
+rm(list=ls())
+```
+
+\
+\
+\
+
+# Sensitivity analysis 
+We found the opposite pattern we expected (lower interedges gave us lower number of modules and higher jaccard similarity)
+\
+```{r}
+
+jaccard_similarity_empirical_and_fixed_km <- read.csv("sensitivity_nullmodel4.csv")
+
+jaccard_similarity_empirical_and_fixed_km %>% 
+  ggplot(aes(x= ave_dist_in_km , y= ave, group= trial, color= trial))+
+  ggtitle("Sensitivity")+ scale_color_discrete(name = "Interedges weight")+
+  geom_point()+ theme_classic()+ geom_smooth(method= "lm", se=F)+
+  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
+  theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
+  labs(x="Distance in Km", y="Jaccard Similarity")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+```
+\
+\
+
+# Relax rate
+We found the expected pattern (lower relax rate ->higher number of modules and lower jaccard similarity) when we used the relax rate.
+\
+\
+```{r}
+
+jaccard_similarity_empirical_and_relax_km <- read.csv("relax_nullmodel4.csv")
+
+
+jaccard_similarity_empirical_and_relax_km %>% 
+  ggplot(aes(x= ave_dist_in_km , y= ave, group= trial, color= trial))+
+  ggtitle("Relax rate")+ scale_color_discrete(name = "Relax rate")+
+  geom_point()+ theme_classic()+ geom_smooth(method= "lm", se=F)+
+  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
+  theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
+  labs(x="Distance in Km", y="Jaccard Similarity")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank()) 
+
+```
+\
+\
+
+#  ??!!למה 
+To try to understand why we get this pattern in the empirical network, we look into the distribution of modules across layers with higher (0.9) and lower (0.1) interedges values in the empirical network and using relax rate.
+\
+\
+
+## Higher value (0.9)
+\
+
+### Interedges value
+\
+```{r}
+
+#Interedges value
+module_data_id3<- read.csv("module_data_id3_higher.csv")
+
+module_data_id3$module<- as.factor(module_data_id3$module)
+module_data_id3$module <- fct_inorder(module_data_id3$module)
+
+Dist_Inter_high<-module_data_id3 %>% 
+  ggplot(aes(x=module, y= count ,fill= factor(layer_name)))+ geom_bar(stat= "identity")+ theme_classic()+ labs(y="Number of locations", x="Modules")+ 
+ theme(axis.text.x = element_blank(),legend.position= "none",
+                                                     axis.text.y=element_text(size=15), axis.title = element_text(size=17),
+                                       legend.text=element_blank())
+
+
+#Relax rate
+
+module_data_id4<- read.csv("module_data_id3_high_relax.csv")
+
+module_data_id4$module<- as.factor(module_data_id4$module)
+module_data_id4$module <- fct_inorder(module_data_id4$module)
+
+Dist_relax_high<-module_data_id4 %>% 
+  ggplot(aes(x=module, y= count ,fill= factor(layer_name)))+ geom_bar(stat= "identity")+ theme_classic()+ labs(y="Number of locations", x="Modules")+
+ theme(axis.text.x = element_blank(),  legend.text=element_blank(),legend.position= "none",
+                                                     axis.text.y=element_text(size=15), axis.title = element_text(size=17))
+
+
+#Combine plot
+plot_grid(Dist_Inter_high,Dist_relax_high,ncol = 2, labels = c('(I)', "(R)"))
+
+
+```
+
+
+\
+\
+\
+
+### Interedges value
+\
+```{r}
+#Plot modules in each island with size proportion
+
+Prop_sp_module_island<- read.csv("Prop_sp_module_island_higher.csv")
+
+Interedges_weight<- ggplot(Prop_sp_module_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
+  geom_tile(color='white') +
+  theme_classic() +
+  scale_fill_viridis_c(limits = c(0, 1)) +
+  scale_x_continuous(breaks=seq(1,83,4)) +
+  scale_y_discrete(limits = c("Hierro","Gomera","TenerifeTeno","TenerifeSouth","GranCanaria","Fuerteventura","WesternSahara"))+
+  labs(x='Module ID', y="Islands")
+Interedges_weight  
+
+```
+
+### Relax rate
+\
+```{r}
+#Plot modules in each island with size proportion
+
+Prop_sp_module_island<- read.csv("Prop_sp_module_island_high_relax.csv")
+
+Interedges_weight<- ggplot(Prop_sp_module_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
+  geom_tile(color='white') +
+  theme_classic() +
+  scale_fill_viridis_c(limits = c(0, 1)) +
+  scale_x_continuous(breaks=seq(1,83,4)) +
+  scale_y_discrete(limits = c("Hierro","Gomera","TenerifeTeno","TenerifeSouth","GranCanaria","Fuerteventura","WesternSahara"))+
+  labs(x='Module ID', y="Islands")
+Interedges_weight  
+
+```
+\
+\
+\
+\
+
+## Lower value (0.1)
+\
+\
+```{r}
+
+#Interedges value
+module_data_id3<- read.csv("module_data_id3_lower.csv")
+
+module_data_id3$module<- as.factor(module_data_id3$module)
+module_data_id3$module <- fct_inorder(module_data_id3$module)
+
+Dist_Inter_low<-module_data_id3 %>% 
+  ggplot(aes(x=module, y= count ,fill= factor(layer_name)))+ geom_bar(stat= "identity")+ theme_classic()+ labs(y="Number of locations", x="Modules")+ 
+ theme(axis.text.x = element_blank(),legend.position= "none",
+                                                     axis.text.y=element_text(size=15), axis.title = element_text(size=17),
+                                       legend.text=element_blank())
+
+
+#Relax rate
+
+module_data_id4<- read.csv("module_data_id3_low_relax.csv")
+
+module_data_id4$module<- as.factor(module_data_id4$module)
+module_data_id4$module <- fct_inorder(module_data_id4$module)
+
+Dist_relax_low<-module_data_id4 %>% 
+  ggplot(aes(x=module, y= count ,fill= factor(layer_name)))+ geom_bar(stat= "identity")+ theme_classic()+ labs(y="Number of locations", x="Modules")+
+ theme(axis.text.x = element_blank(),  legend.text=element_blank(),legend.position= "none",
+                                                     axis.text.y=element_text(size=15), axis.title = element_text(size=17))
+
+
+#Combine plot
+plot_grid(Dist_Inter_low,Dist_relax_low,ncol = 2, labels = c('(I)', "(R)"))
+
+
+```
+\
+\
+\
+
+### Interedges value
+\
+```{r}
+#Plot modules in each island with size proportion
+
+Prop_sp_module_island<- read.csv("Prop_sp_module_island_lower.csv")
+
+Interedges_weight<- ggplot(Prop_sp_module_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
+  geom_tile(color='white') +
+  theme_classic() +
+  scale_fill_viridis_c(limits = c(0, 1)) +
+  scale_x_continuous(breaks=seq(1,83,4)) +
+  scale_y_discrete(limits = c("Hierro","Gomera","TenerifeTeno","TenerifeSouth","GranCanaria","Fuerteventura","WesternSahara"))+
+  labs(x='Module ID', y="Islands")
+Interedges_weight  
+
+```
+
+### Relax rate
+\
+```{r}
+#Plot modules in each island with size proportion
+
+Prop_sp_module_island<- read.csv("Prop_sp_module_island_low_relax.csv")
+
+Relax_low<- ggplot(Prop_sp_module_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
+  geom_tile(color='white') +
+  theme_classic() +
+  scale_fill_viridis_c(limits = c(0, 1)) +
+  scale_x_continuous(breaks=seq(1,83,4)) +
+  scale_y_discrete(limits = c("Hierro","Gomera","TenerifeTeno","TenerifeSouth","GranCanaria","Fuerteventura","WesternSahara"))+
+  labs(x='Module ID', y="Islands")
+Relax_low 
+
+```
