@@ -150,9 +150,20 @@ for (trial in 1:1000){
     interlayers_with_weights_islands <- rbind(interlayers_with_weights_islands,inter_fid)
   }
 }
+#write.csv(interlayers_with_weights_islands, "./csvs/Islands/Jac/interlayer_edges_shuf_classic_islands_as_layers.csv", row.names = FALSE)
 
-interlayer_edges_shuf_classic<-interlayers_with_weights_islands 
-#write.csv(interlayer_edges_shuf_classic, "./csvs/Islands/Jac/interlayer_edges_shuf_classic_islands_as_layers.csv",row.names = FALSE)
+interlayer_edges_shuf_classic <- read.csv("./csvs/Islands/Jac/interlayer_edges_shuf_classic_islands_as_layers.csv") 
+
+interlayer_edges_shuf_classic<-interlayer_edges_shuf_classic[,c(2,1,3,4,5,6)]#change order columns
+
+#inverted version
+interlayer_inverted <- tibble(values= interlayer_edges_shuf_classic$layer_to, interlayer_edges_shuf_classic$node_to, interlayer_edges_shuf_classic$layer_from, 
+                              interlayer_edges_shuf_classic$node_from, interlayer_edges_shuf_classic$weight,interlayer_edges_shuf_classic$trial_num) #create an inverted copy for directed intralayers
+colnames(interlayer_inverted) <- c("layer_from", "node_from", "layer_to", "node_to", "weight","trial_num")
+
+#Create interedgelist
+edgelist_interlayers_both <- bind_rows(interlayer_edges_shuf_classic, interlayer_inverted) #combine inverted and non inverted versions of intra
+
 
 ##---- create intraedges inverted versions and put weight ---------------------------------
 dryad_intralayer_shuf_classic <- read.csv("./csvs/Islands/Jac/shuf_null_edge_list_classic_islands_as_layers.csv") 
@@ -188,14 +199,8 @@ edgelist_intralayer_shuf_classic <- bind_rows(intralayer_weighted_shuf_classic, 
 edgelist_intralayer_shuf_classic<-edgelist_intralayer_shuf_classic[,c(1,2,3,4,6,5)]#change order columns
 colnames(edgelist_intralayer_shuf_classic)[6]<-"trial_num"
 
-interlayer_edges_shuf_classic<-read.csv("csvs/Islands/Jac/interlayer_edges_shuf_classic_islands_as_layers.csv")
-dryad_interlayer_shuf_classic<-interlayer_edges_shuf_classic#interedges
-dryad_interlayer_shuf_classic<-interlayer_edges_shuf_classic[,c(2,1,3,4,5,6)]#change order columns
-dryad_interlayer_shuf_classic$node_from<-as.integer(dryad_interlayer_shuf_classic$node_from)
-dryad_interlayer_shuf_classic$node_to<-as.integer(dryad_interlayer_shuf_classic$node_to)
 
-
-dryad_edgelist_complete_shuf_classic <- bind_rows(edgelist_intralayer_shuf_classic, dryad_interlayer_shuf_classic) #combine inter and intra
+dryad_edgelist_complete_shuf_classic <- bind_rows(edgelist_intralayer_shuf_classic, edgelist_interlayers_both) #combine inter and intra
 #write.csv(dryad_edgelist_complete_shuf_classic, "./csvs/Islands/Jac/dryad_edgelist_complete_shuf_classic_islands_as_layers.csv", row.names = FALSE)
 
 # ----multilayer_class-----------------------------------------------------------------------------------------------
@@ -376,28 +381,8 @@ lm2_module_classic = lm(ave ~ mean_dist_in_km, data=null) #in null model
 summary(lm1_module_classic)
 summary(lm2_module_classic)
 
-
-#lm_module_classic_prueba = lm(turnover ~ mean_distance, data=all_edge_list_islands_combine_no_module_shuf_classic_output)
-
-#all_edge_list_islands_combine_no_module_shuf_classic_output %>% 
-#  ggplot(aes(x= mean_distance, y= turnover))+
-#  geom_point()+ theme_classic()+ geom_smooth(method= "lm", se=F)+
-#  labs(x="Distance (Km)", y="Jaccard Similarity")+  #stat_cor(aes(label = ..rr.label..))+
-  
-#  theme(panel.grid = element_blank(),
- #       panel.border = element_rect(color = "black",fill = NA,size = 1),
-  #      panel.spacing = unit(0.5, "cm", data = NULL),
-   #     axis.text = element_text(size=15, color='black'),
-    #    axis.title = element_text(size=17, color='black'),
-    #    axis.line = element_blank(),
-    #    legend.text.align = 0,
-    #    legend.title =  element_text(size = 13, color = "black"),
-    #    legend.text = element_text(size = 11))
-
-#summary(lm_module_classic_prueba)
-
 #----correlation and r sqaured between jaccard and distance for each run
-#all_edge_list_islands_combine_no_module_shuf_classic <- read.csv("./csvs/Islands/Jac/all_edge_list_islands_combine_no_module_shuf_classic.csv")
+all_edge_list_islands_combine_no_module_shuf_classic <- read.csv("./csvs/Islands/Jac/all_edge_list_islands_combine_no_module_shuf_classic.csv")
 
 iteration_correlation_classic <- NULL
 iteration_correlation_data_classic <- all_edge_list_islands_combine_no_module_shuf_classic %>% subset(layer_from != layer_to) 
@@ -425,7 +410,7 @@ iteration_correlation_classic
 
 
 ##distribution of rsquared and add empirical
-correlation_empirical_classic <- read.csv("./csvs/Islands/Jac/correlation_empirical_pols.csv")
+correlation_empirical_classic <- read.csv("./csvs/Islands/Jac/correlation_empirical.csv")
 iteration_correlation_classic <- read.csv("./csvs/Islands/Jac/iteration_correlation_classic_islands.csv")
 iteration_correlation_classic2<-iteration_correlation_classic %>% mutate(Type = "null_class")
 
@@ -451,6 +436,30 @@ iteration_correlation_classic<-na.omit(iteration_correlation_classic)
 
 p_rsquared_classic <- sum(iteration_correlation_classic$rsquared > correlation_empirical_classic$rsquared)/1000
 p_rsquared_classic
+
+## -- distribution of slopes and add empirical
+
+pdf('./graphs/Islands/Jac/M3_slopes_module_DD.pdf', 10, 6)
+iteration_correlation_classic2  %>% ggplot(aes(x = slope, fill= Type))+ 
+  geom_density(alpha = 0.6)+ 
+  geom_vline(xintercept = correlation_empirical_classic$slope, linetype = "dashed", color = "#FB3B1E") +
+  labs(x= "Slope", y="Density")+  
+  scale_fill_manual(name = "Null Model",  label = expression("M"^3), values= "#FA86F2")+
+  theme_classic()+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
+
+dev.off()
+
+p_slope_classic <- sum(iteration_correlation_classic$slope < correlation_empirical_classic$slope)/1000
+p_slope_classic
 
 
 

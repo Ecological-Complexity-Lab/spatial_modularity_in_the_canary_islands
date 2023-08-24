@@ -180,6 +180,17 @@ for (i in unique(co_occurrence_from_shuf2$node_from)) {
 interlayer_edges_shuf_pols<-interlayers_with_weights_islands 
 #write.csv(interlayer_edges_shuf_pols, "./csvs/Islands/Jac/interlayer_edges_shuf_pols_islands_as_layers.csv",row.names = FALSE)
 
+interlayer_edges_shuf_pols <- read.csv("csvs/Islands/Jac/interlayer_edges_shuf_pols_islands_as_layers.csv")
+interlayer_edges_shuf_pols<-interlayer_edges_shuf_pols[,c(2,1,3,4,5,6)]#change order columns
+
+#inverted version
+interlayer_inverted <- tibble(values= interlayer_edges_shuf_pols$layer_to, interlayer_edges_shuf_pols$node_to, interlayer_edges_shuf_pols$layer_from, 
+                              interlayer_edges_shuf_pols$node_from, interlayer_edges_shuf_pols$weight, interlayer_edges_shuf_pols$trial_num) #create an inverted copy for directed intralayers
+colnames(interlayer_inverted) <- c("layer_from", "node_from", "layer_to", "node_to", "weight","trial_num")
+
+#Create interedgelist
+edgelist_interlayers_pols <- bind_rows(interlayer_edges_shuf_pols, interlayer_inverted) #combine inverted and non inverted versions of intra
+
 
 ##---- create intraedges inverted versions and put weight ---------------------------------
 dryad_intralayer_shuf_pols <- read.csv("csvs/Islands/Jac/shuf_null_edge_list_islands_as_layers.csv") 
@@ -215,14 +226,8 @@ edgelist_intralayer_shuf_pols <- bind_rows(intralayer_weighted_shuf_pols, intral
 edgelist_intralayer_shuf_pols<-edgelist_intralayer_shuf_pols[,c(1,2,3,4,6,5)]#change order columns
 colnames(edgelist_intralayer_shuf_pols)[6]<-"trial_num"
 
-interlayer_edges_shuf_pols<-read.csv("csvs/Islands/Jac/interlayer_edges_shuf_pols_islands_as_layers.csv")
-dryad_interlayer_shuf_pols<-interlayer_edges_shuf_pols#interedges
-dryad_interlayer_shuf_pols<-interlayer_edges_shuf_pols[,c(2,1,3,4,5,6)]#change order columns
-dryad_interlayer_shuf_pols$node_from<-as.integer(dryad_interlayer_shuf_pols$node_from)
-dryad_interlayer_shuf_pols$node_to<-as.integer(dryad_interlayer_shuf_pols$node_to)
 
-
-dryad_edgelist_complete_shuf_pols <- bind_rows(edgelist_intralayer_shuf_pols, dryad_interlayer_shuf_pols) #combine inter and intra
+dryad_edgelist_complete_shuf_pols <- bind_rows(edgelist_intralayer_shuf_pols, edgelist_interlayers_pols) #combine inter and intra
 #write.csv(dryad_edgelist_complete_shuf_pols, "./csvs/Islands/Jac/dryad_edgelist_complete_shuf_pols_islands_as_layers.csv", row.names = FALSE)
 
 
@@ -327,6 +332,18 @@ for (trial in 1:1000){
 interlayer_edges_shuf_plants<-interlayers_with_weights_islands 
 #write.csv(interlayer_edges_shuf_plants, "./csvs/Islands/Jac/interlayer_edges_shuf_plants_islands_as_layers.csv",row.names = FALSE)
 
+#interlayer_edges_shuf_plants <- read.csv("csvs/Islands/Jac/interlayer_edges_shuf_plants_islands_as_layers.csv")
+interlayer_edges_shuf_plants<-interlayer_edges_shuf_plants[,c(2,1,3,4,5,6)]#change order columns
+
+#inverted version
+interlayer_inverted <- tibble(values= interlayer_edges_shuf_plants$layer_to, interlayer_edges_shuf_plants$node_to, interlayer_edges_shuf_plants$layer_from, 
+                              interlayer_edges_shuf_plants$node_from, interlayer_edges_shuf_plants$weight, interlayer_edges_shuf_plants$trial_num) #create an inverted copy for directed intralayers
+colnames(interlayer_inverted) <- c("layer_from", "node_from", "layer_to", "node_to", "weight","trial_num")
+
+#Create interedgelist
+edgelist_interlayers_plants <- bind_rows(interlayer_edges_shuf_plants, interlayer_inverted) #combine inverted and non inverted versions of intra
+
+
 ##---- create intraedges inverted versions and put weight ---------------------------------
 dryad_intralayer_shuf_plants <- read.csv("csvs/Islands/Jac/shuf_null_edge_list_plants_islands_as_layers.csv") 
 dryad_intralayer_shuf_plants <- dryad_intralayer_shuf_plants[, c(6,1,2,3,4,5)]
@@ -361,14 +378,8 @@ edgelist_intralayer_shuf_plants <- bind_rows(intralayer_weighted_shuf_plants, in
 edgelist_intralayer_shuf_plants<-edgelist_intralayer_shuf_plants[,c(1,2,3,4,6,5)]#change order columns
 colnames(edgelist_intralayer_shuf_plants)[6]<-"trial_num"
 
-dryad_interlayer_shuf_plants<-interlayer_edges_shuf_plants#interedges
-dryad_interlayer_shuf_plants<-interlayer_edges_shuf_plants[,c(2,1,3,4,5,6)]#change order columns
-dryad_interlayer_shuf_plants$node_from<-as.integer(dryad_interlayer_shuf_plants$node_from)
-dryad_interlayer_shuf_plants$node_to<-as.integer(dryad_interlayer_shuf_plants$node_to)
-
-dryad_edgelist_complete_shuf_plants <- bind_rows(edgelist_intralayer_shuf_plants, dryad_interlayer_shuf_plants) #combine inter and intra
+dryad_edgelist_complete_shuf_plants <- bind_rows(edgelist_intralayer_shuf_plants, edgelist_interlayers_plants) #combine inter and intra
 #write.csv(dryad_edgelist_complete_shuf_plants, "./csvs/Islands/Jac/dryad_edgelist_complete_shuf_plants_islands_as_layers.csv", row.names = FALSE)
-
 
 
 ##---- shuffling both plants and pollinators -------------------------------------------------------------------
@@ -467,6 +478,19 @@ for (trial in 1:1000){
 interlayer_edges_shuf_both<-interlayers_with_weights_islands 
 #write.csv(interlayer_edges_shuf_both, "./csvs/Islands/Jac/interlayer_edges_shuf_both_islands_as_layers.csv",row.names = FALSE)
 
+#interlayer_edges_shuf_both <- read.csv("csvs/Islands/Jac/interlayer_edges_shuf_both_islands_as_layers.csv")
+interlayer_edges_shuf_both <-interlayer_edges_shuf_both[,c(2,1,3,4,5,6)]#change order columns
+
+#inverted version
+interlayer_inverted <- tibble(values= interlayer_edges_shuf_both$layer_to, interlayer_edges_shuf_both$node_to, interlayer_edges_shuf_both$layer_from, 
+                              interlayer_edges_shuf_both$node_from, interlayer_edges_shuf_both$weight, interlayer_edges_shuf_both$trial_num) #create an inverted copy for directed intralayers
+colnames(interlayer_inverted) <- c("layer_from", "node_from", "layer_to", "node_to", "weight","trial_num")
+
+#Create interedgelist
+edgelist_interlayers_both <- bind_rows(interlayer_edges_shuf_both, interlayer_inverted) #combine inverted and non inverted versions of intra
+
+
+
 ##---- create intraedges inverted versions and put weight ---------------------------------
 dryad_intralayer_shuf_both <- read.csv("csvs/Islands/Jac/shuf_null_edge_list_both_islands_as_layers.csv") 
 dryad_intralayer_shuf_both <- dryad_intralayer_shuf_both[, c(6,1,2,3,4,5)]
@@ -501,12 +525,8 @@ edgelist_intralayer_shuf_both <- bind_rows(intralayer_weighted_shuf_both, intral
 edgelist_intralayer_shuf_both<-edgelist_intralayer_shuf_both[,c(1,2,3,4,6,5)]#change order columns
 colnames(edgelist_intralayer_shuf_both)[6]<-"trial_num"
 
-dryad_interlayer_shuf_both<-interlayer_edges_shuf_both#interedges
-dryad_interlayer_shuf_both<-interlayer_edges_shuf_both[,c(2,1,3,4,5,6)]#change order columns
-dryad_interlayer_shuf_both$node_from<-as.integer(dryad_interlayer_shuf_both$node_from)
-dryad_interlayer_shuf_both$node_to<-as.integer(dryad_interlayer_shuf_both$node_to)
 
-dryad_edgelist_complete_shuf_both <- bind_rows(edgelist_intralayer_shuf_both, dryad_interlayer_shuf_both) #combine inter and intra
+dryad_edgelist_complete_shuf_both <- bind_rows(edgelist_intralayer_shuf_both, edgelist_interlayers_both) #combine inter and intra
 #write.csv(dryad_edgelist_complete_shuf_both, "./csvs/Islands/Jac/dryad_edgelist_complete_shuf_both_islands_as_layers.csv", row.names = FALSE)
 
 
@@ -787,7 +807,6 @@ for (i in 1:1000){
 #iteration_correlation_pols <- read.csv("./csvs/Islands/Jac/iteration_correlation_pols.csv")
 
 #correlation empirical
-classic_layers_turnover_with_distances <- read.csv("./csvs/Islands/classic_layers_turnover_with_distances_islands_as_layers.csv")
 islands_turnover_with_distnace_empirical <- read.csv("csvs/Islands/Jac/islands_turnover_with_distnace_empirical.csv")
 
 
@@ -828,6 +847,27 @@ rsquared_pols
 p_rsquared_pols <- sum(iteration_correlation_pols$rsquared > correlation_empirical_pols$rsquared)/1000
 p_rsquared_pols
 
+#distribution of slope and add empirical
+
+slope_pols <- iteration_correlation_pols %>% 
+  ggplot(aes(x = slope))+ 
+  geom_density(fill = "#BE75FA", color = "#BE75FA", alpha = 0.4)+ 
+  theme_classic()+ labs(x = "Slope")+
+  geom_vline(xintercept = correlation_empirical_pols$slope, linetype = "dashed", color = "#F47069")+
+  theme(axis.title=element_text(size=22))+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+
+slope_pols 
+p_slope_pols <- sum(iteration_correlation_pols$slope < correlation_empirical_pols$slope)/1000
+p_slope_pols
+
+
+
 #----plants
 #all_edge_list_layer_combine_no_module_shuf_plants_output <- read.csv("./csvs/Islands/Jac/all_edge_list_layer_combine_no_module_shuf_plants_output_islands.csv")
 iteration_correlation_plants <- NULL
@@ -859,7 +899,7 @@ for (i in 1:1000){
 #pdf('./graphs/shuffle_between_layers/plants_r_squares_module_DD.pdf', 10, 6) SACAR SI NO SE USA
 rsquared_plants <- iteration_correlation_plants %>% 
   ggplot(aes(x = rsquared))+ 
-  geom_density(fill = "#15B7BC", color = "#15B7BC", alpha = 0.4)+ 
+  geom_density(fill = "#72A323", color = "#72A323", alpha = 0.4)+ 
   theme_classic()+ labs(x = "R squared")+
   geom_vline(xintercept = correlation_empirical_pols$rsquared, linetype = "dashed", color = "#F47069")+
   theme(axis.title=element_text(size=22))+
@@ -872,7 +912,25 @@ rsquared_plants <- iteration_correlation_plants %>%
 #dev.off()
 rsquared_plants
 p_rsquared_plants <- sum(iteration_correlation_plants$rsquared < correlation_empirical_pols$rsquared)/1000
-p_rsquared_plants #0.997
+p_rsquared_plants 
+
+#distribution of slope and add empirical
+slope_plants <- iteration_correlation_plants %>% 
+  ggplot(aes(x = slope))+ 
+  geom_density(fill = "#72A323", color = "#72A323", alpha = 0.4)+ 
+  theme_classic()+ labs(x = "Slope")+
+  geom_vline(xintercept = correlation_empirical_pols$slope, linetype = "dashed", color = "#F47069")+
+  theme(axis.title=element_text(size=22))+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+
+slope_plants
+p_slope_plants<- sum(iteration_correlation_plants$slope < correlation_empirical_pols$slope)/1000
+p_slope_plants
 
 #---- both
 all_edge_list_layer_combine_no_module_shuf_both_output <- read.csv("./csvs/Islands/Jac/all_edge_list_layer_combine_no_module_shuf_both_output_islands.csv")
@@ -907,7 +965,7 @@ for (i in 1:1000){
 #pdf('./graphs/shuffle_between_layers/both_r_squares_module_DD.pdf', 10, 6) SACAR SI NO SE USA
 rsquared_both <- iteration_correlation_both %>% 
   ggplot(aes(x = rsquared))+ 
-  geom_density(fill = "#72A323", color = "#72A323", alpha = 0.4)+ 
+  geom_density(fill ="#15B7BC", color = "#15B7BC", alpha = 0.4)+ 
   theme_classic()+ labs(x = "R squared")+
   geom_vline(xintercept = correlation_empirical_pols$rsquared, linetype = "dashed", color = "#F47069")+
   theme(axis.title=element_text(size=22))+
@@ -920,7 +978,26 @@ rsquared_both <- iteration_correlation_both %>%
 #dev.off()
 rsquared_both
 p_rsquared_both <- sum(iteration_correlation_both$rsquared > correlation_empirical_pols$rsquared)/1000
-p_rsquared_both #0
+p_rsquared_both 
+
+#distribution of slope and add empirical
+slope_both <- iteration_correlation_both %>% 
+  ggplot(aes(x = slope))+ 
+  geom_density(fill = "#15B7BC", color = "#15B7BC", alpha = 0.4)+ 
+  theme_classic()+ labs(x = "Slope")+
+  geom_vline(xintercept = correlation_empirical_pols$slope, linetype = "dashed", color = "#F47069")+
+  theme(axis.title=element_text(size=22))+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=14, color='black'),
+        axis.title = element_text(size=14, color='black'),
+        axis.line = element_blank())
+
+slope_both
+p_slope_both<- sum(iteration_correlation_both$slope < correlation_empirical_pols$slope)/1000
+p_slope_both
+
 
 ## -- all 3 R squared in the same square
 iteration_correlation_pols_M1 <- iteration_correlation_pols %>% mutate(type = "shuf_pollinators")
@@ -937,12 +1014,38 @@ rqsuares_M1_all$type <- factor(rqsuares_M1_all$type, levels = c("shuf_plants","s
 
 
 pdf('./graphs/Islands/Jac/M1_r_squares_module_DD.pdf', 10, 6)
-
 rqsuares_M1_all %>% 
   ggplot(aes(x = rsquared, fill = type))+ 
   geom_density(alpha = 0.5)+ 
   geom_vline(xintercept = correlation_empirical_pols$rsquared, linetype = "dashed", color = "#FB3B1E")+
   labs(x= expression("R"^2), y="Density")+  
+  scale_fill_manual(name = "Null Model",  labels = c(expression("M"[1]^P),expression("M"[1]^A),
+                                                     expression("M"[1]^AP)), values = c("#72A323","#A44CD3", "#15B7BC"))+
+  theme_classic()+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
+dev.off()
+
+## -- all 3 slope in the same square
+
+slope_M1_all <- read.csv("./csvs/Islands/Jac/rqsuares_M1_all.csv")
+
+
+rqsuares_M1_all$type <- factor(rqsuares_M1_all$type, levels = c("shuf_plants","shuf_pollinators","shuf_both"))
+
+pdf('./graphs/Islands/Jac/M1_slope_module_DD.pdf', 10, 6)
+rqsuares_M1_all %>% 
+  ggplot(aes(x = slope, fill = type))+ 
+  geom_density(alpha = 0.5)+ 
+  geom_vline(xintercept = correlation_empirical_pols$slope, linetype = "dashed", color = "#FB3B1E")+
+  labs(x= "Slope", y="Density")+  
   scale_fill_manual(name = "Null Model",  labels = c(expression("M"[1]^P),expression("M"[1]^A),
                                                      expression("M"[1]^AP)), values = c("#72A323","#A44CD3", "#15B7BC"))+
   theme_classic()+

@@ -208,13 +208,18 @@ jaccard_similarity_empirical_and_fixed_km <- jaccard_similarity_empirical_and_fi
 #write.csv(jaccard_similarity_empirical_and_fixed_km, "./csvs/Islands/Jac/sensitivity_nullmodel4.csv", row.names = FALSE) #so it can be used for classical shuffling
 
 #Plot
+library(ggthemes)
+library(paletteer)
 jaccard_similarity_empirical_and_fixed_km <- read.csv("csvs/Islands/Jac/sensitivity_nullmodel4.csv")
+
+cols = c("#24693DFF","#438B4AFF", "#66AD60FF", "#8FD180FF", "#DBF0D4FF","#DCEAF4FF", "#95C1DDFF", "#6D9CC2FF",
+         "#4A79A4FF", "#2A5783FF","#FB3B1E")
 
 pdf('./graphs/Islands/Jac/sensitivity_M4.pdf', 10, 6)
 jaccard_similarity_empirical_and_fixed_km %>% 
   ggplot(aes(x= ave_dist_in_km , y= ave, group= trial, color= trial))+
   geom_point()+ theme_classic()+ geom_smooth(method= "lm", se=F)+
-  scale_color_discrete(name = "Interedges weight")+
+  scale_color_manual(values=cols)+
   #geom_smooth(jaccard_similarity_empirical_and_fixed_km = subset(trial == "empirical"), method = "lm", se = FALSE, color = "#FB3B1E")+
   theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
   theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+

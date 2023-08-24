@@ -268,18 +268,25 @@ for (trial in 1:1000){
     interlayers_with_weights_islands <- rbind(interlayers_with_weights_islands,inter_fid)
   }
 }
-
-interlayers_with_weights_shuf_interactions<-interlayers_with_weights_islands 
 #write.csv(interlayers_with_weights_shuf_interactions, "./csvs/Islands/Jac/interlayers_with_weights_shuf_interactions.csv", row.names = FALSE)
+
+interlayers_with_weights_islands <- read.csv("./csvs/Islands/Jac/interlayers_with_weights_shuf_interactions.csv")
+interlayers_with_weights_islands<-interlayers_with_weights_islands[,c(2,1,3,4,5,6)]#change order columns
+
+#inverted version
+interlayer_inverted <- tibble(values= interlayers_with_weights_islands$layer_to, interlayers_with_weights_islands$node_to, interlayers_with_weights_islands$layer_from, 
+                              interlayers_with_weights_islands$node_from, interlayers_with_weights_islands$weight,interlayers_with_weights_islands$trial_num) #create an inverted copy for directed intralayers
+colnames(interlayer_inverted) <- c("layer_from", "node_from", "layer_to", "node_to", "weight","trial_num")
+
+#Create interedgelist
+edgelist_interlayers_both <- bind_rows(interlayers_with_weights_islands, interlayer_inverted) #combine inverted and non inverted versions of intra
 
 ## ----multilayer_extended_final--------------------------------------------------------------------------------------
 intralayer_edges_shuf_interactions <- read.csv("./csvs/Islands/Jac/intralayer_edges_shuf_interactions.csv")
 colnames(intralayer_edges_shuf_interactions)[6]<-"trial_num" #intraedges
 
-interlayers_with_weights_shuf_interactions<-interlayers_with_weights_shuf_interactions[,c(2,1,3,4,5,6)]#change order columns of interedges
-
 dryad_edgelist_complete_shuf_interactions <- bind_rows(intralayer_edges_shuf_interactions, 
-                                                       interlayers_with_weights_shuf_interactions) #combine inter and intra
+                                                       edgelist_interlayers_both) #combine inter and intra
 
 #write.csv(dryad_edgelist_complete_shuf_interactions, "./csvs/Islands/Jac/dryad_edgelist_complete_shuf_interactions_islands_as_layers.csv", row.names = FALSE)
 
@@ -491,9 +498,31 @@ for (i in 1:1000){
 
 #write.csv(iteration_correlation_interactions, "./csvs/Islands/Jac/iteration_correlation_interactions_islands.csv", row.names = FALSE)
 
+
+#correlation empirical
+islands_turnover_with_distnace_empirical <- read.csv("csvs/Islands/Jac/islands_turnover_with_distnace_empirical.csv")
+
+
+correlation_empirical_data <- cor.test(islands_turnover_with_distnace_empirical$turnover, #ave is just the value of the turnover
+                                            islands_turnover_with_distnace_empirical$distance_in_km, method = "pearson")
+
+lm_val_empirical <- lm(turnover ~ distance_in_km, data = islands_turnover_with_distnace_empirical)
+
+correlation_empirical<- tibble(estimate = correlation_empirical_data$estimate, 
+                                     p_val = correlation_empirical_data$p.value, 
+                                     statistic = correlation_empirical_data$statistic, 
+                                     confidence_int_low = correlation_empirical_data$conf.int[1],
+                                     confidence_int_high = correlation_empirical_data$conf.int[2],
+                                     slope = lm_val_empirical$coefficients[2],
+                                     intercept = lm_val_empirical$coefficients[1], 
+                                     rsquared = summary(lm_val_empirical)$adj.r.squared)
+
+#write.csv(correlation_empirical, "./csvs/Islands/Jac/correlation_empirical.csv", row.names = FALSE) #so it can be used for classical shuffling
+#correlation_empirical_pols <- read.csv("./csvs/Islands/Jac/correlation_empirical.csv")
+
 ## -- distribution of rsquared and add empirical
-correlation_empirical_interactions <- read.csv("./csvs/Islands/Jac/correlation_empirical_pols.csv")
-iteration_correlation_interactions <- read.csv("./csvs/Islands/iteration_correlation_interactions_islands.csv")
+correlation_empirical_interactions <- read.csv("./csvs/Islands/Jac/correlation_empirical.csv")
+iteration_correlation_interactions <- read.csv("./csvs/Islands/Jac/iteration_correlation_interactions_islands.csv")
 iteration_correlation_interactions2<-iteration_correlation_interactions %>% mutate(Type = "null_int")
 
 pdf('./graphs/Islands/Jac/M2_r_squares_module_DD.pdf', 10, 6)
@@ -515,6 +544,29 @@ iteration_correlation_interactions2 %>% ggplot(aes(x = rsquared, fill= Type))+
 
 dev.off()
 
-p_rsquared_interactions <- sum(iteration_correlation_interactions$rsquared > correlation_empirical_interactions$rsquared)/1000
+p_rsquared_interactions <- sum(iteration_correlation_interactions$rsquared < correlation_empirical_interactions$rsquared)/1000
 p_rsquared_interactions
 
+## -- distribution of slopes and add empirical
+
+pdf('./graphs/Islands/Jac/M2_slopes_module_DD.pdf', 10, 6)
+iteration_correlation_interactions2 %>% ggplot(aes(x = slope, fill= Type))+ 
+  geom_density(alpha = 0.6)+ 
+  geom_vline(xintercept = correlation_empirical_interactions$slope, linetype = "dashed", color = "#FB3B1E") +
+  labs(x= "Slope", y="Density")+  
+  scale_fill_manual(name = "Null Model",  label = expression("M"^2), values= "#E6AB02")+
+  theme_classic()+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
+
+dev.off()
+
+p_rsquared_interactions <- sum(iteration_correlation_interactions$slope < correlation_empirical_interactions$slope)/1000
+p_rsquared_interactions

@@ -119,9 +119,19 @@ for (i in unique(co_occurrence$node_from)) {
   interlayers_with_weights_islands <- rbind(interlayers_with_weights_islands,inter_fid)
 }
 
+interlayers_with_weights_islands<-interlayers_with_weights_islands[,c(2,1,3,4,5)]#change order columns
+
+#inverted version
+interlayer_inverted <- tibble(values= interlayers_with_weights_islands$layer_to, interlayers_with_weights_islands$node_to, interlayers_with_weights_islands$layer_from, 
+                              interlayers_with_weights_islands$node_from, interlayers_with_weights_islands$weight) #create an inverted copy for directed intralayers
+colnames(interlayer_inverted) <- c("layer_from", "node_from", "layer_to", "node_to", "weight")
+
+#Create interedgelist
+edgelist_interlayers_both <- bind_rows(interlayers_with_weights_islands, interlayer_inverted) #combine inverted and non inverted versions of intra
+
 
 ## ----multilayer_extended_final--------------------------------------------------------------------------------------
-dryad_edgelist_complete <- bind_rows(edgelist_intralayers_both, interlayers_with_weights_islands) #combine weighted version of intra with inter
+dryad_edgelist_complete <- bind_rows(edgelist_intralayers_both, edgelist_interlayers_both) #combine weighted version of intra with inter
 
 ## ----node_metadata--------------------------------------------------------------------------------------------------                                            
 pollinators <- sort(unique(intralayer_weighted$node_to)) #adding up only pol who haven't been added yet 
@@ -239,11 +249,11 @@ co_occurrence_tot<-co_occurrence_species %>%  group_by(node_id) %>%
 
 
 co_occurrence_tot$Num_pot_interedge<-as.numeric(co_occurrence_tot$Num_pot_interedge)
-pot_interedge<-co_occurrence_tot %>% ungroup() %>% summarize(Pot_interedge = sum(Num_pot_interedge))
+pot_interedge<-co_occurrence_tot %>% ungroup() %>% summarize(Pot_interedge = sum(Num_pot_interedge) *2) #because it is directed, so doble op
 
 #Realized interedges links
 real_interedge<- dryad_edgelist_complete_ids %>% filter(layer_from!=layer_to) %>% 
-                summarize(Real_interedges = n())  
+                summarize(Real_interedges = n())
 
 interedges_comp<-cbind(pot_interedge,real_interedge, col=1)
 interedges_comp2<- pivot_longer(interedges_comp, names_to = "group", values_to = "Count", cols = -col)
@@ -251,7 +261,7 @@ interedges_comp2<- pivot_longer(interedges_comp, names_to = "group", values_to =
 pdf('./graphs/Islands/Jac/realized_interedges.pdf', 10, 6)
 interedges_comp2%>%
   ggplot(aes(x=group, y= Count, fill=group))+ geom_bar(stat='identity', alpha= 0.6, color= "black")+ theme_bw()+
-  scale_y_continuous(limits = c(0, 500), breaks=seq(0,500,50)) +
+  scale_y_continuous(limits = c(0, 900), breaks=seq(0,900,100)) +
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
         panel.spacing = unit(0.5, "cm", data = NULL),
@@ -299,7 +309,7 @@ same_species_mod<-modules_dryad_multilayer  %>% select(-flow,-species) %>%
   group_by(module) %>% distinct(node_id) %>% count() #all modules have two or more different species
 
 df<-data.frame(Group= c("Self-species per module","Multi-species per module"),
-               Count = c(0,30))
+               Count = c(0,45))
 
 pdf('./graphs/Islands/Jac/Modules_self-species.pdf', 10, 6)
 df%>%
