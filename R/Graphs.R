@@ -187,13 +187,19 @@ intra_inter_data_for_distibution <- data.frame(values= c(intralayer_weighted$wei
 
 pdf('./graphs/Islands/Jac/intra and interlinks_islands_jaccard.pdf', 10, 6)
 intra_inter_data_for_distibution %>%
-  ggplot(aes(x=values, fill=group))+ geom_histogram(position= "identity", alpha= 0.6, color= "black")+ theme_bw()+
+  ggplot(aes(x=values, fill=group))+ geom_histogram(position= "identity", alpha= 0.70, color= "black")+ 
+  labs(x='Weight', y="Count") +theme_bw()+
+  scale_fill_manual(name = "Links",  label = c("Interlayer","Intralayer \nplants", "Intralayer \npol"), values = c("#F53416","#008000","#CBADFF"))+
+  theme_classic()+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
         panel.spacing = unit(0.5, "cm", data = NULL),
-        axis.text = element_text(size=14, color='black'),
-        axis.title = element_text(size=14, color='black'),
-        axis.line = element_blank())
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
 dev.off()
 
 
@@ -308,8 +314,10 @@ modules_dryad_multilayer <- read.csv("./csvs/Islands/Jac/modules_in_network_isla
 same_species_mod<-modules_dryad_multilayer  %>% select(-flow,-species) %>% 
   group_by(module) %>% distinct(node_id) %>% count() #all modules have two or more different species
 
+check<-same_species_mod %>% filter(n>1)
+
 df<-data.frame(Group= c("Self-species per module","Multi-species per module"),
-               Count = c(0,45))
+               Count = c(11,31))
 
 pdf('./graphs/Islands/Jac/Modules_self-species.pdf', 10, 6)
 df%>%
@@ -424,7 +432,6 @@ Prop_sp_module_island<- Prop_sp_module_2 %>%
                                layer_id == '6' ~ 'Gomera',
                                layer_id == '7' ~ 'Hierro'))
 
-
 #write.csv(Prop_sp_module_island , "./csvs/Islands/Jac/Prop_sp_module_island.csv", row.names = FALSE)
 
 #pdf('./graphs/Islands/Jac/Prop_sp_modules_per_islands.pdf', 10, 6)
@@ -537,7 +544,7 @@ Panel_A <- jaccard_similarity_layer_empirical_and_null_km %>%
 Panel_A
 
 #Panel B
-jaccard_similarity_layer_empirical_and_null_km_M2 <- read.csv("./csvs/Islands/jaccard_similarity_layer_empirical_and_null_km_islands.csv") #need to read this to run next part
+jaccard_similarity_layer_empirical_and_null_km_M2 <- read.csv("./csvs/Islands/Jac/jaccard_similarity_layer_empirical_and_null_km_interactions_islands.csv") #need to read this to run next part
 
 Panel_B<- jaccard_similarity_layer_empirical_and_null_km_M2%>% 
   ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
@@ -559,7 +566,7 @@ Panel_B
 
 
 #Panel C
-jaccard_similarity_layer_empirical_and_null_km_classic_M3 <- read.csv("./csvs/Islands/jaccard_similarity_layer_empirical_and_null_km_classic_islands.csv") #need to read this to run next part
+jaccard_similarity_layer_empirical_and_null_km_classic_M3 <- read.csv("./csvs/Islands/Jac/jaccard_similarity_layer_empirical_and_null_km_classic_islands.csv") #need to read this to run next part
 
 Panel_C<- jaccard_similarity_layer_empirical_and_null_km_classic_M3 %>% 
   ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
@@ -579,16 +586,46 @@ Panel_C<- jaccard_similarity_layer_empirical_and_null_km_classic_M3 %>%
         legend.text = element_text(size = 11))
 Panel_C
 
+#Panel D
+jaccard_similarity_empirical_and_fixed_km <- read.csv("csvs/Islands/Jac/sensitivity_nullmodel4.csv")
+jaccard_similarity_empirical_and_fixed_km$trial[jaccard_similarity_empirical_and_fixed_km$trial=="empirical"]<-"E"
+jaccard_similarity_empirical_and_fixed_km$trial<-factor(jaccard_similarity_empirical_and_fixed_km$trial, 
+                                                        levels = c("E","0.1","0.2","0.3","0.4","0.5","0.6","0.7","0.8","0.9","1"))
+str(jaccard_similarity_empirical_and_fixed_km)
+cols2 = c("#FB3B1E", "#7DB0DDFF","#5BB7D3FF", "#3FBBC4FF", "#39BEB1FF", "#4EBE9CFF","#6ABC88FF", "#86B875FF", "#9FB368FF",
+          "#B5AD64FF", "#C7A76CFF")
+
+Panel_D<- jaccard_similarity_empirical_and_fixed_km %>% 
+  ggplot(aes(x= ave_dist_in_km , y= ave, group= trial, color= trial))+
+  geom_point()+ theme_classic()+ geom_smooth(method= "lm", se=F)+
+  scale_color_manual(values=cols2, name ="Interedges \nweight")+
+  #geom_smooth(jaccard_similarity_empirical_and_fixed_km = subset(trial == "empirical"), method = "lm", se = FALSE, color = "#FB3B1E")+
+  theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
+  theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
+  labs(x="Distance (Km)", y="Jaccard Similarity")+
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black",fill = NA,size = 1),
+        panel.spacing = unit(0.5, "cm", data = NULL),
+        axis.text = element_text(size=15, color='black'),
+        axis.title = element_text(size=17, color='black'),
+        axis.line = element_blank(),
+        legend.text.align = 0,
+        legend.title =  element_text(size = 13, color = "black"),
+        legend.text = element_text(size = 11))
+Panel_D
+
+
 # Figure 3 (all panels together)
-pdf('./graphs/Islands/Figure_3.pdf', 10, 8)
+pdf('./graphs/Islands/Jac/Figure_3.pdf', 10, 8)
 upper_row<- plot_grid(Panel_A + theme(plot.margin = unit(c(0.2,0.25,0.2,0.5), "cm")),
                       Panel_B + theme(plot.margin = unit(c(0.2,0.25,0.2,0.5), "cm")), 
                       ncol = 2, labels = c('(A)', "(B)"))
 
-bottom_row<- plot_grid(NULL,Panel_C + theme(plot.margin = unit(c(0.75,0.25,0.5,0.5), "cm")), NULL,
-                       ncol = 3, labels = c("","(C)",""), rel_widths = c(0.48,1,0.48))
+bottom_row<- plot_grid(Panel_C + theme(plot.margin = unit(c(0.2,0.25,0.2,0.5), "cm")), 
+                       Panel_D + theme(plot.margin = unit(c(0.2,0.25,0.2,0.5), "cm")),
+                       ncol = 2, labels = c("(C)","(D)"))
 
-plot_grid(upper_row, bottom_row, ncol = 1, rel_heights = c(1, 1))
+plot_grid(upper_row, bottom_row, ncol = 1)
 dev.off()
 
 
@@ -621,8 +658,8 @@ Panel_A <- rqsuares_M1_all %>%
 Panel_A
 
 #Panel B
-correlation_empirical_interactions <- read.csv("./csvs/Islands/correlation_empirical_interactions.csv")
-iteration_correlation_interactions <- read.csv("./csvs/Islands/iteration_correlation_interactions_islands.csv")
+correlation_empirical_interactions <- read.csv("./csvs/Islands/Jac/correlation_empirical.csv")
+iteration_correlation_interactions <- read.csv("./csvs/Islands/Jac/iteration_correlation_interactions_islands.csv")
 iteration_correlation_interactions2<-iteration_correlation_interactions %>% mutate(Type = "null_int")
 
 Panel_B<- iteration_correlation_interactions2 %>% ggplot(aes(x = rsquared, fill= Type))+ 
@@ -642,8 +679,8 @@ Panel_B<- iteration_correlation_interactions2 %>% ggplot(aes(x = rsquared, fill=
         legend.text = element_text(size = 11))
 
 #Panel C
-correlation_empirical_classic <- read.csv("./csvs/Islands/correlation_empirical_classic_islands.csv")
-iteration_correlation_classic <- read.csv("./csvs/Islands/iteration_correlation_classic_islands.csv")
+correlation_empirical_classic <- read.csv("./csvs/Islands/Jac/correlation_empirical.csv")
+iteration_correlation_classic <- read.csv("./csvs/Islands/Jac/iteration_correlation_classic_islands.csv")
 iteration_correlation_classic2<-iteration_correlation_classic %>% mutate(Type = "null_class")
 
 Panel_C<- iteration_correlation_classic2 %>% ggplot(aes(x = rsquared, fill= Type))+ 
@@ -664,7 +701,7 @@ Panel_C<- iteration_correlation_classic2 %>% ggplot(aes(x = rsquared, fill= Type
 Panel_C
 
 # Figure 4 (all panels together)
-pdf('./graphs/Islands/Figure_4.pdf', 10, 8)
+pdf('./graphs/Islands/Jac/Figure_4.pdf', 10, 8)
 upper_row<- plot_grid(Panel_A + theme(plot.margin = unit(c(0.2,0.25,0.2,0.5), "cm")),
                       Panel_B + theme(plot.margin = unit(c(0.2,0.25,0.2,0.5), "cm")), 
                       ncol = 2, labels = c('(A)', "(B)"))
@@ -674,3 +711,6 @@ bottom_row<- plot_grid(NULL,Panel_C + theme(plot.margin = unit(c(0.75,0.25,0.5,0
 
 plot_grid(upper_row, bottom_row, ncol = 1, rel_heights = c(1, 1))
 dev.off()
+
+
+

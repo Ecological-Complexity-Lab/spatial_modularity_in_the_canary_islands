@@ -34,6 +34,7 @@ library(ggforce)
 library(ggmap)
 library(ggraph)
 library(ggpubr)
+library(viridis)
 rm(list=ls())
 ```
 
@@ -601,14 +602,13 @@ In addition, modifying partner similarity of species across locations ($M_4$) pr
 ```{r}
 jaccard_similarity_empirical_and_fixed_km <- read.csv("sensitivity_nullmodel4.csv")
 
-cols = c("#24693DFF","#438B4AFF", "#66AD60FF", "#8FD180FF", "#DBF0D4FF","#DCEAF4FF", "#95C1DDFF", "#6D9CC2FF",
-         "#4A79A4FF", "#2A5783FF","#FB3B1E")
+cols2 = c("#7DB0DDFF","#5BB7D3FF", "#3FBBC4FF", "#39BEB1FF", "#4EBE9CFF","#6ABC88FF", "#86B875FF", "#9FB368FF",
+         "#B5AD64FF", "#C7A76CFF","#FB3B1E")
 
 jaccard_similarity_empirical_and_fixed_km %>% 
   ggplot(aes(x= ave_dist_in_km , y= ave, group= trial, color= trial))+
   geom_point()+ theme_classic()+ geom_smooth(method= "lm", se=F)+
-  scale_color_manual(values=cols)+
-  #geom_smooth(jaccard_similarity_empirical_and_fixed_km = subset(trial == "empirical"), method = "lm", se = FALSE, color = "#FB3B1E")+
+  scale_color_manual(values=cols2, name ="Interedges weight")+
   theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
   theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
   labs(x="Distance in Km", y="Jaccard Similarity")+
@@ -618,5 +618,4 @@ jaccard_similarity_empirical_and_fixed_km %>%
         axis.text = element_text(size=14, color='black'),
         axis.title = element_text(size=14, color='black'),
         axis.line = element_blank()) 
-
 ```

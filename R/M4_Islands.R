@@ -192,34 +192,82 @@ ave_module_islands_turnover_fixed <- all_edge_list_islands_combine_no_module_M4_
                                                                          "trial")
 ave_module_islands_turnover_fixed$trial<-as.character(ave_module_islands_turnover_fixed$trial)
 
-## empirical
+#add empirical
 islands_turnover_with_distnace_empirical <- read.csv("csvs/Islands/Jac/islands_turnover_with_distnace_empirical.csv")
 
-empirical_turnover_for_modules_layers <- islands_turnover_with_distnace_empirical %>% group_by(layer_from, layer_to) %>%
-  summarise(ave = mean(turnover), ave_dist = mean_distance) %>% mutate(trial="empirical")
+empirical_turnover_for_modules_layers_shuf <- islands_turnover_with_distnace_empirical %>% group_by(layer_from, layer_to) %>%
+  summarise(ave = mean(turnover), sd = sd(turnover), ave_dist = mean_distance) %>% mutate(trial="empirical") #make sure sd is 0 cause its the empirical and not null
 
+
+#---- combine for jaccard analysis------------------------------------------------------------------------------------------------------
 #combine all layers
-jaccard_similarity_empirical_and_fixed <- rbind(empirical_turnover_for_modules_layers, 
-                                                ave_module_islands_turnover_fixed)
+jaccard_similarity_empirical_and_null_fixed <- rbind(empirical_turnover_for_modules_layers_shuf, 
+                                                            ave_module_islands_turnover_fixed)
 
-jaccard_similarity_empirical_and_fixed_km <- jaccard_similarity_empirical_and_fixed  %>% 
-  mutate(ave_dist_in_km = ave_dist/1000)
+jaccard_similarity_layer_empirical_and_null_km_fixed <- jaccard_similarity_empirical_and_null_fixed %>% 
+  mutate(mean_dist_in_km = ave_dist/1000)
 
-#write.csv(jaccard_similarity_empirical_and_fixed_km, "./csvs/Islands/Jac/sensitivity_nullmodel4.csv", row.names = FALSE) #so it can be used for classical shuffling
+#write.csv(jaccard_similarity_layer_empirical_and_null_km_fixed, "./csvs/Islands/Jac/sensitivity_nullmodel4.csv", row.names = FALSE) #so it can be used for classical shuffling
+
+
+##--Linear regression models
+jaccard_similarity_layer_empirical_and_null_km_fixed <- read.csv("csvs/Islands/Jac/sensitivity_nullmodel4.csv")
+
+l_e = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
+                                     jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="empirical")) 
+l_1 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
+                                            jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="0.1")) 
+l_2 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
+                                            jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="0.2")) 
+l_3 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
+                                            jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="0.3")) 
+l_4 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
+                                            jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="0.4"))
+l_5 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
+                                            jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="0.5")) 
+l_6 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
+                                            jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="0.6")) 
+l_7 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
+                                            jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="0.7")) 
+l_8 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
+                                            jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="0.8"))
+l_9 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
+                                            jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="0.9")) 
+l_10 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
+                                             jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="1"))
+
+summary(l_e)
+summary(l_1)
+summary(l_2)
+summary(l_3)
+summary(l_4)
+summary(l_5)
+summary(l_6)
+summary(l_7)
+summary(l_8)
+summary(l_9)
+summary(l_10)
+
 
 #Plot
 library(ggthemes)
 library(paletteer)
+
 jaccard_similarity_empirical_and_fixed_km <- read.csv("csvs/Islands/Jac/sensitivity_nullmodel4.csv")
 
-cols = c("#24693DFF","#438B4AFF", "#66AD60FF", "#8FD180FF", "#DBF0D4FF","#DCEAF4FF", "#95C1DDFF", "#6D9CC2FF",
-         "#4A79A4FF", "#2A5783FF","#FB3B1E")
+paletteer_c("grDevices::Harmonic", 10)
+paletteer_c("grDevices::ag_GrnYl", 10)
+cols = c("#7DB0DDFF","#5BB7D3FF", "#3FBBC4FF", "#39BEB1FF", "#4EBE9CFF","#6ABC88FF", "#86B875FF", "#9FB368FF",
+         "#B5AD64FF", "#C7A76CFF","#FB3B1E")
+
+cols2 = c("#7DB0DDFF","#5BB7D3FF", "#3FBBC4FF", "#39BEB1FF", "#4EBE9CFF","#6ABC88FF", "#86B875FF", "#9FB368FF",
+         "#B5AD64FF", "#C7A76CFF","#FB3B1E")
 
 pdf('./graphs/Islands/Jac/sensitivity_M4.pdf', 10, 6)
 jaccard_similarity_empirical_and_fixed_km %>% 
   ggplot(aes(x= ave_dist_in_km , y= ave, group= trial, color= trial))+
   geom_point()+ theme_classic()+ geom_smooth(method= "lm", se=F)+
-  scale_color_manual(values=cols)+
+  scale_color_manual(values=cols, name ="Interedges weight")+
   #geom_smooth(jaccard_similarity_empirical_and_fixed_km = subset(trial == "empirical"), method = "lm", se = FALSE, color = "#FB3B1E")+
   theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
   theme(axis.text.y=element_text(size=15))+ theme(legend.title = element_text(size = 13), legend.text = element_text(size = 13))+
