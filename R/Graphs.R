@@ -174,6 +174,17 @@ dryad_edgelist_complete_ids <-
 
 #write.csv(dryad_edgelist_complete_ids, "./csvs/Islands/Jac/dryad_edgelist_complete_ids_islands.csv", row.names = FALSE)
 
+view(dryad_edgelist_complete_ids)
+
+#Prop of shared partners plants
+prop_parn_plants<- dryad_edgelist_complete_ids %>% filter(layer_from!=layer_to) %>% filter(node_to<=39) %>% 
+  summarize(Prop=mean(weight), stand = sd(weight))
+
+#Prop of shared partners pollinators
+prop_parn_poll<- dryad_edgelist_complete_ids %>% filter(layer_from!=layer_to) %>% filter(node_to>39) %>% 
+  summarize(Prop=mean(weight), stand = sd(weight))
+
+
 #Plot links distribution (directed)
 inter_extended<- dryad_edgelist_complete_ids %>% filter(layer_from!=layer_to)
 intra_inter_data_for_distibution <- data.frame(values= c(intralayer_weighted$weight, 
@@ -201,7 +212,6 @@ intra_inter_data_for_distibution %>%
         legend.title =  element_text(size = 13, color = "black"),
         legend.text = element_text(size = 11))
 dev.off()
-
 
 #---- basic analysis for richness in island --------------------------------------------------------------------------------
 tot_plant_ids <- tot_plant %>% inner_join(layer_metadata, by= c("layer_from" = "layer_name")) %>%
@@ -379,7 +389,9 @@ for(i in (1:nrow(modules_count))){
   }
 }
 
-
+prueba<- modules_dryad_multilayer%>% count(module)
+#Average species per module
+ave_modules_count_not_proportion <- modules_count_not_proportion %>% summarise(ave=mean(n), stan=sd(n))
 #distribution by species and proportion
 pdf('./graphs/modularity_analysis/proportion_species_in_modules_Jac.pdf', 10, 6)
 modules_count %>% ggplot(aes(x=as.numeric(module), y=as.numeric(n), fill= type))+
@@ -392,6 +404,9 @@ modules_count %>% ggplot(aes(x=as.numeric(module), y=as.numeric(n), fill= type))
         axis.title = element_text(size=14, color='black'),
         axis.line = element_blank())
 dev.off()
+
+#Average species per module
+ave_size<- modules_dryad_multilayer%>% count(module) %>% summarise(ave=mean (n), stan= sd(n))
 
 #distribution by module size
 library(plotrix)

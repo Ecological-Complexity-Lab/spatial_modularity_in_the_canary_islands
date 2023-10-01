@@ -75,6 +75,10 @@ top_30_scatterpies
 empirical_turnover_for_module_island_shuf_no_self_loop_km <- read.csv("csvs/Islands/Jac/islands_turnover_with_distnace_empirical.csv")
 islands_with_lon_lat_dif <- read.csv("./csvs/islands_with_lon_lat_dif.csv")
 
+#Average Jaccard
+Jaccard_ave<- empirical_turnover_for_module_island_shuf_no_self_loop_km %>% 
+  summarize(Prop = mean(turnover), stan = sd(turnover))
+
 # Modify islands_with_lon_lat_dif dataframe 
 islands_with_lon_lat_dif2<- islands_with_lon_lat_dif %>% 
   mutate(layer_from = recode(layer_from, "1" = "1", "2" = "2", "3"="3", "4east" = "4", "4west" = "5", "6" = "6", "7" = "7"),
