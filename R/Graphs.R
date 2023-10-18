@@ -25,8 +25,8 @@ library(extRC)
 
 
 ##----get_data--------------------------------------------------------------------------------------------------------
-setwd("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands")
-source("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands/R/functions.R")
+setwd("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands")
+source("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands/R/functions.R")
 
 dryad_intralayer <- read.csv("./csvs/intralayer_file.csv")
 dryad_interlayer <- read.csv("./csvs/interlayer_file.csv") #already has inverted within
@@ -343,6 +343,24 @@ dev.off()
 
 
 #-----------Final Plots -------------
+
+##Number of plant and pollinators per module (Fig. S5) --
+Num_sp_module<-modules_dryad_multilayer %>% 
+  group_by(module) %>% count(type)
+
+pdf('./graphs/Islands/Jac/Num_sp_modules.pdf', 10, 8)
+Num_sp_module %>% ggplot(aes(x=as.numeric(module), y=as.numeric(n), fill= type))+
+  geom_bar(stat="identity", position= position_dodge2(preserve = "single"))+ theme_classic()+
+  scale_x_continuous(breaks=seq(1,42,2))+ labs(x= "Module ID", y= "Number of species")+
+  scale_fill_manual(name = "Trophic group",  label = c("Plant","Pollinator"), values = c("#008000","#DDA0DD"))+
+  theme(panel.grid = element_blank(),panel.background = element_blank(), 
+        axis.text.x = element_text(size=11, colour = "black"),
+        axis.text.y=element_text(size=13, colour = "black"), axis.title = element_text(size=14),
+        legend.text=element_text(size=11.5),legend.title =element_text(size=12),
+        axis.line = element_line(colour = "black"))
+dev.off()
+
+
 
 #Distribution of modules in islands
 #modules_with_lat_lon <- read.csv("csvs/Islands/Jac/modules_with_lat_lon_islands_as_layers.csv") 
@@ -681,7 +699,7 @@ Panel_B<- iteration_correlation_interactions2 %>% ggplot(aes(x = rsquared, fill=
   geom_density(alpha = 0.6)+ 
   geom_vline(xintercept = correlation_empirical_interactions$rsquared, linetype = "dashed", color = "#FB3B1E") +
   labs(x= expression("R"^2), y="Density")+  
-  scale_fill_manual(name = "Null Model",  label = expression("M"^2), values= "#E6AB02")+
+  scale_fill_manual(name = "Null Model",  label = expression("M"[2]), values= "#E6AB02")+
   theme_classic()+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
@@ -702,7 +720,7 @@ Panel_C<- iteration_correlation_classic2 %>% ggplot(aes(x = rsquared, fill= Type
   geom_density(alpha = 0.6)+ 
   geom_vline(xintercept = correlation_empirical_classic$rsquared, linetype = "dashed", color = "#FB3B1E") +
   labs(x= expression("R"^2), y="Density")+  
-  scale_fill_manual(name = "Null Model",  label = expression("M"^3), values= "#FA86F2")+
+  scale_fill_manual(name = "Null Model",  label = expression("M"[3]), values= "#FA86F2")+
   theme_classic()+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
