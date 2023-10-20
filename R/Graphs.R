@@ -1,7 +1,5 @@
-#### ISLANDS AND JACCARD AS INTEREDGES
+#### Exploratory analysis and graphs
 
-
-####-----Modularity plots
 
 ##---load_libraries-------------------------------------------------------------------------------------------------
 options(rgl.useNULL = TRUE)
@@ -23,13 +21,11 @@ library(reshape2)
 library(extRC)
 
 
-
 ##----get_data--------------------------------------------------------------------------------------------------------
 setwd("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands")
 source("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands/R/functions.R")
 
-dryad_intralayer <- read.csv("./csvs/intralayer_file.csv")
-dryad_interlayer <- read.csv("./csvs/interlayer_file.csv") #already has inverted within
+dryad_intralayer <- read.csv("./csvs_nuevo/intralayer_file.csv")
 
 ##---- layers as islands -------------------------------------------------------------------------------
 dryad_intralayer_islands <- dryad_intralayer
@@ -156,10 +152,6 @@ physical_nodes <- tibble(node_id=1:S, #1 till the last species
 layer_metadata <- tibble(layer_id=c(1:7), layer_name=island_names)  #give num to each layer
 
 
-#write.csv(physical_nodes, "./csvs/Islands/Jac/physical_nodes_islands.csv", row.names = FALSE)
-#write.csv(layer_metadata, "./csvs/Islands/Jac/layer_metadata_islands.csv", row.names = FALSE)
-
-
 # Replace the node names with node_ids
 dryad_edgelist_complete_ids <- 
   dryad_edgelist_complete %>% 
@@ -172,9 +164,6 @@ dryad_edgelist_complete_ids <-
   dplyr::select(-layer_from, -layer_to) %>% 
   dplyr::select(layer_from=layer_id.x, node_from, layer_to=layer_id.y, node_to, weight)
 
-#write.csv(dryad_edgelist_complete_ids, "./csvs/Islands/Jac/dryad_edgelist_complete_ids_islands.csv", row.names = FALSE)
-
-view(dryad_edgelist_complete_ids)
 
 #Prop of shared partners plants
 prop_parn_plants<- dryad_edgelist_complete_ids %>% filter(layer_from!=layer_to) %>% filter(node_to<=39) %>% 
@@ -194,9 +183,9 @@ intra_inter_data_for_distibution <- data.frame(values= c(intralayer_weighted$wei
                                                         rep("intra pollinators", nrow(intralayer_weighted_inverted)),
                                                         rep("inter", nrow(inter_extended))))
 
-#write.csv(intra_inter_data_for_distibution, "./csvs/Islands/Jac/intra_inter_data_for_distibution_islands_as_layers.csv",  row.names = FALSE)
+#write.csv(intra_inter_data_for_distibution, "./csvs_nuevo/intra_inter_data_for_distibution_islands_as_layers.csv",  row.names = FALSE)
 
-pdf('./graphs/Islands/Jac/intra and interlinks_islands_jaccard.pdf', 10, 6)
+pdf('./graphs/Fig_S1.pdf', 10, 6)
 intra_inter_data_for_distibution %>%
   ggplot(aes(x=values, fill=group))+ geom_histogram(position= "identity", alpha= 0.70, color= "black")+ 
   labs(x='Weight', y="Count") +theme_bw()+
@@ -213,7 +202,7 @@ intra_inter_data_for_distibution %>%
         legend.text = element_text(size = 11))
 dev.off()
 
-#---- basic analysis for richness in island --------------------------------------------------------------------------------
+#---- Exploratory graph of species distribution --------------------------------------------------------------------------------
 tot_plant_ids <- tot_plant %>% inner_join(layer_metadata, by= c("layer_from" = "layer_name")) %>%
   subset(select = -layer_from) %>% count(layer_id)
 tot_plant_ids$type <- "plant"
@@ -231,8 +220,8 @@ richness_in_islands %>%
         panel.border = element_rect(color = "black",fill = NA,size = 1),
         panel.spacing = unit(0.5, "cm", data = NULL),
         axis.text = element_text(size=14, color='black'),
-        axis.title = element_text(size=14, color='black'),
-        axis.line = element_blank())
+       axis.title = element_text(size=14, color='black'),
+       axis.line = element_blank())
 
 ##-- Distribution of species in islands
 co_occurrence_species<- dryad_edgelist_complete_ids %>% filter(layer_from == layer_to) %>% 
@@ -248,7 +237,6 @@ co_occurrence_species<- dryad_edgelist_complete_ids %>% filter(layer_from == lay
 co_occurrence_species<- left_join(co_occurrence_species,physical_nodes, by="node_id") %>% select(-species) %>% 
   group_by(layer_id,node_id,type,layer_name) %>% unique() %>% count()
 
-#write.csv(co_occurrence_species, "./Results/Jac/co_occurrence_species.csv", row.names = FALSE)
 
 ## -- Comparision between species co-occurrence and number of interedges
 
@@ -274,7 +262,7 @@ real_interedge<- dryad_edgelist_complete_ids %>% filter(layer_from!=layer_to) %>
 interedges_comp<-cbind(pot_interedge,real_interedge, col=1)
 interedges_comp2<- pivot_longer(interedges_comp, names_to = "group", values_to = "Count", cols = -col)
 
-pdf('./graphs/Islands/Jac/realized_interedges.pdf', 10, 6)
+
 interedges_comp2%>%
   ggplot(aes(x=group, y= Count, fill=group))+ geom_bar(stat='identity', alpha= 0.6, color= "black")+ theme_bw()+
   scale_y_continuous(limits = c(0, 900), breaks=seq(0,900,100)) +
@@ -283,7 +271,7 @@ interedges_comp2%>%
         panel.spacing = unit(0.5, "cm", data = NULL),
         axis.text = element_text(size=14, color='black'),
         axis.title = element_text(size=14, color='black'))
-dev.off()  
+ 
 
 ## Distribution of plants
 co_occurrence_plants<- co_occurrence_species %>% filter(type=="plant") %>% group_by(node_id) %>%  
@@ -293,7 +281,6 @@ co_occurrence_plants<- co_occurrence_species %>% filter(type=="plant") %>% group
 co_occurrence_plants$node_id<- as.factor(co_occurrence_plants$node_id)
 co_occurrence_plants$node_id <- fct_inorder(co_occurrence_plants$node_id)
 
-pdf('./graphs/Islands/co_occurrence_plants.pdf', 10, 6)
 co_occurrence_plants%>% 
   ggplot(aes(x=node_id, y= n ,fill= factor(layer_name)))+ geom_bar(stat= "identity")+ theme_classic()+ labs(y="Number of islands", x="Species ID")+
   guides(fill=guide_legend(title="Island"))
@@ -307,48 +294,25 @@ co_occurrence_pol<- co_occurrence_species %>% filter(type=="pollinator") %>% gro
 co_occurrence_pol$node_id <- as.factor(co_occurrence_pol$node_id)
 co_occurrence_pol$node_id <- fct_inorder(co_occurrence_pol$node_id)
 
-pdf('./graphs/Islands/co_occurrence_pol.pdf', 10, 6)
 co_occurrence_pol%>% 
   ggplot(aes(x=node_id, y= n ,fill= factor(layer_name)))+ geom_bar(stat= "identity")+ theme_classic()+ labs(y="Number of islands", x="Species ID")+
   guides(fill=guide_legend(title="Island"))+ theme(axis.text.x=element_blank())
-dev.off()
 
 
 
-##--- Exploratory graphs modules
+#---- Exploratory graphs and plots of modules --------------------------------------------------------------------------------
 
 ##----upload data frame islands  -------
-modules_dryad_multilayer <- read.csv("./csvs/Islands/Jac/modules_in_network_islands_as_layers.csv",row.names = 1) 
-
-##-- Check if modules are integrated by the same species across layers
-same_species_mod<-modules_dryad_multilayer  %>% select(-flow,-species) %>% 
-  group_by(module) %>% distinct(node_id) %>% count() #all modules have two or more different species
-
-check<-same_species_mod %>% filter(n>1)
-
-df<-data.frame(Group= c("Self-species per module","Multi-species per module"),
-               Count = c(11,31))
-
-pdf('./graphs/Islands/Jac/Modules_self-species.pdf', 10, 6)
-df%>%
-  ggplot(aes(x=Group, y= Count, fill=Group))+ geom_bar(stat='identity', alpha= 0.6, color= "black")+ theme_bw()+
-  scale_y_continuous(limits = c(0, 50), breaks=seq(0,50,10)) +
-  theme(panel.grid = element_blank(),
-        panel.border = element_rect(color = "black",fill = NA,size = 1),
-        panel.spacing = unit(0.5, "cm", data = NULL),
-        axis.text = element_text(size=14, color='black'),
-        axis.title = element_text(size=14, color='black'))
-dev.off()  
-
+modules_dryad_multilayer <- read.csv("./csvs_nuevo/modules_in_network_islands_as_layers.csv",row.names = 1) 
 
 
 #-----------Final Plots -------------
 
-##Number of plant and pollinators per module (Fig. S5) --
+## Number of plant and pollinators per module (Fig. S3) --
 Num_sp_module<-modules_dryad_multilayer %>% 
   group_by(module) %>% count(type)
 
-pdf('./graphs/Islands/Jac/Num_sp_modules.pdf', 10, 8)
+pdf('./graphs/Fig_S3.pdf', 10, 8)
 Num_sp_module %>% ggplot(aes(x=as.numeric(module), y=as.numeric(n), fill= type))+
   geom_bar(stat="identity", position= position_dodge2(preserve = "single"))+ theme_classic()+
   scale_x_continuous(breaks=seq(1,42,2))+ labs(x= "Module ID", y= "Number of species")+
@@ -361,10 +325,9 @@ Num_sp_module %>% ggplot(aes(x=as.numeric(module), y=as.numeric(n), fill= type))
 dev.off()
 
 
+## Distribution of modules in islands (Fig. S5) --
 
-#Distribution of modules in islands
-#modules_with_lat_lon <- read.csv("csvs/Islands/Jac/modules_with_lat_lon_islands_as_layers.csv") 
-
+#modules_with_lat_lon <- read.csv("./csvs_nuevo/modules_with_lat_lon_islands_as_layers.csv") 
 modules_with_lat_lon$layer_id<- as.character(modules_with_lat_lon$layer_id)
 
 modules_with_lat_lon_id <- modules_with_lat_lon %>% 
@@ -383,7 +346,7 @@ modules_with_lat_lon_id <- modules_with_lat_lon_id %>% unique()  %>% group_by(mo
 modules_with_lat_lon_id$module<- as.factor(modules_with_lat_lon_id$module)
 modules_with_lat_lon_id$module <- fct_inorder(modules_with_lat_lon_id$module)
 
-pdf('./graphs/Islands/Jac/Distribution_modules_islands.pdf', 10, 6)
+pdf('./graphs/Fig_S5.pdf', 10, 6)
 modules_with_lat_lon_id %>% 
   ggplot(aes(x=module, y= count ,fill= factor(layer_name)))+ geom_bar(stat= "identity")+ theme_classic()+ labs(y="Number of locations", x="Modules")+
   guides(fill=guide_legend(title="Location"))+ theme(axis.text.x = element_blank(),
@@ -392,96 +355,22 @@ modules_with_lat_lon_id %>%
 dev.off()
 
 
-### ---Module size distribution
-plants_and_pols <- modules_dryad_multilayer%>% count(type) 
-plants <- plants_and_pols[1,2]
-pols <- plants_and_pols[2,2]
-modules_count <- modules_dryad_multilayer %>% count(module, type) #count how many plants and pollinators are found in each module
-modules_count_not_proportion <- modules_count
-for(i in (1:nrow(modules_count))){
-  if (modules_count$type[i] == "plant"){
-    modules_count$n[i] <- modules_count$n[i]/plants
-  }
-  else{
-    modules_count$n[i] <- modules_count$n[i]/pols
-  }
-}
-
-prueba<- modules_dryad_multilayer%>% count(module)
-#Average species per module
-ave_modules_count_not_proportion <- modules_count_not_proportion %>% summarise(ave=mean(n), stan=sd(n))
-#distribution by species and proportion
-pdf('./graphs/modularity_analysis/proportion_species_in_modules_Jac.pdf', 10, 6)
-modules_count %>% ggplot(aes(x=as.numeric(module), y=as.numeric(n), fill= type))+
-  geom_bar(stat="identity", position= position_dodge2(preserve = "single"))+ theme_classic()+
-  scale_x_continuous(breaks=seq(1,88,2))+ labs(x= "Module Number", y= "Proportion")+
-  theme(panel.grid = element_blank(),
-        panel.border = element_rect(color = "black",fill = NA,size = 1),
-        panel.spacing = unit(0.5, "cm", data = NULL),
-        axis.text = element_text(size=9, color='black'),
-        axis.title = element_text(size=14, color='black'),
-        axis.line = element_blank())
-dev.off()
-
-#Average species per module
-ave_size<- modules_dryad_multilayer%>% count(module) %>% summarise(ave=mean (n), stan= sd(n))
-
-#distribution by module size
+# Average description of modules --
 library(plotrix)
+
 module_sizes <- modules_dryad_multilayer %>% count(module)
-min(module_sizes$n) #2 species
-max(module_sizes$n) #109 species
-mean(module_sizes$n) #16.33 sp
-std.error(module_sizes$n)#4 sp
-sd(module_sizes$n)#21
+min(module_sizes$n)
+max(module_sizes$n) 
+mean(module_sizes$n) 
+std.error(module_sizes$n)
+sd(module_sizes$n)
 
 
-##-- Plot modules in each island with size proportion
 
-#Calculate the number and proportion of species in each module
-modules_dryad_multilayer <- read.csv("./csvs/Islands/Jac/modules_in_network_islands_as_layers.csv") 
-
-#Calculate number of nodes in each module per island
-N_species_mod<-modules_dryad_multilayer %>% 
-  group_by(layer_id, module) %>% 
-  summarize(module_size=n_distinct(node_id))
-
-#Create dataframe with total number of nodes per module across islands
-Module_size <- modules_dryad_multilayer %>% count(module) #num of nodes in module. 
-
-#merge dataframes and calculate proportion of species in each module
-Prop_sp_module <- left_join(N_species_mod,Module_size)
-
-Prop_sp_module_2<-Prop_sp_module %>% 
-  mutate(Prop_sp = module_size / n)
-
-#change order accoridng to distances
-Prop_sp_module_island<- Prop_sp_module_2 %>% 
-  mutate(layer_name= case_when(layer_id == '1' ~ 'WesternSahara',
-                               layer_id == '2' ~ 'Fuerteventura',
-                               layer_id == '3' ~ 'GranCanaria',
-                               layer_id == '4' ~ 'TenerifeSouth',
-                               layer_id == '5' ~ 'TenerifeTeno',
-                               layer_id == '6' ~ 'Gomera',
-                               layer_id == '7' ~ 'Hierro'))
-
-#write.csv(Prop_sp_module_island , "./csvs/Islands/Jac/Prop_sp_module_island.csv", row.names = FALSE)
-
-#pdf('./graphs/Islands/Jac/Prop_sp_modules_per_islands.pdf', 10, 6)
-#ggplot(Prop_sp_module_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
-#  geom_tile(color='white') +
-#  theme_classic() +
-#  scale_fill_viridis_c(limits = c(0, 1)) +
-#  scale_x_continuous(breaks=seq(1,88,2)) +
-#  scale_y_discrete(limits = c("Hierro","Gomera","TenerifeTeno","TenerifeSouth","GranCanaria","Fuerteventura","WesternSahara"))+
-#  labs(x='Module ID', y="Islands")
-#dev.off()
-
-
-##-- Plot modules in each island with size proportion according to island 
+## -- Plot modules in each island with size proportion according to island (Fig. S4)
 
 #Calculate the number and proportion of species in each module
-modules_dryad_multilayer <- read.csv("./csvs/Islands/Jac/modules_in_network_islands_as_layers.csv") 
+modules_dryad_multilayer <- read.csv("./csvs_nuevo/modules_in_network_islands_as_layers.csv") 
 
 #Calculate number of nodes in each module per island
 N_species_mod<-modules_dryad_multilayer %>% 
@@ -512,9 +401,9 @@ Prop_sp_in_island<- Prop_sp_island_2 %>%
                                layer_id == '7' ~ 'Hierro'))
 
 
-#write.csv(Prop_sp_in_island , "./csvs/Islands/Jac/Prop_sp_in_island.csv", row.names = FALSE)
+#write.csv(Prop_sp_in_island , "./csvs_nuevo/Prop_sp_in_island.csv", row.names = FALSE)
 
-pdf('./graphs/Islands/Jac/Prop_sp_islands_in_modules.pdf', 10, 6)
+pdf('./graphs/Fig_S4.pdf', 10, 6)
 ggplot(Prop_sp_in_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
   geom_tile(color='white') +
   theme(panel.grid = element_blank(),panel.background = element_blank(), 
@@ -529,31 +418,11 @@ ggplot(Prop_sp_in_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
 dev.off()
 
 
-## ---- Plot of total possibilities of interaction rewiring to test null model 3
-interactions_co_occurences <-read.csv("./csvs/Islands/interactions_co_occurences.csv")
 
-interactions_co_occurences_pot <- interactions_co_occurences %>%
-  mutate(possible_changes = co_occurrences - interactions) %>% 
-  summarise(co_occurrences = sum (co_occurrences), interactions = sum(interactions), possible_changes = sum(possible_changes)) %>% 
-              mutate(Id = c(1))
-interactions_co_occurences_pot2<- pivot_longer(interactions_co_occurences_pot, names_to = "group", values_to = "number", cols = -Id)
-
-pdf('./graphs/Islands/interactions_co_occurences_pot.pdf', 10, 6)
-interactions_co_occurences_pot2 %>%
-  ggplot(aes(x=group, y= number, fill=group))+ geom_bar(stat='identity', alpha= 0.6, color= "black")+ theme_bw()+
-  scale_y_continuous(limits = c(0, 1200), breaks=seq(0,1200,300)) +
-  theme(panel.grid = element_blank(),
-        panel.border = element_rect(color = "black",fill = NA,size = 1),
-        panel.spacing = unit(0.5, "cm", data = NULL),
-        axis.text = element_text(size=14, color='black'),
-        axis.title = element_text(size=14, color='black'))
-dev.off()  
-
-
-######## ------ Final figures manuscript (except for the map) ##########
+######## ------ Final figures manuscript (except map and null model figures)  ##########
 
 ## -- Figure 3
-jaccard_similarity_layer_empirical_and_null_km <- read.csv("csvs/Islands/Jac/jaccard_similarity_layer_empirical_and_null_km_islands_m1.csv")
+jaccard_similarity_layer_empirical_and_null_km <- read.csv("./csvs_nuevo/jaccard_similarity_layer_empirical_and_null_km_islands_m1.csv")
 
 # Panel A
 Panel_A <- jaccard_similarity_layer_empirical_and_null_km %>% 
@@ -577,7 +446,7 @@ Panel_A <- jaccard_similarity_layer_empirical_and_null_km %>%
 Panel_A
 
 #Panel B
-jaccard_similarity_layer_empirical_and_null_km_M2 <- read.csv("./csvs/Islands/Jac/jaccard_similarity_layer_empirical_and_null_km_interactions_islands.csv") #need to read this to run next part
+jaccard_similarity_layer_empirical_and_null_km_M2 <- read.csv("./csvs_nuevo/jaccard_similarity_layer_empirical_and_null_km_interactions_islands.csv") #need to read this to run next part
 
 Panel_B<- jaccard_similarity_layer_empirical_and_null_km_M2%>% 
   ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
@@ -599,7 +468,7 @@ Panel_B
 
 
 #Panel C
-jaccard_similarity_layer_empirical_and_null_km_classic_M3 <- read.csv("./csvs/Islands/Jac/jaccard_similarity_layer_empirical_and_null_km_classic_islands.csv") #need to read this to run next part
+jaccard_similarity_layer_empirical_and_null_km_classic_M3 <- read.csv("./csvs_nuevo/jaccard_similarity_layer_empirical_and_null_km_classic_islands.csv") #need to read this to run next part
 
 Panel_C<- jaccard_similarity_layer_empirical_and_null_km_classic_M3 %>% 
   ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
@@ -620,7 +489,7 @@ Panel_C<- jaccard_similarity_layer_empirical_and_null_km_classic_M3 %>%
 Panel_C
 
 #Panel D
-jaccard_similarity_empirical_and_fixed_km <- read.csv("csvs/Islands/Jac/sensitivity_nullmodel4.csv")
+jaccard_similarity_empirical_and_fixed_km <- read.csv("./csvs_nuevo/sensitivity_nullmodel4.csv")
 jaccard_similarity_empirical_and_fixed_km$trial[jaccard_similarity_empirical_and_fixed_km$trial=="empirical"]<-"E"
 jaccard_similarity_empirical_and_fixed_km$trial<-factor(jaccard_similarity_empirical_and_fixed_km$trial, 
                                                         levels = c("E","0.1","0.2","0.3","0.4","0.5","0.6","0.7","0.8","0.9","1"))
@@ -629,7 +498,7 @@ cols2 = c("#FB3B1E", "#7DB0DDFF","#5BB7D3FF", "#3FBBC4FF", "#39BEB1FF", "#4EBE9C
           "#B5AD64FF", "#C7A76CFF")
 
 Panel_D<- jaccard_similarity_empirical_and_fixed_km %>% 
-  ggplot(aes(x= ave_dist_in_km , y= ave, group= trial, color= trial))+
+  ggplot(aes(x= mean_dist_in_km , y= ave, group= trial, color= trial))+
   geom_point()+ theme_classic()+ geom_smooth(method= "lm", se=F)+
   scale_color_manual(values=cols2, name ="Interedges \nweight")+
   #geom_smooth(jaccard_similarity_empirical_and_fixed_km = subset(trial == "empirical"), method = "lm", se = FALSE, color = "#FB3B1E")+
@@ -649,7 +518,7 @@ Panel_D
 
 
 # Figure 3 (all panels together)
-pdf('./graphs/Islands/Jac/Figure_3.pdf', 10, 8)
+pdf('./graphs/Figure_3.pdf', 10, 8)
 upper_row<- plot_grid(Panel_A + theme(plot.margin = unit(c(0.2,0.25,0.2,0.5), "cm")),
                       Panel_B + theme(plot.margin = unit(c(0.2,0.25,0.2,0.5), "cm")), 
                       ncol = 2, labels = c('(A)', "(B)"))
@@ -663,12 +532,11 @@ dev.off()
 
 
 
-
 ## -- Figure 4
 
 # Panel A
-correlation_empirical_pols <- read.csv("./csvs/Islands/Jac/correlation_empirical_pols.csv")
-rqsuares_M1_all <- read.csv("./csvs/Islands/Jac/rqsuares_M1_all.csv")
+correlation_empirical_pols <- read.csv("./csvs_nuevo/correlation_empirical_pols.csv")
+rqsuares_M1_all <- read.csv("./csvs_nuevo/rqsuares_M1_all.csv")
 rqsuares_M1_all$type <- factor(rqsuares_M1_all$type, levels = c("shuf_plants","shuf_pollinators","shuf_both"))
 
 Panel_A <- rqsuares_M1_all %>% 
@@ -691,8 +559,8 @@ Panel_A <- rqsuares_M1_all %>%
 Panel_A
 
 #Panel B
-correlation_empirical_interactions <- read.csv("./csvs/Islands/Jac/correlation_empirical.csv")
-iteration_correlation_interactions <- read.csv("./csvs/Islands/Jac/iteration_correlation_interactions_islands.csv")
+correlation_empirical_interactions <- read.csv("./csvs_nuevo/correlation_empirical.csv")
+iteration_correlation_interactions <- read.csv("./csvs_nuevo/iteration_correlation_interactions_islands.csv")
 iteration_correlation_interactions2<-iteration_correlation_interactions %>% mutate(Type = "null_int")
 
 Panel_B<- iteration_correlation_interactions2 %>% ggplot(aes(x = rsquared, fill= Type))+ 
@@ -712,8 +580,8 @@ Panel_B<- iteration_correlation_interactions2 %>% ggplot(aes(x = rsquared, fill=
         legend.text = element_text(size = 11))
 
 #Panel C
-correlation_empirical_classic <- read.csv("./csvs/Islands/Jac/correlation_empirical.csv")
-iteration_correlation_classic <- read.csv("./csvs/Islands/Jac/iteration_correlation_classic_islands.csv")
+correlation_empirical_classic <- read.csv("./csvs_nuevo/correlation_empirical.csv")
+iteration_correlation_classic <- read.csv("./csvs_nuevo/iteration_correlation_classic_islands.csv")
 iteration_correlation_classic2<-iteration_correlation_classic %>% mutate(Type = "null_class")
 
 Panel_C<- iteration_correlation_classic2 %>% ggplot(aes(x = rsquared, fill= Type))+ 
@@ -734,7 +602,7 @@ Panel_C<- iteration_correlation_classic2 %>% ggplot(aes(x = rsquared, fill= Type
 Panel_C
 
 # Figure 4 (all panels together)
-pdf('./graphs/Islands/Jac/Figure_4.pdf', 10, 8)
+pdf('./graphs/Figure_4.pdf', 10, 8)
 upper_row<- plot_grid(Panel_A + theme(plot.margin = unit(c(0.2,0.25,0.2,0.5), "cm")),
                       Panel_B + theme(plot.margin = unit(c(0.2,0.25,0.2,0.5), "cm")), 
                       ncol = 2, labels = c('(A)', "(B)"))

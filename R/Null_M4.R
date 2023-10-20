@@ -1,7 +1,8 @@
-# ---- NULL MODEL M4: CHANGE MANUALLY VALUE INTERLAYER LINKS BETWEEN ISLANDS ------------------------------------------------------------------------
+# ---- NULL MODEL M4: SET WEIGHT OF INTERLAYER LINKS BETWEEN ISLANDS ------------------------------------------------------------------------
 
-# this portion of the code changes the weight of all interlayer links between islands from 0.1 to 1. It is important to test if similatiry of partners
-#between species across layers affect the pattern of distance decay. This null model maintains intralayer structure and the presence of interlayer links.
+#In this code we tested if the extent to which species share partners across locations triggers distance decay in structure.
+#To do this, we set the weight of the already existing interlayer links to a uniform value ranging from 0.1 to 1.
+
 
 
 ##---load_libraries-------------------------------------------------------------------------------------------------
@@ -22,12 +23,12 @@ library(ggraph)
 library(ggpubr)
 
 
-setwd("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands")
-source("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands/R/functions.R")
+setwd("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands")
+source("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands/R/functions.R")
 
-##---- empirical data ---------------------------------------------------------------------------
-inter_extended <- read.csv("./csvs/Islands/Jac/dryad_only_interlayer_edges_islands_as_layers.csv")
-intra_nonextended <- read.csv("./csvs/Islands/Jac/dryad_only_intralayer_edges_islands_as_layers.csv")
+##---- get empirical data ---------------------------------------------------------------------------
+inter_extended <- read.csv("./csvs_nuevo/dryad_only_interlayer_edges_islands_as_layers.csv")
+intra_nonextended <- read.csv("./csvs_nuevo/dryad_only_intralayer_edges_islands_as_layers.csv")
 
 inter_extended <- inter_extended [,-1]
 intra_nonextended <- intra_nonextended [,-1]
@@ -49,8 +50,8 @@ for(t in k){
 
 
 # ----multilayer_class-----------------------------------------------------------------------------------------------
-physical_nodes <- read.csv("./csvs/Islands/physical_nodes_islands.csv")
-layer_metadata <- read.csv("./csvs/Islands/layer_metadata_islands.csv")
+physical_nodes <- read.csv("./csvs_nuevo/physical_nodes_islands.csv")
+layer_metadata <- read.csv("./csvs_nuevo/layer_metadata_islands.csv")
 
 # Input: An extended edge list.
 dryad_edgelist_complete_fixed <- Sen_list_classic
@@ -89,10 +90,11 @@ dryad_multilayer_complete_fixed_output <- modularity_for_fixed(dryad_edgelist_co
 
 dryad_multilayer_complete_fixed_output <- dryad_multilayer_complete_fixed_output %>% drop_na() 
 
-#write.csv(dryad_multilayer_complete_fixed_output, "./csvs/Islands/Jac/modularity_M4.csv", row.names = FALSE)
+#write.csv(dryad_multilayer_complete_fixed_output, "./csvs_nuevo/modularity_M4.csv", row.names = FALSE)
 
 ##---- distance decay of modules  ---------------------------------------------------------------
-distances_with_ids <- read.csv("./csvs/Islands/distances_with_ids_islands_as_layers.csv")
+distances_with_ids <- read.csv("./csvs_nuevo/distances_with_ids_islands_as_layers.csv")
+dryad_multilayer_complete_fixed_output <- read.csv("./csvs_nuevo/modularity_M4.csv")
 dryad_multilayer_M4<-dryad_multilayer_complete_fixed_output 
 
 
@@ -193,7 +195,7 @@ ave_module_islands_turnover_fixed <- all_edge_list_islands_combine_no_module_M4_
 ave_module_islands_turnover_fixed$trial<-as.character(ave_module_islands_turnover_fixed$trial)
 
 #add empirical
-islands_turnover_with_distnace_empirical <- read.csv("csvs/Islands/Jac/islands_turnover_with_distnace_empirical.csv")
+islands_turnover_with_distnace_empirical <- read.csv("./csvs_nuevo/islands_turnover_with_distnace_empirical.csv")
 
 empirical_turnover_for_modules_layers_shuf <- islands_turnover_with_distnace_empirical %>% group_by(layer_from, layer_to) %>%
   summarise(ave = mean(turnover), sd = sd(turnover), ave_dist = mean_distance) %>% mutate(trial="empirical") #make sure sd is 0 cause its the empirical and not null
@@ -207,11 +209,11 @@ jaccard_similarity_empirical_and_null_fixed <- rbind(empirical_turnover_for_modu
 jaccard_similarity_layer_empirical_and_null_km_fixed <- jaccard_similarity_empirical_and_null_fixed %>% 
   mutate(mean_dist_in_km = ave_dist/1000)
 
-#write.csv(jaccard_similarity_layer_empirical_and_null_km_fixed, "./csvs/Islands/Jac/sensitivity_nullmodel4.csv", row.names = FALSE) #so it can be used for classical shuffling
+#write.csv(jaccard_similarity_layer_empirical_and_null_km_fixed, "./csvs_nuevo/sensitivity_nullmodel4.csv", row.names = FALSE) #so it can be used for classical shuffling
 
 
 ##--Linear regression models
-jaccard_similarity_layer_empirical_and_null_km_fixed <- read.csv("csvs/Islands/Jac/sensitivity_nullmodel4.csv")
+jaccard_similarity_layer_empirical_and_null_km_fixed <- read.csv("./csvs_nuevo/sensitivity_nullmodel4.csv")
 
 l_e = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
                                      jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="empirical")) 
@@ -253,19 +255,17 @@ summary(l_10)
 library(ggthemes)
 library(paletteer)
 
-jaccard_similarity_empirical_and_fixed_km <- read.csv("csvs/Islands/Jac/sensitivity_nullmodel4.csv")
+jaccard_similarity_empirical_and_fixed_km <- read.csv("./csvs_nuevo/sensitivity_nullmodel4.csv")
 
 paletteer_c("grDevices::Harmonic", 10)
 paletteer_c("grDevices::ag_GrnYl", 10)
 cols = c("#7DB0DDFF","#5BB7D3FF", "#3FBBC4FF", "#39BEB1FF", "#4EBE9CFF","#6ABC88FF", "#86B875FF", "#9FB368FF",
          "#B5AD64FF", "#C7A76CFF","#FB3B1E")
 
-cols2 = c("#7DB0DDFF","#5BB7D3FF", "#3FBBC4FF", "#39BEB1FF", "#4EBE9CFF","#6ABC88FF", "#86B875FF", "#9FB368FF",
-         "#B5AD64FF", "#C7A76CFF","#FB3B1E")
 
-pdf('./graphs/Islands/Jac/sensitivity_M4.pdf', 10, 6)
+pdf('./graphs/sensitivity_M4.pdf', 10, 6)
 jaccard_similarity_empirical_and_fixed_km %>% 
-  ggplot(aes(x= ave_dist_in_km , y= ave, group= trial, color= trial))+
+  ggplot(aes(x= mean_dist_in_km , y= ave, group= trial, color= trial))+
   geom_point()+ theme_classic()+ geom_smooth(method= "lm", se=F)+
   scale_color_manual(values=cols, name ="Interedges weight")+
   #geom_smooth(jaccard_similarity_empirical_and_fixed_km = subset(trial == "empirical"), method = "lm", se = FALSE, color = "#FB3B1E")+

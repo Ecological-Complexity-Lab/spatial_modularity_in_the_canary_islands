@@ -24,6 +24,7 @@ library(ggmap)
 library(ggraph)
 library(ggpubr)
 
+
 ##----get_data--------------------------------------------------------------------------------------------------------
 setwd("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands")
 source("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands/R/functions.R")

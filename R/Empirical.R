@@ -2,9 +2,6 @@
 #(islands as layers) and test distance decay in modules composition
 #of the empirical network.
 
-#LINES 12- 289: Create dataframe and exploratory analysis
-#LINES 351-482: Distance decay in structure - Empirical data
-
 
 ##---load_libraries-------------------------------------------------------------------------------------------------
 options(rgl.useNULL = TRUE)
@@ -24,8 +21,6 @@ library(ggraph)
 library(ggpubr)
 library(reshape2)
 library(extRC)
-
-
 
 ##----get_data--------------------------------------------------------------------------------------------------------
 setwd("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands")
