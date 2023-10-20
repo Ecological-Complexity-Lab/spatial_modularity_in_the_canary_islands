@@ -1,5 +1,5 @@
 
-# ---- NULL MODEL M3: SHUFFLING INTERACTION WITHIN ISLANDS ------------------------------------------------------------------------
+# ---- NULL MODEL M3: SHUFFLING INTERACTIONS WITHIN ISLANDS ------------------------------------------------------------------------
 
 # this portion of the code shuffles interactions within layers.
 # the shuffled networks are then compared the empirical network to determine whether 
