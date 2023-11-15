@@ -21,7 +21,7 @@ library(ggforce)
 library(ggmap)
 library(ggraph)
 library(ggpubr)
-
+library(ecodist)
 
 setwd("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands")
 source("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands/R/functions.R")
@@ -212,44 +212,40 @@ jaccard_similarity_layer_empirical_and_null_km_fixed <- jaccard_similarity_empir
 #write.csv(jaccard_similarity_layer_empirical_and_null_km_fixed, "./csvs_nuevo/sensitivity_nullmodel4.csv", row.names = FALSE) #so it can be used for classical shuffling
 
 
-##--Linear regression models
+##--regression models
 jaccard_similarity_layer_empirical_and_null_km_fixed <- read.csv("./csvs_nuevo/sensitivity_nullmodel4.csv")
 
-l_e = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
-                                     jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="empirical")) 
-l_1 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
-                                            jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="0.1")) 
-l_2 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
-                                            jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="0.2")) 
-l_3 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
-                                            jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="0.3")) 
-l_4 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
-                                            jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="0.4"))
-l_5 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
-                                            jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="0.5")) 
-l_6 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
-                                            jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="0.6")) 
-l_7 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
-                                            jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="0.7")) 
-l_8 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
-                                            jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="0.8"))
-l_9 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
-                                            jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="0.9")) 
-l_10 = lm(ave ~ mean_dist_in_km ,data=subset(jaccard_similarity_layer_empirical_and_null_km_fixed,
-                                             jaccard_similarity_layer_empirical_and_null_km_fixed$trial=="1"))
+n_4<-jaccard_similarity_layer_empirical_and_null_km_fixed
 
-summary(l_e)
-summary(l_1)
-summary(l_2)
-summary(l_3)
-summary(l_4)
-summary(l_5)
-summary(l_6)
-summary(l_7)
-summary(l_8)
-summary(l_9)
-summary(l_10)
+n_4_1<- MRM(ave ~ mean_dist_in_km ,data=subset(n_4, n_4$trial=="0.1")) 
+n_4_1
 
+n_4_2<- MRM(ave ~ mean_dist_in_km ,data=subset(n_4, n_4$trial=="0.2")) 
+n_4_2
+
+n_4_3<- MRM(ave ~ mean_dist_in_km ,data=subset(n_4, n_4$trial=="0.3")) 
+n_4_3
+
+n_4_4<- MRM(ave ~ mean_dist_in_km ,data=subset(n_4, n_4$trial=="0.4")) 
+n_4_4
+
+n_4_5<- MRM(ave ~ mean_dist_in_km ,data=subset(n_4, n_4$trial=="0.5")) 
+n_4_5
+
+n_4_6<- MRM(ave ~ mean_dist_in_km ,data=subset(n_4, n_4$trial=="0.6")) 
+n_4_6
+
+n_4_7<- MRM(ave ~ mean_dist_in_km ,data=subset(n_4, n_4$trial=="0.7")) 
+n_4_7
+
+n_4_8<- MRM(ave ~ mean_dist_in_km ,data=subset(n_4, n_4$trial=="0.8")) 
+n_4_8
+
+n_4_9<- MRM(ave ~ mean_dist_in_km ,data=subset(n_4, n_4$trial=="0.9")) 
+n_4_9
+
+n_4_10<- MRM(ave ~ mean_dist_in_km ,data=subset(n_4, n_4$trial=="1")) 
+n_4_10
 
 #Plot
 library(ggthemes)

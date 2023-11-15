@@ -23,7 +23,7 @@ library(ggmap)
 library(ggraph)
 library(ggtree)
 library(ggpubr)
-
+library(ecodist)
 
 ##----get_data--------------------------------------------------------------------------------------------------------
 setwd("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands")
@@ -349,6 +349,7 @@ jaccard_similarity_layer_empirical_and_null_km_classic <- jaccard_similarity_emp
 
 
 #---- graphs for distance decay in modules shuf vs empirical--------------------------------
+
 #jaccard_similarity_layer_empirical_and_null_km_classic <- read.csv("./csvs_nuevo/jaccard_similarity_layer_empirical_and_null_km_classic_islands.csv") #need to read this to run next part
 
 pdf('./graphs/M3_Modules_DD_Islands.pdf', 10, 6)
@@ -371,17 +372,16 @@ jaccard_similarity_layer_empirical_and_null_km_classic %>%
 dev.off()
 
 #---- statistical analysis--------------------------------------------------
-emp<-jaccard_similarity_layer_empirical_and_null_km_classic %>% filter(type=="empirical")
+jaccard_similarity_layer_empirical_and_null_km_classic<- read.csv("./csvs_nuevo/jaccard_similarity_layer_empirical_and_null_km_classic_islands.csv") #need to read this to run next part
+
 null<-jaccard_similarity_layer_empirical_and_null_km_classic %>% filter(type=="null_model_within")
 
-shapiro.test(emp$ave)
 shapiro.test(null$ave)#normal
 
-#---- linear regression
-lm1_module_classic = lm(ave ~ mean_dist_in_km ,data=emp) #in empirical
-lm2_module_classic = lm(ave ~ mean_dist_in_km, data=null) #in null model
-summary(lm1_module_classic)
-summary(lm2_module_classic)
+#--- regression
+m_n3<-MRM(ave ~ mean_dist_in_km,data=null,nperm=9999)
+m_n3
+
 
 #----correlation and r sqaured between jaccard and distance for each run
 all_edge_list_islands_combine_no_module_shuf_classic <- read.csv("./csvs_nuevo/all_edge_list_islands_combine_no_module_shuf_classic.csv")
@@ -389,37 +389,37 @@ all_edge_list_islands_combine_no_module_shuf_classic <- read.csv("./csvs_nuevo/a
 iteration_correlation_classic <- NULL
 iteration_correlation_data_classic <- all_edge_list_islands_combine_no_module_shuf_classic %>% subset(layer_from != layer_to) 
 iteration_correlation_data_classic_km <- iteration_correlation_data_classic %>% 
-  mutate(mean_dist_in_km = mean_distance/1000)
+  mutate(mean_dist_in_km = mean_distance/1000)%>% group_by(trial) %>% 
+  distinct(layer_from,layer_to, .keep_all = T)
 
 
 for (i in 1:1000){
   trial_classic = iteration_correlation_data_classic_km %>% filter(trial == i)
   iteration_correlation_new_classic <- cor.test(trial_classic$turnover, trial_classic$mean_dist_in_km, method = "pearson")
-  lm_val_classic <- lm(turnover ~ mean_dist_in_km, data = trial_classic)
+  mrm_val_classic <- MRM(turnover ~ mean_dist_in_km, data = trial_classic)
   iteration_correlation_classic <- rbind(iteration_correlation_classic, tibble(estimate = iteration_correlation_new_classic$estimate, 
                                                                                p_val = iteration_correlation_new_classic$p.value, 
                                                                                statistic = iteration_correlation_new_classic$statistic, 
                                                                                confidence_int_low = iteration_correlation_new_classic$conf.int[1],
                                                                                confidence_int_high = iteration_correlation_new_classic$conf.int[2],
-                                                                               slope = lm_val_classic$coefficients[2],
-                                                                               intercept = lm_val_classic$coefficients[1],
-                                                                               rsquared = summary(lm_val_classic)$adj.r.squared,
+                                                                               slope = mrm_val_classic$coef[2],
+                                                                               intercept = mrm_val_classic$coef[1],
+                                                                               rsquared = mrm_val_classic$r.squared[1],
                                                                                trial_num = i))
 }
 
 iteration_correlation_classic
 #write.csv(iteration_correlation_classic, "./csvs_nuevo/iteration_correlation_classic_islands.csv", row.names = FALSE)
 
+p_rsquared_classic <- sum(iteration_correlation_classic$rsquared > 0.653)/1000
+p_rsquared_classic
 
-##distribution of rsquared and empirical
-correlation_empirical_classic <- read.csv("./csvs_nuevo/correlation_empirical.csv")
-iteration_correlation_classic <- read.csv("./csvs_nuevo/iteration_correlation_classic_islands.csv")
 iteration_correlation_classic2<-iteration_correlation_classic %>% mutate(Type = "null_class")
 
 pdf('./graphs/M3_r_squares_module_DD.pdf', 10, 6)
 iteration_correlation_classic2 %>% ggplot(aes(x = rsquared, fill= Type))+ 
   geom_density(alpha = 0.6)+ 
-  geom_vline(xintercept = correlation_empirical_classic$rsquared, linetype = "dashed", color = "#FB3B1E") +
+  geom_vline(xintercept = 0.653, linetype = "dashed", color = "#FB3B1E") +
   labs(x= expression("R"^2), y="Density")+  
   scale_fill_manual(name = "Null Model",  label = expression("M"[3]), values= "#FA86F2")+
   theme_classic()+
@@ -434,6 +434,5 @@ iteration_correlation_classic2 %>% ggplot(aes(x = rsquared, fill= Type))+
         legend.text = element_text(size = 11))
 dev.off()
 
-p_rsquared_classic <- sum(iteration_correlation_classic$rsquared > correlation_empirical_classic$rsquared)/1000
-p_rsquared_classic
+
 

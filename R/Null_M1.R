@@ -23,6 +23,7 @@ library(ggforce)
 library(ggmap)
 library(ggraph)
 library(ggpubr)
+library(ecodist)
 
 
 ##----get_data--------------------------------------------------------------------------------------------------------
@@ -747,57 +748,54 @@ jaccard_similarity_layer_empirical_and_null_km %>%
 dev.off()
 
 #------check if its significant for islands----------------------------------------------------------------
+jaccard_similarity_layer_empirical_and_null_km <- read.csv("./csvs_nuevo/jaccard_similarity_layer_empirical_and_null_km_islands_m1.csv")
 
 ## check normality
-emp<-jaccard_similarity_layer_empirical_and_null_km %>% filter(type=="empirical")
 pol<-jaccard_similarity_layer_empirical_and_null_km %>% filter(type=="null_pollinators")
 pla<-jaccard_similarity_layer_empirical_and_null_km %>% filter(type=="null_plants")
 both<-jaccard_similarity_layer_empirical_and_null_km %>% filter(type=="null_both")
 
-shapiro.test(emp$ave)
 shapiro.test(pol$ave)
 shapiro.test(pla$ave)
 shapiro.test(both$ave)
 
-max(emp$ave)
-min(emp$ave)
-
 ##models
-lm1_module = lm(ave ~ mean_dist_in_km ,data=emp) #in empirical
-lm2_module = lm(ave ~ mean_dist_in_km ,data=pol) #in null pols
-lm3_module = lm(ave ~ mean_dist_in_km ,data=pla) #in null plants
-lm4_module = lm(ave ~ mean_dist_in_km ,data=both) #in null both
-
-summary(lm1_module)
-summary(lm2_module)
-summary(lm3_module)
-summary(lm4_module)
+m_pol<-MRM(ave ~ mean_dist_in_km,data=pol,nperm=9999 )
+m_pol
+m_pla<-MRM(ave ~ mean_dist_in_km,data=pla,nperm=9999 )
+m_pla
+m_both<-MRM(ave ~ mean_dist_in_km,data=both,nperm=9999 )
+m_both
 
 
 ##correlation and r squared between jaccard and distance for each run ----------------------------------------------------------------------------
 
-## -- pols
+##correlation and r squared between jaccard and distance for each run ----------------------------------------------------------------------------
 
-#all_edge_list_layer_combine_no_module_shuf_pols_output <- read.csv("./csvs_nuevo/all_edge_list_layer_combine_no_module_shuf_pols_output_islands.csv")
+## -- pols
+all_edge_list_layer_combine_no_module_shuf_pols_output <- read.csv("./csvs_nuevo/all_edge_list_layer_combine_no_module_shuf_pols_output_islands.csv")
+
 iteration_correlation_pols <- NULL
 iteration_correlation_data_pols <- all_edge_list_layer_combine_no_module_shuf_pols_output %>% subset(layer_from != layer_to) 
 
 iteration_correlation_data_pols_km <- iteration_correlation_data_pols %>% 
-  mutate(mean_dist_in_km = mean_distance/1000)
+  mutate(mean_dist_in_km = mean_distance/1000)%>% group_by(trial) %>% 
+  distinct(layer_from,layer_to, .keep_all = T)
+
 
 for (i in 1:1000){
   print(i)
   trial_pols = iteration_correlation_data_pols_km %>% filter(trial == i)
   iteration_correlation_new_pols <- cor.test(trial_pols$turnover, trial_pols$mean_dist_in_km, method = "pearson")
-  lm_val_pols <- lm(turnover ~ mean_dist_in_km, data = trial_pols)
+  mrm_val_pols <- MRM(turnover ~ mean_dist_in_km, data = trial_pols)
   iteration_correlation_pols <- rbind(iteration_correlation_pols, tibble(estimate = iteration_correlation_new_pols$estimate, 
                                                                          p_val = iteration_correlation_new_pols$p.value, 
                                                                          statistic = iteration_correlation_new_pols$statistic, 
                                                                          confidence_int_low = iteration_correlation_new_pols$conf.int[1],
                                                                          confidence_int_high = iteration_correlation_new_pols$conf.int[2],
-                                                                         slope = lm_val_pols$coefficients[2],
-                                                                         intercept = lm_val_pols$coefficients[1],
-                                                                         rsquared = summary(lm_val_pols)$adj.r.squared,
+                                                                         slope = mrm_val_pols$coef[2],
+                                                                         intercept = mrm_val_pols$coef[1],
+                                                                         rsquared = mrm_val_pols$r.squared[1],
                                                                          trial_num = i))
 }
 
@@ -805,93 +803,77 @@ for (i in 1:1000){
 #write.csv(iteration_correlation_pols, "./csvs_nuevo/iteration_correlation_pols.csv", row.names = FALSE)
 #iteration_correlation_pols <- read.csv("./csvs_nuevo/iteration_correlation_pols.csv")
 
-#correlation empirical
-islands_turnover_with_distnace_empirical <- read.csv("./csvs_nuevo/islands_turnover_with_distnace_empirical.csv")
-
-
-correlation_empirical_data_pols <- cor.test(islands_turnover_with_distnace_empirical$turnover, #ave is just the value of the turnover
-                                            islands_turnover_with_distnace_empirical$distance_in_km, method = "pearson")
-
-lm_val_empirical_pols <- lm(turnover ~ distance_in_km, data = islands_turnover_with_distnace_empirical)
-
-correlation_empirical_pols <- tibble(estimate = correlation_empirical_data_pols$estimate, 
-                                     p_val = correlation_empirical_data_pols$p.value, 
-                                     statistic = correlation_empirical_data_pols$statistic, 
-                                     confidence_int_low = correlation_empirical_data_pols$conf.int[1],
-                                     confidence_int_high = correlation_empirical_data_pols$conf.int[2],
-                                     slope = lm_val_empirical_pols$coefficients[2],
-                                     intercept = lm_val_empirical_pols$coefficients[1], 
-                                     rsquared = summary(lm_val_empirical_pols)$adj.r.squared)
-
-#write.csv(correlation_empirical_pols, "./csvs_nuevo/correlation_empirical_pols.csv", row.names = FALSE) #so it can be used for classical shuffling
-#correlation_empirical_pols <- read.csv("./csvs_nuevo/correlation_empirical_pols.csv")
-
-
-p_rsquared_pols <- sum(iteration_correlation_pols$rsquared > correlation_empirical_pols$rsquared)/1000
+p_rsquared_pols <- sum(iteration_correlation_pols$rsquared > 0.653)/1000
 p_rsquared_pols ## -- distribution of rsquared and  empirical
 
 
 #----plants
-#all_edge_list_layer_combine_no_module_shuf_plants_output <- read.csv("./csvs_nuevo/all_edge_list_layer_combine_no_module_shuf_plants_output_islands.csv")
+all_edge_list_layer_combine_no_module_shuf_plants_output <- read.csv("./csvs_nuevo/all_edge_list_layer_combine_no_module_shuf_plants_output_islands.csv")
+
 iteration_correlation_plants <- NULL
 iteration_correlation_data_plants <- all_edge_list_layer_combine_no_module_shuf_plants_output %>% subset(layer_from != layer_to) 
 
 iteration_correlation_data_plants_km <- iteration_correlation_data_plants %>% 
-  mutate(mean_dist_in_km = mean_distance/1000)
+  mutate(mean_dist_in_km = mean_distance/1000)  %>% group_by(trial) %>% 
+  distinct(layer_from,layer_to, .keep_all = T)
 
 for (i in 1:1000){
   print(i)
   trial_plants = iteration_correlation_data_plants_km %>% filter(trial == i)
   iteration_correlation_new_plants <- cor.test(trial_plants$turnover, trial_plants$mean_dist_in_km, method = "pearson")
-  lm_val_plants <- lm(turnover ~ mean_dist_in_km, data = trial_plants)
+  mrm_val_plants <- MRM(turnover ~ mean_dist_in_km, data = trial_plants)
   iteration_correlation_plants <- rbind(iteration_correlation_plants, tibble(estimate = iteration_correlation_new_plants$estimate, 
                                                                              p_val = iteration_correlation_new_plants$p.value, 
                                                                              statistic = iteration_correlation_new_plants$statistic, 
                                                                              confidence_int_low = iteration_correlation_new_plants$conf.int[1],
                                                                              confidence_int_high = iteration_correlation_new_plants$conf.int[2],
-                                                                             slope = lm_val_plants$coefficients[2],
-                                                                             intercept = lm_val_plants$coefficients[1],
-                                                                             rsquared = summary(lm_val_plants)$adj.r.squared,
+                                                                             slope = mrm_val_plants$coef[2],
+                                                                             intercept = mrm_val_plants$coef[1],
+                                                                             rsquared = mrm_val_plants$r.squared[1],
                                                                              trial_num = i))
 }
+
 
 #write.csv(iteration_correlation_plants, "./csvs_nuevo/iteration_correlation_plants.csv", row.names = FALSE)
 #iteration_correlation_plants <- read.csv("./csvs_nuevo/iteration_correlation_plants.csv")
 
-p_rsquared_plants <- sum(iteration_correlation_plants$rsquared < correlation_empirical_pols$rsquared)/1000
-p_rsquared_plants ## -- distribution of rsquared and add empirical
+p_rsquared_plants <- sum(iteration_correlation_plants$rsquared > 0.653)/1000
+p_rsquared_plants ## -- distribution of rsquared and add empirica
 
 
 #---- both
 all_edge_list_layer_combine_no_module_shuf_both_output <- read.csv("./csvs_nuevo/all_edge_list_layer_combine_no_module_shuf_both_output_islands.csv")
+
 iteration_correlation_both <- NULL
 iteration_correlation_data_both <- all_edge_list_layer_combine_no_module_shuf_both_output %>% subset(layer_from != layer_to) 
 
 iteration_correlation_data_both_km <- iteration_correlation_data_both %>% 
-  mutate(mean_dist_in_km = mean_distance/1000)
+  mutate(mean_dist_in_km = mean_distance/1000)%>% group_by(trial) %>% 
+  distinct(layer_from,layer_to, .keep_all = T)
 
 
 for (i in 1:1000){
   print(i)
   trial_both = iteration_correlation_data_both_km %>% filter(trial == i)
   iteration_correlation_new_both <- cor.test(trial_both$turnover, trial_both$mean_dist_in_km, method = "pearson")
-  lm_val_both <- lm(turnover ~ mean_dist_in_km, data = trial_both)
+  mrm_val_both <- MRM(turnover ~ mean_dist_in_km, data = trial_both)
   iteration_correlation_both <- rbind(iteration_correlation_both, tibble(estimate = iteration_correlation_new_both$estimate, 
                                                                          p_val = iteration_correlation_new_both$p.value, 
                                                                          statistic = iteration_correlation_new_both$statistic, 
                                                                          confidence_int_low = iteration_correlation_new_both$conf.int[1],
                                                                          confidence_int_high = iteration_correlation_new_both$conf.int[2],
-                                                                         slope = lm_val_both$coefficients[2],
-                                                                         intercept = lm_val_both$coefficients[1],
-                                                                         rsquared = summary(lm_val_both)$adj.r.squared,
+                                                                         slope = mrm_val_both$coef[2],
+                                                                         intercept = mrm_val_both$coef[1],
+                                                                         rsquared = mrm_val_both$r.squared[1],
                                                                          trial_num = i))
 }
 
-#write.csv(iteration_correlation_both, "./csvs_nuevo/iteration_correlation_both.csv", row.names = FALSE)
+
+write.csv(iteration_correlation_both, "./csvs_nuevo/iteration_correlation_both.csv", row.names = FALSE)
 #iteration_correlation_both<- read.csv("./csvs_nuevo/iteration_correlation_both.csv")
 
 
-p_rsquared_both <- sum(iteration_correlation_both$rsquared > correlation_empirical_pols$rsquared)/1000
+p_rsquared_both <- sum(iteration_correlation_both$rsquared > 0.653)/1000
 p_rsquared_both ##distribution of rsquared and empirical
 
 
@@ -904,7 +886,7 @@ iteration_correlation_both_M1 <- iteration_correlation_both %>% mutate(type = "s
 rqsuares_M1_all <- rbind(iteration_correlation_pols_M1, iteration_correlation_plants_M1, iteration_correlation_both_M1)
 
 #write.csv(rqsuares_M1_all, "./csvs_nuevo/rqsuares_M1_all.csv", row.names = FALSE)
-rqsuares_M1_all <- read.csv("./csvs_nuevo/rqsuares_M1_all.csv")
+#rqsuares_M1_all <- read.csv("./csvs_nuevo/rqsuares_M1_all.csv")
 
 
 rqsuares_M1_all$type <- factor(rqsuares_M1_all$type, levels = c("shuf_plants","shuf_pollinators","shuf_both"))
@@ -914,7 +896,7 @@ pdf('./graphs/M1_r_squares_module_DD.pdf', 10, 6)
 rqsuares_M1_all %>% 
   ggplot(aes(x = rsquared, fill = type))+ 
   geom_density(alpha = 0.5)+ 
-  geom_vline(xintercept = correlation_empirical_pols$rsquared, linetype = "dashed", color = "#FB3B1E")+
+  geom_vline(xintercept = 0.653, linetype = "dashed", color = "#FB3B1E")+ #line R squared empirical
   labs(x= expression("R"^2), y="Density")+  
   scale_fill_manual(name = "Null Model",  labels = c(expression("M"[1]^P),expression("M"[1]^A),
                                                      expression("M"[1]^AP)), values = c("#72A323","#A44CD3", "#15B7BC"))+

@@ -535,14 +535,13 @@ dev.off()
 ## -- Figure 4
 
 # Panel A
-correlation_empirical_pols <- read.csv("./csvs_nuevo/correlation_empirical_pols.csv")
 rqsuares_M1_all <- read.csv("./csvs_nuevo/rqsuares_M1_all.csv")
 rqsuares_M1_all$type <- factor(rqsuares_M1_all$type, levels = c("shuf_plants","shuf_pollinators","shuf_both"))
 
 Panel_A <- rqsuares_M1_all %>% 
   ggplot(aes(x = rsquared, fill = type))+ 
   geom_density(alpha = 0.5)+ 
-  geom_vline(xintercept = correlation_empirical_pols$rsquared, linetype = "dashed", color = "#FB3B1E")+
+  geom_vline(xintercept = 0.653, linetype = "dashed", color = "#FB3B1E")+ # Rsquared empirical
   labs(x= expression("R"^2), y="Density")+  
   scale_fill_manual(name = "Null Model",  labels = c(expression("M"[1]^P),expression("M"[1]^A),
                                                      expression("M"[1]^AP)), values = c("#72A323","#A44CD3", "#15B7BC"))+
@@ -559,13 +558,12 @@ Panel_A <- rqsuares_M1_all %>%
 Panel_A
 
 #Panel B
-correlation_empirical_interactions <- read.csv("./csvs_nuevo/correlation_empirical.csv")
 iteration_correlation_interactions <- read.csv("./csvs_nuevo/iteration_correlation_interactions_islands.csv")
 iteration_correlation_interactions2<-iteration_correlation_interactions %>% mutate(Type = "null_int")
 
 Panel_B<- iteration_correlation_interactions2 %>% ggplot(aes(x = rsquared, fill= Type))+ 
   geom_density(alpha = 0.6)+ 
-  geom_vline(xintercept = correlation_empirical_interactions$rsquared, linetype = "dashed", color = "#FB3B1E") +
+  geom_vline(xintercept = 0.653, linetype = "dashed", color = "#FB3B1E") + # Rsquared empirical
   labs(x= expression("R"^2), y="Density")+  
   scale_fill_manual(name = "Null Model",  label = expression("M"[2]), values= "#E6AB02")+
   theme_classic()+
@@ -580,13 +578,12 @@ Panel_B<- iteration_correlation_interactions2 %>% ggplot(aes(x = rsquared, fill=
         legend.text = element_text(size = 11))
 
 #Panel C
-correlation_empirical_classic <- read.csv("./csvs_nuevo/correlation_empirical.csv")
 iteration_correlation_classic <- read.csv("./csvs_nuevo/iteration_correlation_classic_islands.csv")
 iteration_correlation_classic2<-iteration_correlation_classic %>% mutate(Type = "null_class")
 
 Panel_C<- iteration_correlation_classic2 %>% ggplot(aes(x = rsquared, fill= Type))+ 
   geom_density(alpha = 0.6)+ 
-  geom_vline(xintercept = correlation_empirical_classic$rsquared, linetype = "dashed", color = "#FB3B1E") +
+  geom_vline(xintercept = 0.653, linetype = "dashed", color = "#FB3B1E") + #rsquared empirical
   labs(x= expression("R"^2), y="Density")+  
   scale_fill_manual(name = "Null Model",  label = expression("M"[3]), values= "#FA86F2")+
   theme_classic()+

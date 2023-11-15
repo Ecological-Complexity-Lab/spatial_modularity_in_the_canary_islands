@@ -21,6 +21,7 @@ library(ggraph)
 library(ggpubr)
 library(reshape2)
 library(extRC)
+library(ecodist)
 
 ##----get_data--------------------------------------------------------------------------------------------------------
 setwd("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands")
@@ -358,27 +359,13 @@ islands_turnover_with_distnace_empirical <- islands_turnover_with_distnace_empir
 #write.csv(islands_turnover_with_distnace_empirical,  "./csvs_nuevo/islands_turnover_with_distnace_empirical.csv",  row.names = FALSE)
 
 ## Statistical analysis -----
+emp <- read.csv("./csvs_nuevo/islands_turnover_with_distnace_empirical.csv", sep =";")
+
 shapiro.test(islands_turnover_with_distnace_empirical$turnover)#normal
-lm1_module = lm(turnover ~ distance_in_km ,data=islands_turnover_with_distnace_empirical) #in empirical
-summary(lm1_module)
+
+m_emp<-MRM(turnover ~ distance_in_km,data=emp,nperm=9999 )
 
 
 
-## Graph distance decay in modules of the empirical network--
-#pdf('./graphs/Islands/Jac/Modules distance decay alone_islands.pdf', 10, 6)
-#islands_turnover_with_distnace_empirical %>%
-  #ggplot(aes(x=distance_in_km, y=turnover))+
-  #geom_point(color = "#FB3B1E")+ 
-  #scale_x_continuous()+ stat_smooth(method= "lm", se=F, color = "#FB3B1E")+
-  #theme(axis.title=element_text(size=22))+theme(axis.text.x=element_text(size=15))+
-  #theme(axis.text.y=element_text(size=15))+
-  #labs(x="Distance in Km", y="Jaccard Similarity")+ theme_bw()+
-  #theme(panel.grid = element_blank(),
-  #     panel.border = element_rect(color = "black",fill = NA,size = 1),
-  #      panel.spacing = unit(0.5, "cm", data = NULL),
-  #      axis.text = element_text(size=14, color='black'),
-  #      axis.title = element_text(size=14, color='black'),
-  #      axis.line = element_blank())
-#dev.off()
 
 

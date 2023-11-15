@@ -25,7 +25,7 @@ library(ggmap)
 library(ggraph)
 library(ggtree)
 library(ggpubr)
-
+library(ecodist)
 
 ##----get_data--------------------------------------------------------------------------------------------------------
 setwd("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands")
@@ -455,83 +455,57 @@ jaccard_similarity_layer_empirical_and_null_km_interactions %>%
 dev.off()
 
 #---- statistical analysis--------------------------------------------------
-emp<-jaccard_similarity_layer_empirical_and_null_km_interactions %>% filter(type=="empirical")
+jaccard_similarity_layer_empirical_and_null_km_interactions <- read.csv("./csvs_nuevo/jaccard_similarity_layer_empirical_and_null_km_interactions_islands.csv") #need to read this to run next part
+
 null<-jaccard_similarity_layer_empirical_and_null_km_interactions %>% filter(type=="null_model_int")
 
-
-shapiro.test(emp$ave)
 shapiro.test(null$ave)
 
-#---- linear regression
-lm1_module_classic = lm(ave ~ mean_dist_in_km ,data=emp) #in empirical
-lm2_module_classic = lm(ave ~ mean_dist_in_km, data=subset(jaccard_similarity_layer_empirical_and_null_km_interactions, 
-                                                           jaccard_similarity_layer_empirical_and_null_km_interactions$type=="null_model_int")) #in null model
+#---- regression
 
+m_n2<-MRM(ave ~ mean_dist_in_km, data = null, nperm=9999)
+m_n2
 
-summary(lm1_module_classic)
-summary(lm2_module_classic)
+#---- multiple regression on distances matrices and correlation
+all_edge_list_islands_combine_no_module_shuf_interactions_output <- read.csv("./csvs_nuevo/all_edge_list_islands_combine_no_module_shuf_interactions.csv")
 
-
-## -- correlation and r sqaured between jaccard and distance for each run -----------------
-
-#---- linear regression and correlation
 iteration_correlation_interactions <- NULL
 iteration_correlation_data_interactions <- all_edge_list_islands_combine_no_module_shuf_interactions_output %>% subset(layer_from != layer_to) 
 
 iteration_correlation_data_interactions_km <- iteration_correlation_data_interactions %>% 
-  mutate(mean_dist_in_km = mean_distance/1000)
+  mutate(mean_dist_in_km = mean_distance/1000)%>% group_by(trial) %>% 
+  distinct(layer_from,layer_to, .keep_all = T)
 
 
 for (i in 1:1000){
   trial_interactions = iteration_correlation_data_interactions_km %>% filter(trial == i)
   iteration_correlation_new_interactions <- cor.test(trial_interactions$turnover, trial_interactions$mean_dist_in_km, method = "pearson")
-  lm_val_interactions <- lm(turnover ~ mean_dist_in_km, data = trial_interactions)
+  mrm_val_interactions <- MRM(turnover ~ mean_dist_in_km, data = trial_interactions)
   iteration_correlation_interactions <- rbind(iteration_correlation_interactions, tibble(estimate = iteration_correlation_new_interactions$estimate, 
                                                                                          p_val = iteration_correlation_new_interactions$p.value, 
                                                                                          statistic = iteration_correlation_new_interactions$statistic, 
                                                                                          confidence_int_low = iteration_correlation_new_interactions$conf.int[1],
                                                                                          confidence_int_high = iteration_correlation_new_interactions$conf.int[2],
-                                                                                         slope = lm_val_interactions$coefficients[2],
-                                                                                         intercept = lm_val_interactions$coefficients[1],
-                                                                                         rsquared = summary(lm_val_interactions)$adj.r.squared,
+                                                                                         slope = mrm_val_interactions$coef[2],
+                                                                                         intercept = mrm_val_interactions$coef[1],
+                                                                                         rsquared = mrm_val_interactions$r.squared[1],
                                                                                          trial_num = i))
 }
 
+iteration_correlation_interactions
 #write.csv(iteration_correlation_interactions, "./csvs_nuevo/iteration_correlation_interactions_islands.csv", row.names = FALSE)
 
+p_rsquared_interactions <- sum(iteration_correlation_interactions$rsquared > 0.653)/1000
+p_rsquared_interactions
 
-#correlation empirical
-islands_turnover_with_distnace_empirical <- read.csv("./csvs_nuevo/islands_turnover_with_distnace_empirical.csv")
-
-
-correlation_empirical_data <- cor.test(islands_turnover_with_distnace_empirical$turnover, #ave is just the value of the turnover
-                                            islands_turnover_with_distnace_empirical$distance_in_km, method = "pearson")
-
-lm_val_empirical <- lm(turnover ~ distance_in_km, data = islands_turnover_with_distnace_empirical)
-
-correlation_empirical<- tibble(estimate = correlation_empirical_data$estimate, 
-                                     p_val = correlation_empirical_data$p.value, 
-                                     statistic = correlation_empirical_data$statistic, 
-                                     confidence_int_low = correlation_empirical_data$conf.int[1],
-                                     confidence_int_high = correlation_empirical_data$conf.int[2],
-                                     slope = lm_val_empirical$coefficients[2],
-                                     intercept = lm_val_empirical$coefficients[1], 
-                                     rsquared = summary(lm_val_empirical)$adj.r.squared)
-
-#write.csv(correlation_empirical, "./csvs_nuevo/correlation_empirical.csv", row.names = FALSE) #so it can be used for classical shuffling
-#correlation_empirical_pols <- read.csv("./csvs_nuevo/correlation_empirical.csv")
-
-## -- distribution of rsquared and empirical
-correlation_empirical_interactions <- read.csv("./csvs_nuevo/correlation_empirical.csv")
-iteration_correlation_interactions <- read.csv("./csvs_nuevo/iteration_correlation_interactions_islands.csv")
 iteration_correlation_interactions2<-iteration_correlation_interactions %>% mutate(Type = "null_int")
 
 pdf('./graphs/M2_r_squares_module_DD.pdf', 10, 6)
 iteration_correlation_interactions2 %>% ggplot(aes(x = rsquared, fill= Type))+ 
   geom_density(alpha = 0.6)+ 
-  geom_vline(xintercept = correlation_empirical_interactions$rsquared, linetype = "dashed", color = "#FB3B1E") +
+  geom_vline(xintercept = 0.653, linetype = "dashed", color = "#FB3B1E") + #line represting rsquared empirical
   labs(x= expression("R"^2), y="Density")+  
-  scale_fill_manual(name = "Null Model",  label = expression("M"^2), values= "#E6AB02")+
+  scale_fill_manual(name = "Null Model",  label = expression("M"[2]), values= "#E6AB02")+
   theme_classic()+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
@@ -544,7 +518,3 @@ iteration_correlation_interactions2 %>% ggplot(aes(x = rsquared, fill= Type))+
         legend.text = element_text(size = 11))
 
 dev.off()
-
-p_rsquared_interactions <- sum(iteration_correlation_interactions$rsquared < correlation_empirical_interactions$rsquared)/1000
-p_rsquared_interactions
-
