@@ -1,5 +1,5 @@
-#This code turns the data into a multilayer network with 7 layers 
-#(islands as layers) and test distance decay in modules composition
+#This code turns the data into a multilayer network with 5 layers 
+#(Fuerteventura, Gran Canaria, Tenerife, Gomera y Hierro) and test distance decay in modules composition
 #of the empirical network.
 
 
@@ -43,21 +43,23 @@ dryad_intralayer <- interactions_csv %>% group_by(interaction_id) %>% #group 1 i
 
 
 ##---- Aggregate from site to island level as layers (locations) -------------------------------------------------------------------------------
-dryad_intralayer_islands <- dryad_intralayer
 
-old_names <- c("WesternSahara1", "WesternSahara2",
-               "Fuerteventura1", "Fuerteventura2",
+# Remove dataframe of mainland
+dryad_intralayer_islands <- dryad_intralayer %>% filter (!(layer_from == "WesternSahara1"|
+                                                          layer_from == "WesternSahara2"))
+
+# Merge sites belonging to each island
+old_names <- c("Fuerteventura1", "Fuerteventura2",
                "GranCanaria1", "GranCanaria2",
                "TenerifeSouth1", "TenerifeSouth2",
                "TenerifeTeno1", "TenerifeTeno2",
                "Gomera1", "Gomera2",
                "Hierro1", "Hierro2")
 
-new_names <- c("WesternSahara", "WesternSahara",
-               "Fuerteventura", "Fuerteventura",
+new_names <- c( "Fuerteventura", "Fuerteventura",
                "GranCanaria", "GranCanaria",
-               "TenerifeSouth", "TenerifeSouth",
-               "TenerifeTeno", "TenerifeTeno",
+               "Tenerife", "Tenerife",
+               "Tenerife", "Tenerife",
                "Gomera", "Gomera",
                "Hierro", "Hierro")
 
@@ -68,9 +70,11 @@ dryad_intralayer_islands$layer_to[dryad_intralayer_islands$layer_to %in% old_nam
   new_names[match(dryad_intralayer_islands$layer_to, old_names)] #change to reflect layer = island
 
 #if node_from, node_to, layer_from, layer_to are all the same need to sum the weight
+dryad_intralayer_islands$weight<-as.integer(dryad_intralayer_islands$weight)
 dryad_intralayer_islands_grouped <- dryad_intralayer_islands %>% 
   group_by(layer_from, node_from, layer_to, node_to) %>% 
   summarise(sum_weight = sum(weight)) #turn sums of sites to sum of island
+
 
 ## ----dryad intralayer interlayer both ways-------------------------------------------------------------------------------------
 intralayer_inverted <- tibble(values= dryad_intralayer_islands$layer_to, dryad_intralayer_islands$node_to, dryad_intralayer_islands$layer_from, 
@@ -131,6 +135,7 @@ for (i in unique(co_occurrence$node_from)) {
 
 interlayers_with_weights_islands<-interlayers_with_weights_islands[,c(2,1,3,4,5)]#change order columns
 
+
 #inverted version
 interlayer_inverted <- tibble(values= interlayers_with_weights_islands$layer_to, interlayers_with_weights_islands$node_to, interlayers_with_weights_islands$layer_from, 
                               interlayers_with_weights_islands$node_from, interlayers_with_weights_islands$weight) #create an inverted copy for directed intralayers
@@ -150,11 +155,9 @@ A <- length(pollinators) # Number of pollinators
 P <- length(plants) # Number of plants
 S <- A+P
 
-island_names <- c("WesternSahara", #islands as layers
-               "Fuerteventura",
+island_names <- c("Fuerteventura",#islands as layers
                "GranCanaria",
-               "TenerifeSouth",
-               "TenerifeTeno",
+               "Tenerife",
                "Gomera",
                "Hierro")
 
@@ -162,10 +165,10 @@ island_names <- c("WesternSahara", #islands as layers
 physical_nodes <- tibble(node_id=1:S, #1 till the last species
                          type=c(rep('plant',P),rep('pollinator',A)), #replicate the words P and A times
                          species=c(plants,pollinators)) #add species from plants and pollinators in accordance
-layer_metadata <- tibble(layer_id=c(1:7), layer_name=island_names)  #give num to each layer
+layer_metadata <- tibble(layer_id=c(1:5), layer_name=island_names)  #give num to each layer
 
-#write.csv(physical_nodes, "./csvs_nuevo/physical_nodes_islands.csv", row.names = FALSE)
-#write.csv(layer_metadata, "./csvs_nuevo/layer_metadata_islands.csv", row.names = FALSE)
+#write.csv(physical_nodes, "./csvs_nuevo/physical_nodes_justislands.csv", row.names = FALSE)
+#write.csv(layer_metadata, "./csvs_nuevo/layer_metadata_justislands.csv", row.names = FALSE)
 
 
 # Replace the node names with node_ids
@@ -180,7 +183,7 @@ dryad_edgelist_complete_ids <-
   dplyr::select(-layer_from, -layer_to) %>% 
   dplyr::select(layer_from=layer_id.x, node_from, layer_to=layer_id.y, node_to, weight)
 
-#write.csv(dryad_edgelist_complete_ids, "./csvs_nuevo/dryad_edgelist_complete_ids_islands.csv", row.names = FALSE)
+#write.csv(dryad_edgelist_complete_ids, "./csvs_nuevo/dryad_edgelist_complete_ids_justislands.csv", row.names = FALSE)
 
 
 ## ---- Multilayer_class to calculate modularity-----------------------------------------------------------------------------------------------
@@ -200,8 +203,8 @@ inter_extended <-
   filter(layer_from!=layer_to) #only inter
 
 
-#write.csv(intra_nonextended, "./csvs_nuevo/dryad_only_intralayer_edges_islands_as_layers.csv")
-#write.csv(inter_extended, "./csvs_nuevo/dryad_only_interlayer_edges_islands_as_layers.csv")
+#write.csv(intra_nonextended, "./csvs_nuevo/dryad_only_intralayer_edges_justislands_as_layers.csv")
+#write.csv(inter_extended, "./csvs_nuevo/dryad_only_interlayer_edges_justislands_as_layers.csv")
 
 #calculate modules for empirical network
 modules_dryad_multilayer <- modified_multi(dryad_multilayer, 
@@ -214,37 +217,54 @@ modules_dryad_multilayer <- modified_multi(dryad_multilayer,
                                            temporal_network = F)
 
 modules<-modules_dryad_multilayer$modules
-#write.csv(modules, "./csvs_nuevo/modules_in_network_islands_as_layers.csv")
+#write.csv(modules, "./csvs_nuevo/modules_in_network_justislands_as_layers.csv")
 
 
 # ---- DISTANCE DECAY IN MODULES - EMPIRICAL DATA ------------------------------------------------------------------------
 
 ## Calculate distances between islands (locations)-----
-distances <- read.csv("./csvs/distances_file.csv")
+distances <- read.csv("./csvs_nuevo/distances_file.csv", sep = ";") %>% 
+  filter(!(layer_from == "WesternSahara" |layer_to == "WesternSahara"))# keep just islands
 
-distances$layer_from[distances$layer_from %in% old_names] <- 
-  new_names[match(distances$layer_from, old_names)] #change to reflect layer = island
+# we recalculated the distance between each island and tenerife (after merging TenerifeSouth and TenerifeTeno)
+distances_layer_from_to_tenerife<-distances %>% filter (layer_to == "TenerifeSouth" |layer_to == "TenerifeTeno") %>% 
+  group_by(layer_from) %>% summarise(distance_in_meters = mean(distance_in_meters)) %>% 
+  mutate(layer_to = "Tenerife") %>% filter(!(layer_from == "TenerifeSouth" |layer_from == "TenerifeTeno"))
+  
+distances_layer_from_to_tenerife<-distances_layer_from_to_tenerife[,c(1,3,2)]
 
-distances$layer_to[distances$layer_to %in% old_names] <- 
-  new_names[match(distances$layer_to, old_names)] #change to reflect layer = island
+#distances between the other islands
+rest_distances<-distances %>% filter(!(layer_from == "TenerifeSouth" |layer_to == "TenerifeSouth"|
+                                         layer_from == "TenerifeTeno" |layer_to == "TenerifeTeno"))
 
-distances_normalized <- distances %>% filter(layer_from != layer_to) %>% #delete distances between sites in the same island
-  group_by(layer_to, layer_from) %>% #group will contain 4 sites- site 1 and 1 of layer from and site 1 and 2 or layer to
-  summarise(mean_distance = mean(distance_in_meters)) %>%unique() #use an average distance of the 4 sites in 2 different islands to determine the distance between the islands
+#FALTA DISTANCIA 3-4 Y 3-5
 
-distances_normalized <- distances_normalized[c("layer_from", "layer_to", "mean_distance")]
+#final distances
+distances_normalized<-rbind(distances_layer_from_to_tenerife, rest_distances) %>% 
+  rename("mean_distance" ="distance_in_meters" )
 
+distances_normalized_inverted<- tibble(values= dryad_intralayer_islands$layer_to, dryad_intralayer_islands$node_to, dryad_intralayer_islands$layer_from, 
+                                       dryad_intralayer_islands$node_from, dryad_intralayer_islands$weight)
+                               
 #add id of locations
 distances_with_ids <- distances_normalized %>% left_join(layer_metadata, by= c("layer_from"="layer_name")) %>% 
   left_join(layer_metadata, by= c("layer_to"="layer_name")) %>% #add correct id to layer name
   select(mean_distance, layer_id.x, layer_id.y) #discard actual names of layers
-names(distances_with_ids)[3] <- "layer_from" 
-names(distances_with_ids)[4] <- "layer_to"
-names(distances_with_ids)[1] <- "layer_name_to"
+names(distances_with_ids)[2] <- "layer_from" 
+names(distances_with_ids)[3] <- "layer_to"
+names(distances_with_ids)[1] <- "mean_distance"
 
 distances_with_ids <- distances_with_ids[c("layer_from", "layer_to", "mean_distance")]
 
-#write.csv(distances_with_ids, "./csvs_nuevo/distances_with_ids_islands_as_layers.csv", row.names = FALSE)
+distances_with_ids_inverted<- tibble(layer_from=distances_with_ids$layer_to, 
+                                     layer_to = distances_with_ids$layer_from, 
+                                     mean_distance = distances_with_ids$mean_distance)# to add all combination of layers from and to
+
+distances_with_ids_final<-rbind(distances_with_ids,distances_with_ids_inverted) %>% unique()
+
+#write.csv(distances_with_ids_final, "./csvs_nuevo/distances_with_ids_justislands_as_layers.csv", row.names = FALSE)
+
+distances_with_ids<-read.csv("./csvs_nuevo/distances_with_ids_justislands_as_layers.csv")
 
 ## Jaccard on islands (locations) -----
 #similarity check 2 furthest apart
@@ -253,36 +273,38 @@ modules_for_similarity_num <- modules %>% select(module, layer_id) %>%
 modules_for_similarity <- modules %>%
   filter(module %in% modules_for_similarity_num$module) #only save the modules that are found in 2 or more layers
 
+
 #pivot modules function for islands as layers
 pivot_by_module_islands <- function(data){ #creates a data frame with module on the side and layer_id on the top
   s1 = melt(data, id = c("layer_id", "module"))
   s2 = dcast(s1, layer_id ~ module, length)
   s3 = t(s2) 
   s3 <- s3[-1,]
-  colnames(s3) <- c(1,2,3,4,5,6,7)
+  colnames(s3) <- c(1,2,3,4,5)
   return(s3)
 }
 
 module_pivoted <- pivot_by_module_islands(modules_for_similarity)
 
-#write.csv(module_pivoted, "./csvs_nuevo/module_pivoted_for_state_node_similarity_islands_as_layers.csv")
+#write.csv(module_pivoted, "./csvs_nuevo/module_pivoted_for_state_node_similarity_justislands_as_layers.csv")
 
 #edge list per module function for islands as layers
 edge_list_per_module_islands <- function(data,edge_list){
   #gets one row from a data frame and creates an edge list from it
-  for (i in (1:6)){
+  for (i in (1:4)){
     if (data[i]==0) next #only take layers where the module is present
     else {
-      for (j in ((i+1):7)){
+      for (j in ((i+1):5)){
         if (data[j]==0) next #only take layers where the module is present
         else {
-          edge_list <- rbind(edge_list, tibble(layer_from=i, layer_to=j, module=as.character(NA))) #create edge list of all the layer found in a module
+        edge_list <- rbind(edge_list, tibble(layer_from=i, layer_to=j, module=as.character(NA))) #create edge list of all the layer found in a module
         }
       }
     }
   }
   return(edge_list)
 }
+
 
 
 modules_edge_list <- NULL
@@ -292,8 +314,9 @@ for (i in (1:nrow(module_pivoted))){ #run the function for each row in the data 
   current_module <- rownames(module_pivoted)[i]
   modules_edge_list <- modules_edge_list %>% mutate(module = replace_na(module, current_module)) #add module number
 }
-
-edge_list_with_distances <- right_join(modules_edge_list, distances_with_ids, by= c("layer_from", "layer_to")) #combine the edge list with the distances between each two layers
+ 
+ 
+edge_list_with_distances <- left_join(modules_edge_list, distances_with_ids, by= c("layer_from", "layer_to")) #combine the edge list with the distances between each two layers
 edge_list_with_distances <- na.omit(edge_list_with_distances) #remove NA and delete layer name
 
 #arrange data to include coordinates and modules sizes
@@ -301,30 +324,34 @@ size <- count(modules_dryad_multilayer$modules, module)  #create a data frame of
 module_data <- merge(modules_dryad_multilayer$modules , size, by=c("module","module")) #merge size of module with all the other info about the modules
 colnames(module_data)[7] <- "size_of_module" #rename column
 
-#write.csv(module_data, "./csvs_nuevo/module_data_islands_as_layers.csv", row.names = FALSE)
-#write.csv(size, "./csvs_nuevo/size_islands_as_layers.csv", row.names = FALSE)
+#write.csv(module_data, "./csvs_nuevo/module_data_justislands_as_layers.csv", row.names = FALSE)
+#write.csv(size, "./csvs_nuevo/size_justislands_as_layers.csv", row.names = FALSE)
 
-lon_lat_data <- read_csv('./csvs_nuevo/layers.csv') #create new data frame with just the layer data
+
+lon_lat_data <- read_csv('./csvs_nuevo/layers.csv') %>% 
+  filter(!(layer_name =="WesternSahara1"| layer_name =="WesternSahara2" )) #create new data frame with just the layer data
+
 lon_lat_data <- lon_lat_data %>% select(c("layer_id","lat","Lon")) %>% na.omit()  #only select layer id and coordinates
 
 #layers as islands
-old <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14)
-new_values <- c(1,1,2,2,3,3,4,4,5,5,6,6,7,7)
+old <- c(3,4,5,6,7,8,9,10,11,12,13,14)
+new_values <- c(1,1,2,2,3,3,3,3,4,4,5,5)
 lon_lat_data$layer_id[lon_lat_data$layer_id %in% old] <- new_values[match(lon_lat_data$layer_id, old)]
 
-lon_lat_data <- lon_lat_data %>% unique() #delete duplicates caused by islands having 2 sites
+lon_lat_data <- lon_lat_data %>% unique() %>% #delete duplicates caused by islands having 2 sites
+  group_by(layer_id) %>% summarise(lat =mean(lat), long = mean(Lon))
 
-#write.csv(lon_lat_data, "./csvs_nuevo/lon_lat_data_islands_as_layers.csv", row.names = FALSE)
-lon_lat_data <- read.csv("./csvs_nuevo/lon_lat_data_islands_as_layers.csv")
+#write.csv(lon_lat_data, "./csvs_nuevo/lon_lat_data_justislands_as_layers.csv", row.names = FALSE)
+lon_lat_data <- read.csv("./csvs_nuevo/lon_lat_data_justislands_as_layers.csv")
 
 module_data_with_loc <- merge(module_data, lon_lat_data, by= c("layer_id","layer_id")) #merge modules with module size with the coordinates
 
 #how many layers are within a module
-modules_with_lat_lon <- module_data_with_loc %>% select(layer_id, module, lat, Lon, size_of_module) %>% unique() #take only certain columns
+modules_with_lat_lon <- module_data_with_loc %>% select(layer_id, module, lat, long, size_of_module) %>% unique() #take only certain columns
 modules_with_lat_lon$count <- c(1)
 
-#write.csv(modules_with_lat_lon, "./csvs_nuevo/modules_with_lat_lon_islands_as_layers.csv", row.names = FALSE)
-#modules_with_lat_lon <- read.csv("./csvs_nuevo/modules_with_lat_lon_islands_as_layers.csv")
+#write.csv(modules_with_lat_lon, "./csvs_nuevo/modules_with_lat_lon_justislands_as_layers.csv", row.names = FALSE)
+#modules_with_lat_lon <- read.csv("./csvs_nuevo/modules_with_lat_lon_justislands_as_layers.csv")
 
 #version with # of modules in layers
 edge_list_by_islands_modules <- edge_list_with_distances
@@ -336,8 +363,8 @@ edge_list_by_islands_modules <- edge_list_by_islands_modules %>% group_by(layer_
 ## Distance decay in modules -----
 module_island_turnover <- NULL
 
-for (i in (1:6)){
-  for (j in ((1+i):7)){
+for (i in (1:4)){
+  for (j in ((1+i):5)){
     print(i)
     modules_in_island_from <- filter(modules_with_lat_lon, layer_id == i) %>% select(module) %>% unique() %>% unlist()
     modules_in_island_to <- filter(modules_with_lat_lon, layer_id == j) %>% select(module) %>% unique() %>% unlist()
@@ -356,14 +383,15 @@ islands_turnover_with_distnace_empirical <- edge_list_by_islands_modules %>%
 islands_turnover_with_distnace_empirical <- islands_turnover_with_distnace_empirical %>% 
   mutate(distance_in_km=mean_distance/1000) #turn to km
 
-#write.csv(islands_turnover_with_distnace_empirical,  "./csvs_nuevo/islands_turnover_with_distnace_empirical.csv",  row.names = FALSE)
+#write.csv(islands_turnover_with_distnace_empirical,  "./csvs_nuevo/justislands_turnover_with_distnace_empirical.csv",  row.names = FALSE)
 
 ## Statistical analysis -----
-emp <- read.csv("./csvs_nuevo/islands_turnover_with_distnace_empirical.csv", sep =";")
+emp <- read.csv("./csvs_nuevo/justislands_turnover_with_distnace_empirical.csv", sep =",")
 
 shapiro.test(islands_turnover_with_distnace_empirical$turnover)#normal
 
 m_emp<-MRM(turnover ~ distance_in_km,data=emp,nperm=9999 )
+m_emp
 
 
 
