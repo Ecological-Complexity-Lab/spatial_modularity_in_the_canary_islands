@@ -31,9 +31,9 @@ library(ecodist)
 setwd("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands")
 source("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands/R/functions.R")
 
-physical_nodes <- read.csv("./csvs_nuevo/physical_nodes_islands.csv")
-layer_metadata <- read.csv("./csvs_nuevo/layer_metadata_islands.csv")
-dryad_edgelist_complete_ids <- read.csv("./csvs_nuevo/dryad_edgelist_complete_ids_islands.csv")
+physical_nodes <- read.csv("./csvs_nuevo/physical_nodes_justislands.csv")
+layer_metadata <- read.csv("./csvs_nuevo/layer_metadata_justislands.csv")
+dryad_edgelist_complete_ids <- read.csv("./csvs_nuevo/dryad_edgelist_complete_ids_justislands.csv")
 
 #---- number of layers each species is found in------------------------------------------------------
 #plants
@@ -118,27 +118,29 @@ for (j in 1:nrow(interactions_co_occurences)){ #every pair
 
 
 ##---- Calculate the raw weight of intraedges using layers as islands -------------------------------------------------------------------------------
-#physical_nodes <- read.csv("./csvs_nuevo/physical_nodes.csv")
-#layer_metadata <-read.csv("./csvs_nuevo/layer_metadata.csv")
+#physical_nodes <- read.csv("./csvs_nuevo/physical_nodes_justislands.csv")
+#layer_metadata <-read.csv("./csvs_nuevo/layer_metadata_justislands.csv")
 dryad_intralayer <- read.csv("./csvs_nuevo/intralayer_file.csv")
 
-dryad_intralayer_islands <- dryad_intralayer
 
-old_names <- c("WesternSahara1", "WesternSahara2",
-               "Fuerteventura1", "Fuerteventura2",
+# Remove dataframe of mainland
+dryad_intralayer_islands <- dryad_intralayer %>% filter (!(layer_from == "WesternSahara1"|
+                                                             layer_from == "WesternSahara2"))
+
+# Merge sites belonging to each island
+old_names <- c("Fuerteventura1", "Fuerteventura2",
                "GranCanaria1", "GranCanaria2",
                "TenerifeSouth1", "TenerifeSouth2",
                "TenerifeTeno1", "TenerifeTeno2",
                "Gomera1", "Gomera2",
                "Hierro1", "Hierro2")
 
-new_names <- c("WesternSahara", "WesternSahara",
-               "Fuerteventura", "Fuerteventura",
-               "GranCanaria", "GranCanaria",
-               "TenerifeSouth", "TenerifeSouth",
-               "TenerifeTeno", "TenerifeTeno",
-               "Gomera", "Gomera",
-               "Hierro", "Hierro")
+new_names <- c( "Fuerteventura", "Fuerteventura",
+                "GranCanaria", "GranCanaria",
+                "Tenerife", "Tenerife",
+                "Tenerife", "Tenerife",
+                "Gomera", "Gomera",
+                "Hierro", "Hierro")
 
 dryad_intralayer_islands$layer_from[dryad_intralayer_islands$layer_from %in% old_names] <- 
   new_names[match(dryad_intralayer_islands$layer_from, old_names)] #change to reflect layer = island
@@ -147,6 +149,7 @@ dryad_intralayer_islands$layer_to[dryad_intralayer_islands$layer_to %in% old_nam
   new_names[match(dryad_intralayer_islands$layer_to, old_names)] #change to reflect layer = island
 
 #if node_from, node_to, layer_from, layer_to are all the same need to sum the weight
+dryad_intralayer_islands$weight<-as.integer(dryad_intralayer_islands$weight)
 dryad_intralayer_islands_grouped <- dryad_intralayer_islands %>% 
   group_by(layer_from, node_from, layer_to, node_to) %>% 
   summarise(sum_weight = sum(weight)) #turn sums of sites to sum of island
@@ -268,7 +271,7 @@ for (trial in 1:1000){
     interlayers_with_weights_islands <- rbind(interlayers_with_weights_islands,inter_fid)
   }
 }
-#write.csv(interlayers_with_weights_shuf_interactions, "./csvs_nuevo/interlayers_with_weights_shuf_interactions.csv", row.names = FALSE)
+#write.csv(interlayers_with_weights_islands, "./csvs_nuevo/interlayers_with_weights_shuf_interactions.csv", row.names = FALSE)
 
 interlayers_with_weights_islands <- read.csv("./csvs_nuevo/interlayers_with_weights_shuf_interactions.csv")
 interlayers_with_weights_islands<-interlayers_with_weights_islands[,c(2,1,3,4,5,6)]#change order columns
@@ -291,8 +294,8 @@ dryad_edgelist_complete_shuf_interactions <- bind_rows(intralayer_edges_shuf_int
 #write.csv(dryad_edgelist_complete_shuf_interactions, "./csvs_nuevo/dryad_edgelist_complete_shuf_interactions_islands_as_layers.csv", row.names = FALSE)
 
 # ----multilayer_class-----------------------------------------------------------------------------------------------
-layer_metadata <- read.csv("./csvs_nuevo/layer_metadata_islands.csv")
-physical_nodes <- read.csv("./csvs_nuevo/physical_nodes_islands.csv")
+layer_metadata <- read.csv("./csvs_nuevo/layer_metadata_justislands.csv")
+physical_nodes <- read.csv("./csvs_nuevo/physical_nodes_justislands.csv")
 #dryad_edgelist_complete_shuf_interactions <- read.csv("./csvs_nuevo/dryad_edgelist_complete_shuf_interactions_islands_as_layers.csv")
 
 ## ---- Calculate number of modules and test distance decay in shuf networks --------------------------------------------------------
@@ -309,11 +312,11 @@ dryad_multilayer_shuf_1000_interactions_output <- modularity_for_shuf(dryad_edge
 dryad_multilayer_shuf_1000_interactions_output <- dryad_multilayer_shuf_1000_interactions_output %>% drop_na() 
 #delete all NAs that are in the physical nodes but not the network (and were not assigned to modules)
 
-#write.csv(dryad_multilayer_shuf_1000_interactions_output, "./csvs_nuevo/dryad_multilayer_shuf_1000_interactions_output_islands.csv", row.names = FALSE)
+#write.csv(dryad_multilayer_shuf_1000_interactions_output, "./csvs_nuevo/dryad_multilayer_shuf_1000_interactions_output_justislands.csv", row.names = FALSE)
 
 ##---- Distance decay of modules  ---------------------------------------------------------------
-distances_with_ids <- read.csv("./csvs_nuevo/distances_with_ids_islands_as_layers.csv")
-dryad_multilayer_shuf_1000_interactions_output<- read.csv("./csvs_nuevo/dryad_multilayer_shuf_1000_interactions_output_islands.csv")
+distances_with_ids <- read.csv("./csvs_nuevo/distances_with_ids_justislands_as_layers.csv")
+dryad_multilayer_shuf_1000_interactions_output<- read.csv("./csvs_nuevo/dryad_multilayer_shuf_1000_interactions_output_justislands.csv")
 
 #pivot modules function for islands as layers
 pivot_by_module_islands <- function(data){ #creates a data frame with module on the side and layer_id on the top
@@ -322,7 +325,7 @@ pivot_by_module_islands <- function(data){ #creates a data frame with module on 
   s2<-na.omit(s2)
   s4 = t(s2) 
   s4 <- s4[-1,]
-  colnames(s4) <- c(1,2,3,4,5,6,7)
+  colnames(s4) <- c(1,2,3,4,5)
   return(s4)
 }
 
@@ -357,12 +360,12 @@ module_distance_decay_islands_func <- function(multilayer_1000,
       }
     }
     
-    edge_list_with_distances_shuf <- right_join(modules_edge_list_shuf, distances_with_ids, by= c("layer_from", "layer_to")) #combine the edge list with the distances between each two layers
+    edge_list_with_distances_shuf <- left_join(modules_edge_list_shuf, distances_with_ids, by= c("layer_from", "layer_to")) #combine the edge list with the distances between each two layers
     #edge_list_with_distances_shuf <- na.omit(edge_list_with_distances_shuf) #we remove this line (which it removes NA), because we have a lot locations don't have modules in common
     
     
-    for (i in 1:6){
-      for (j in (i+1):7){
+    for (i in 1:4){
+      for (j in (i+1):5){
         modules_in_layer_from_shuf <- filter(modules_for_similarity_shuf, layer_id == i) %>% select(module) %>% unique() %>% unlist()
         modules_in_layer_to_shuf <- filter(modules_for_similarity_shuf, layer_id == j) %>% select(module) %>% unique() %>% unlist()
         #take all nodes in layer_from and all nodes in layer_to to check turnover
@@ -384,10 +387,10 @@ module_distance_decay_islands_func <- function(multilayer_1000,
 edge_list_per_module_islands <- function(data,edge_list, k){
   #gets one row from a data frame and creates an edge list from it
   
-  for (i in (1:6)){
+  for (i in (1:4)){
     if (data[i]==0) next #only take layers where the module is present
     else {
-      for (j in ((i+1):7)){
+      for (j in ((i+1):5)){
         if (data[j]==0) next #only take layers where the module is present
         else {
           edge_list <-rbind(edge_list,tibble(layer_from=i, layer_to=j, module=as.character(NA))) #create edge list of all the layer found in a module
@@ -407,17 +410,17 @@ all_edge_list_islands_combine_no_module_shuf_interactions_output <- module_dista
                                                                                                   turnover_with_distance_interactions)
 
 
-#write.csv(all_edge_list_islands_combine_no_module_shuf_interactions_output, "./csvs_nuevo/all_edge_list_islands_combine_no_module_shuf_interactions.csv", row.names = FALSE)
+#write.csv(all_edge_list_islands_combine_no_module_shuf_interactions_output, "./csvs_nuevo/all_edge_list_justislands_combine_no_module_shuf_interactions.csv", row.names = FALSE)
 
 #---- create ave for jaccard layers-------------------------------------------------------------------------
-all_edge_list_islands_combine_no_module_shuf_interactions_output <- read.csv("./csvs_nuevo/all_edge_list_islands_combine_no_module_shuf_interactions.csv")
+all_edge_list_islands_combine_no_module_shuf_interactions_output <- read.csv("./csvs_nuevo/all_edge_list_justislands_combine_no_module_shuf_interactions.csv")
 
 ave_module_islands_turnover_shuf_interactions <- all_edge_list_islands_combine_no_module_shuf_interactions_output %>% 
   group_by(layer_from, layer_to) %>%
   summarise(ave=mean(turnover), sd=sd(turnover), ave_dist=mean(mean_distance)) %>% mutate(type="null_model_int") #create mean and sd for each point
 
 #add empirical
-islands_turnover_with_distnace_empirical <- read.csv("./csvs_nuevo/islands_turnover_with_distnace_empirical.csv")
+islands_turnover_with_distnace_empirical <- read.csv("./csvs_nuevo/justislands_turnover_with_distnace_empirical.csv")
 
 empirical_turnover_for_modules_layers_shuf <- islands_turnover_with_distnace_empirical %>% group_by(layer_from, layer_to) %>%
   summarise(ave = mean(turnover), sd = sd(turnover), ave_dist = mean_distance) %>% mutate(type="empirical") #make sure sd is 0 cause its the empirical and not null
@@ -430,10 +433,10 @@ jaccard_similarity_empirical_and_null_interactions <- rbind(empirical_turnover_f
 jaccard_similarity_layer_empirical_and_null_km_interactions <- jaccard_similarity_empirical_and_null_interactions %>% 
   mutate(mean_dist_in_km = ave_dist/1000)
 
-#write.csv(jaccard_similarity_layer_empirical_and_null_km_interactions,"./csvs_nuevo/jaccard_similarity_layer_empirical_and_null_km_interactions_islands.csv", row.names = FALSE)
+#write.csv(jaccard_similarity_layer_empirical_and_null_km_interactions,"./csvs_nuevo/jaccard_similarity_layer_empirical_and_null_km_interactions_justislands.csv", row.names = FALSE)
 
 #---- graphs for distance decay in modules shuf vs empirical--------------------------------
-#jaccard_similarity_layer_empirical_and_null_km_interactions <- read.csv("./csvs_nuevo/jaccard_similarity_layer_empirical_and_null_km_interactions_islands.csv") #need to read this to run next part
+jaccard_similarity_layer_empirical_and_null_km_interactions <- read.csv("./csvs_nuevo/jaccard_similarity_layer_empirical_and_null_km_interactions_justislands.csv") #need to read this to run next part
 
 pdf('./graphs/M2_Modules_DD_Islands.pdf', 10, 6)
 jaccard_similarity_layer_empirical_and_null_km_interactions %>% 
@@ -455,7 +458,7 @@ jaccard_similarity_layer_empirical_and_null_km_interactions %>%
 dev.off()
 
 #---- statistical analysis--------------------------------------------------
-jaccard_similarity_layer_empirical_and_null_km_interactions <- read.csv("./csvs_nuevo/jaccard_similarity_layer_empirical_and_null_km_interactions_islands.csv") #need to read this to run next part
+jaccard_similarity_layer_empirical_and_null_km_interactions <- read.csv("./csvs_nuevo/jaccard_similarity_layer_empirical_and_null_km_interactions_justislands.csv") #need to read this to run next part
 
 null<-jaccard_similarity_layer_empirical_and_null_km_interactions %>% filter(type=="null_model_int")
 
@@ -467,7 +470,7 @@ m_n2<-MRM(ave ~ mean_dist_in_km, data = null, nperm=9999)
 m_n2
 
 #---- multiple regression on distances matrices and correlation
-all_edge_list_islands_combine_no_module_shuf_interactions_output <- read.csv("./csvs_nuevo/all_edge_list_islands_combine_no_module_shuf_interactions.csv")
+all_edge_list_islands_combine_no_module_shuf_interactions_output <- read.csv("./csvs_nuevo/all_edge_list_justislands_combine_no_module_shuf_interactions.csv")
 
 iteration_correlation_interactions <- NULL
 iteration_correlation_data_interactions <- all_edge_list_islands_combine_no_module_shuf_interactions_output %>% subset(layer_from != layer_to) 
@@ -493,9 +496,9 @@ for (i in 1:1000){
 }
 
 iteration_correlation_interactions
-#write.csv(iteration_correlation_interactions, "./csvs_nuevo/iteration_correlation_interactions_islands.csv", row.names = FALSE)
+#write.csv(iteration_correlation_interactions, "./csvs_nuevo/iteration_correlation_interactions_justislands.csv", row.names = FALSE)
 
-p_rsquared_interactions <- sum(iteration_correlation_interactions$rsquared > 0.653)/1000
+p_rsquared_interactions <- sum(iteration_correlation_interactions$rsquared < 0.50)/1000
 p_rsquared_interactions
 
 iteration_correlation_interactions2<-iteration_correlation_interactions %>% mutate(Type = "null_int")

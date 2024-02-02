@@ -237,7 +237,6 @@ distances_layer_from_to_tenerife<-distances_layer_from_to_tenerife[,c(1,3,2)]
 rest_distances<-distances %>% filter(!(layer_from == "TenerifeSouth" |layer_to == "TenerifeSouth"|
                                          layer_from == "TenerifeTeno" |layer_to == "TenerifeTeno"))
 
-#FALTA DISTANCIA 3-4 Y 3-5
 
 #final distances
 distances_normalized<-rbind(distances_layer_from_to_tenerife, rest_distances) %>% 
@@ -388,7 +387,7 @@ islands_turnover_with_distnace_empirical <- islands_turnover_with_distnace_empir
 ## Statistical analysis -----
 emp <- read.csv("./csvs_nuevo/justislands_turnover_with_distnace_empirical.csv", sep =",")
 
-shapiro.test(islands_turnover_with_distnace_empirical$turnover)#normal
+shapiro.test(emp$turnover)#normal
 
 m_emp<-MRM(turnover ~ distance_in_km,data=emp,nperm=9999 )
 m_emp
