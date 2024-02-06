@@ -1,18 +1,10 @@
 ## ---- Code to create map showing structure similarity between islands (Fig. 2)
 
-library(tmaptools)
-library(rgdal)
-library(sf)
-library(raster)
-library(maptiles)
-library(sp)
-library(glue)
+
 library(dplyr)
 library(ggplot2)
-library(readxl)
 library(stringr)
 library(colorspace)
-library(maps)
 library(tidyselect)
 
 ##----get_data--------------------------------------------------------------------------------------------------------

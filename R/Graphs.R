@@ -191,7 +191,7 @@ pdf('./graphs/Fig_S1.pdf', 10, 6)
 intra_inter_data_for_distibution %>%
   ggplot(aes(x=values, fill=group))+ geom_histogram(position= "identity", alpha= 0.70, color= "black")+ 
   labs(x='Weight', y="Count") +theme_bw()+
-  scale_fill_manual(name = "Links",  label = c("Interlayer","Intralayer \nplants", "Intralayer \npol"), values = c("#F53416","#008000","#CBADFF"))+
+  scale_fill_manual(name = "Links",  label = c("Interlayer","Intralayer \nplants", "Intralayer \npollinators"), values = c("#F53416","#008000","#CBADFF"))+
   theme_classic()+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
@@ -334,10 +334,10 @@ Num_sp_module<-modules_dryad_multilayer %>%
 pdf('./graphs/Fig_S3.pdf', 10, 8)
 Num_sp_module %>% ggplot(aes(x=as.numeric(module), y=as.numeric(n), fill= type))+
   geom_bar(stat="identity", position= position_dodge2(preserve = "single"))+ theme_classic()+
-  scale_x_continuous(breaks=seq(1,34,2))+ labs(x= "Module ID", y= "Number of species")+
+  scale_x_continuous(breaks=seq(1,33))+ labs(x= "Module ID", y= "Number of species")+
   scale_fill_manual(name = "Trophic group",  label = c("Plant","Pollinator"), values = c("#008000","#DDA0DD"))+
   theme(panel.grid = element_blank(),panel.background = element_blank(), 
-        axis.text.x = element_text(size=11, colour = "black"),
+        axis.text.x = element_text(size=10, colour = "black"),
         axis.text.y=element_text(size=13, colour = "black"), axis.title = element_text(size=14),
         legend.text=element_text(size=11.5),legend.title =element_text(size=12),
         axis.line = element_line(colour = "black"))
@@ -422,12 +422,12 @@ pdf('./graphs/Fig_S4.pdf', 10, 6)
 ggplot(Prop_sp_in_island, aes(x = module, y = layer_name, fill=Prop_sp )) +
   geom_tile(color='white') +
   theme(panel.grid = element_blank(),panel.background = element_blank(), 
-    axis.text.x = element_text(size=12, colour = "black"),
+    axis.text.x = element_text(size=11, colour = "black"),
         axis.text.y=element_text(size=13, colour = "black"), axis.title = element_text(size=14),
         legend.text=element_text(size=11.5),legend.title =element_text(size=12),
     axis.line = element_line(colour = "black")) +
   scale_fill_viridis(name = "Prop. sp",limits = c(0, 0.50)) +
-  scale_x_continuous(breaks=seq(1,88,4)) +
+  scale_x_continuous(breaks=seq(1,33)) +
   scale_y_discrete(limits = c("Hierro","Gomera","Tenerife","GranCanaria","Fuerteventura"))+
   labs(x='Module ID', y="Locations")
 dev.off()
