@@ -381,6 +381,10 @@ null<-jaccard_similarity_layer_empirical_and_null_km_classic %>% filter(type=="n
 
 shapiro.test(null$ave)#normal
 
+#--- regression
+m_n3<-MRM(ave ~ mean_dist_in_km,data=null,nperm=9999)
+m_n3
+
 
 #----correlation and r sqaured between jaccard and distance for each run
 all_edge_list_islands_combine_no_module_shuf_classic <- read.csv("./csvs_nuevo/all_edge_list_justislands_combine_no_module_shuf_classic.csv")
@@ -395,7 +399,8 @@ iteration_correlation_data_classic_km <- iteration_correlation_data_classic %>%
 for (i in 1:1000){
   trial_classic = iteration_correlation_data_classic_km %>% filter(trial == i)
   iteration_correlation_new_classic <- cor.test(trial_classic$turnover, trial_classic$mean_dist_in_km, method = "pearson")
-  mrm_val_classic <- MRM(turnover ~ mean_dist_in_km, data = trial_classic)
+  trial_classic$scaled_mean_dist_in_km<- scale(trial_classic$mean_dist_in_km) #scale the distance -- NEW LINE
+  mrm_val_classic <- MRM(turnover ~ scaled_mean_dist_in_km, data = trial_classic)
   iteration_correlation_classic <- rbind(iteration_correlation_classic, tibble(estimate = iteration_correlation_new_classic$estimate, 
                                                                                p_val = iteration_correlation_new_classic$p.value, 
                                                                                statistic = iteration_correlation_new_classic$statistic, 
@@ -408,20 +413,20 @@ for (i in 1:1000){
 }
 
 iteration_correlation_classic
-#write.csv(iteration_correlation_classic, "./csvs_nuevo/iteration_correlation_classic_justislands.csv", row.names = FALSE)
+#write.csv(iteration_correlation_classic, "./csvs_nuevo/iteration_correlation_classic_justislands_scaled.csv", row.names = FALSE)
 
 #test 
-greater <- sum(iteration_correlation_classic$slope >  -0.00087)
-less <- sum(iteration_correlation_classic$slope  <  -0.00087)
-p_slope_local<- 2 * min(greater, less) / 1000 #calculate manually t-test two tailed
+greater <- sum(iteration_correlation_classic$slope >  -0.1110952)
+less <- sum(iteration_correlation_classic$slope  <  -0.1110952)
+p_slope_both<- 2 * min(greater, less) / 1000 #calculate manually t-test two tailed
 
 
 iteration_correlation_classic2<-iteration_correlation_classic %>% mutate(Type = "null_class")
 
-pdf('./graphs/NM3_slope_module_DD.pdf', 10, 6)
+pdf('./graphs/NM3_slope_module_DD_scaled.pdf', 10, 6)
 iteration_correlation_classic2 %>% ggplot(aes(x = slope, fill= Type))+ 
   geom_density(alpha = 0.6)+ 
-  geom_vline(xintercept = -0.00087, linetype = "dashed", color = "#FB3B1E") +
+  geom_vline(xintercept = -0.111, linetype = "dashed", color = "#FB3B1E") +
   labs(x= "Slope", y="Density")+  
   scale_fill_manual(name = "Models",  label = expression("NM"[3]), values= "#FA86F2")+
   theme_classic()+

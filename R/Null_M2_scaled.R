@@ -480,7 +480,8 @@ iteration_correlation_data_interactions_km <- iteration_correlation_data_interac
 for (i in 1:1000){
   trial_interactions = iteration_correlation_data_interactions_km %>% filter(trial == i)
   iteration_correlation_new_interactions <- cor.test(trial_interactions$turnover, trial_interactions$mean_dist_in_km, method = "pearson")
-  mrm_val_interactions <- MRM(turnover ~ mean_dist_in_km, data = trial_interactions)
+  trial_interactions$scaled_mean_dist_in_km<- scale(trial_interactions$mean_dist_in_km) #scale the distance -- NEW LINE
+  mrm_val_interactions <- MRM(turnover ~ scaled_mean_dist_in_km, data = trial_interactions)
   iteration_correlation_interactions <- rbind(iteration_correlation_interactions, tibble(estimate = iteration_correlation_new_interactions$estimate, 
                                                                                          p_val = iteration_correlation_new_interactions$p.value, 
                                                                                          statistic = iteration_correlation_new_interactions$statistic, 
@@ -493,20 +494,20 @@ for (i in 1:1000){
 }
 
 iteration_correlation_interactions
-#write.csv(iteration_correlation_interactions, "./csvs_nuevo/iteration_correlation_interactions_justislands.csv", row.names = FALSE)
+#write.csv(iteration_correlation_interactions, "./csvs_nuevo/iteration_correlation_interactions_justislands_scaled.csv", row.names = FALSE)
 
 #test 
-greater <- sum(iteration_correlation_interactions$slope >  -0.00087)
-less <- sum(iteration_correlation_interactions$slope  <  -0.00087)
-p_slope_int<- 2 * min(greater, less) / 1000 #calculate manually t-test two tailed
+greater <- sum(iteration_correlation_interactions$slope >  -0.1110952)
+less <- sum(iteration_correlation_interactions$slope  <  -0.1110952)
+p_slope_both<- 2 * min(greater, less) / 1000 #calculate manually t-test two tailed
 
 
 iteration_correlation_interactions2<-iteration_correlation_interactions %>% mutate(Type = "null_int")
 
-pdf('./graphs/NM2_slope_module_DD.pdf', 10, 6)
+pdf('./graphs/NM2_slope_module_DD_scaled.pdf', 10, 6)
 iteration_correlation_interactions2 %>% ggplot(aes(x = slope, fill= Type))+ 
   geom_density(alpha = 0.6)+ 
-  geom_vline(xintercept = -0.00087, linetype = "dashed", color = "#FB3B1E") + #line represting rsquared empirical
+  geom_vline(xintercept = -0.111, linetype = "dashed", color = "#FB3B1E") + #line represting rsquared empirical
   labs(x= "Slope", y="Density")+  
   scale_fill_manual(name = "Models",  label = expression("NM"[2]), values= "#E6AB02")+
   theme_classic()+

@@ -24,8 +24,8 @@ library(extRC)
 library(ecodist)
 
 ##----get_data--------------------------------------------------------------------------------------------------------
-setwd("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands")
-source("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands/R/functions.R")
+setwd("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands")
+source("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands/R/functions.R")
 
 ## ---- Create edgelist of the empirical network using islands (locations) as layers
 
@@ -389,10 +389,11 @@ emp <- read.csv("./csvs_nuevo/justislands_turnover_with_distnace_empirical.csv",
 
 shapiro.test(emp$turnover)#normal
 
+emp$scaled_distance_in_km<- scale(emp$distance_in_km) #scale the distance 
+
 m_emp<-MRM(turnover ~ distance_in_km,data=emp,nperm=9999 )
 m_emp
 
-
-
-
+m_emp2<-MRM(turnover ~ scaled_distance_in_km,data=emp,nperm=9999 )#scaled
+m_emp2
 

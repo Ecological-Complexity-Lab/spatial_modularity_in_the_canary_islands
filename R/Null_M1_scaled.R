@@ -785,8 +785,8 @@ for (i in 1:1000){
   print(i)
   trial_pols = iteration_correlation_data_pols_km %>% filter(trial == i)
   iteration_correlation_new_pols <- cor.test(trial_pols$turnover, trial_pols$mean_dist_in_km, method = "pearson")
-  #trial_pols$scaled_mean_dist_in_km<- scale(trial_pols$mean_dist_in_km) #scale the distance -- NEW LINE
-  mrm_val_pols <- MRM(turnover ~ mean_dist_in_km, data = trial_pols)
+  trial_pols$scaled_mean_dist_in_km<- scale(trial_pols$mean_dist_in_km) #scale the distance -- NEW LINE
+  mrm_val_pols <- MRM(turnover ~ scaled_mean_dist_in_km, data = trial_pols)
   iteration_correlation_pols <- rbind(iteration_correlation_pols, tibble(estimate = iteration_correlation_new_pols$estimate, 
                                                                          p_val = iteration_correlation_new_pols$p.value, 
                                                                          statistic = iteration_correlation_new_pols$statistic, 
@@ -799,14 +799,14 @@ for (i in 1:1000){
 }
 
 
-#write.csv(iteration_correlation_pols, "./csvs_nuevo/iteration_correlation_pols.csv", row.names = FALSE)
+#write.csv(iteration_correlation_pols, "./csvs_nuevo/iteration_correlation_pols_scaled.csv", row.names = FALSE)
 iteration_correlation_pols <- read.csv("./csvs_nuevo/iteration_correlation_pols.csv")
-
+iteration_correlation_pols <- read.csv("./csvs_nuevo/iteration_correlation_pols_scaled.csv")
 
 #test
 
-greater <- sum(iteration_correlation_pols$slope >  -0.00087)
-less <- sum(iteration_correlation_pols$slope  <  -0.00087)
+greater <- sum(iteration_correlation_pols$slope >  -0.1110952)
+less <- sum(iteration_correlation_pols$slope  <  -0.1110952)
 p_slope_pols<- 2 * min(greater, less) / 1000 #calculate manually t-test two tailed
 
 
@@ -825,7 +825,8 @@ for (i in 1:1000){
   print(i)
   trial_plants = iteration_correlation_data_plants_km %>% filter(trial == i)
   iteration_correlation_new_plants <- cor.test(trial_plants$turnover, trial_plants$mean_dist_in_km, method = "pearson")
-  mrm_val_plants <- MRM(turnover ~ mean_dist_in_km, data = trial_plants)
+  trial_plants$scaled_mean_dist_in_km<- scale(trial_plants$mean_dist_in_km) #scale the distance -- NEW LINE
+  mrm_val_plants <- MRM(turnover ~ trial_plants$scaled_mean_dist_in_km, data = trial_plants)
   iteration_correlation_plants <- rbind(iteration_correlation_plants, tibble(estimate = iteration_correlation_new_plants$estimate, 
                                                                              p_val = iteration_correlation_new_plants$p.value, 
                                                                              statistic = iteration_correlation_new_plants$statistic, 
@@ -838,13 +839,14 @@ for (i in 1:1000){
 }
 
 
-#write.csv(iteration_correlation_plants, "./csvs_nuevo/iteration_correlation_plants.csv", row.names = FALSE)
+#write.csv(iteration_correlation_plants, "./csvs_nuevo/iteration_correlation_plants_scaled.csv", row.names = FALSE)
 iteration_correlation_plants <- read.csv("./csvs_nuevo/iteration_correlation_plants.csv")
+iteration_correlation_plants  <- read.csv("./csvs_nuevo/iteration_correlation_plants_scaled.csv")
 
 #test
 
-greater <- sum(iteration_correlation_plants$slope >  -0.00087)
-less <- sum(iteration_correlation_plants$slope  <  -0.00087)
+greater <- sum(iteration_correlation_plants$slope >  -0.1110952)
+less <- sum(iteration_correlation_plants$slope  <  -0.1110952)
 p_slope_plant<- 2 * min(greater, less) / 1000 #calculate manually t-test two tailed
 
 
@@ -863,7 +865,8 @@ for (i in 1:1000){
   print(i)
   trial_both = iteration_correlation_data_both_km %>% filter(trial == i)
   iteration_correlation_new_both <- cor.test(trial_both$turnover, trial_both$mean_dist_in_km, method = "pearson")
-  mrm_val_both <- MRM(turnover ~ mean_dist_in_km, data = trial_both)
+  trial_both$scaled_mean_dist_in_km<- scale(trial_both$mean_dist_in_km) #scale the distance -- NEW LINE
+  mrm_val_both <- MRM(turnover ~ scaled_mean_dist_in_km, data = trial_both)
   iteration_correlation_both <- rbind(iteration_correlation_both, tibble(estimate = iteration_correlation_new_both$estimate, 
                                                                          p_val = iteration_correlation_new_both$p.value, 
                                                                          statistic = iteration_correlation_new_both$statistic, 
@@ -876,12 +879,12 @@ for (i in 1:1000){
 }
 
 
-#write.csv(iteration_correlation_both, "./csvs_nuevo/iteration_correlation_both.csv", row.names = FALSE)
+#write.csv(iteration_correlation_both, "./csvs_nuevo/iteration_correlation_both_scaled.csv", row.names = FALSE)
 iteration_correlation_both<- read.csv("./csvs_nuevo/iteration_correlation_both.csv")
 
 #test 
-greater <- sum(iteration_correlation_both$slope >  -0.00087)
-less <- sum(iteration_correlation_both$slope  <  -0.00087)
+greater <- sum(iteration_correlation_both$slope >  -0.1110952)
+less <- sum(iteration_correlation_both$slope  <  -0.1110952)
 p_slope_both<- 2 * min(greater, less) / 1000 #calculate manually t-test two tailed
 
 
@@ -891,20 +894,20 @@ iteration_correlation_pols_NM1 <- iteration_correlation_pols %>% mutate(type = "
 iteration_correlation_plants_NM1 <- iteration_correlation_plants %>% mutate(type = "shuf_plants")
 iteration_correlation_both_NM1 <- iteration_correlation_both %>% mutate(type = "shuf_both")
 
-slopes_NM1_all <- rbind(iteration_correlation_pols_NM1, iteration_correlation_plants_NM1, iteration_correlation_both_NM1)
+slopes_NM1_all <- rbind(iteration_correlation_pols_M1, iteration_correlation_plants_M1, iteration_correlation_both_M1)
 
-#write.csv(slopes_NM1_all, "./csvs_nuevo/slopes_NM1_all_nonscaled.csv", row.names = FALSE)
+#write.csv(slopes_NM1_all, "./csvs_nuevo/slopes_NM1_all.csv", row.names = FALSE)
 #slopes_M1_all <- read.csv("./csvs_nuevo/slopes_NM1_all.csv")
 
 
-slopes_NM1_all$type <- factor(slopes_NM1_all$type, levels = c("shuf_plants","shuf_pollinators","shuf_both"))
+slopes_NM1_all$type <- factor(rqsuares_NM1_all$type, levels = c("shuf_plants","shuf_pollinators","shuf_both"))
 
 
-pdf('./graphs/NM1_slopes_module_DD.pdf', 10, 6)
+pdf('./graphs/NM1_slopes_module_DD_scaled.pdf', 10, 6)
 slopes_NM1_all %>% 
   ggplot(aes(x = slope, fill = type))+ 
   geom_density(alpha = 0.5)+ 
-  geom_vline(xintercept = -0.00087, linetype = "dashed", color = "#FB3B1E")+ #line R squared empirical
+  geom_vline(xintercept = -0.111, linetype = "dashed", color = "#FB3B1E")+ #line R squared empirical
   labs(x= "Slope", y="Density")+  
   scale_fill_manual(name = "Models",  labels = c(expression("NM"[1]^P),expression("NM"[1]^A),
                                                      expression("NM"[1]^AP)), values = c("#72A323","#A44CD3", "#15B7BC"))+

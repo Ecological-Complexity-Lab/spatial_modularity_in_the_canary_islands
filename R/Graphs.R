@@ -22,8 +22,8 @@ library(extRC)
 
 
 ##----get_data--------------------------------------------------------------------------------------------------------
-setwd("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands")
-source("D:/Trabajo/Papers/Canary_Island/spatial_modularity_in_the_canary_islands/R/functions.R")
+setwd("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands")
+source("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands/R/functions.R")
 
 dryad_intralayer <- read.csv("./csvs_nuevo/intralayer_file.csv")
 
@@ -524,21 +524,22 @@ dev.off()
 ## -- Figure 4
 
 # Panel A
-rqsuares_M1_all <- read.csv("./csvs_nuevo/rqsuares_M1_all.csv")
-rqsuares_M1_all$type <- factor(rqsuares_M1_all$type, levels = c("shuf_plants","shuf_pollinators","shuf_both"))
+# Panel A
+NM1 <- read.csv("./csvs_nuevo/slopes_NM1_all_nonscaled.csv")
+NM1$type <- factor(NM1$type, levels = c("shuf_plants","shuf_pollinators","shuf_both"))
 
-Panel_A <- rqsuares_M1_all %>% 
-  ggplot(aes(x = rsquared, fill = type))+ 
+Panel_A <- NM1 %>% 
+  ggplot(aes(x = slope, fill = type))+ 
   geom_density(alpha = 0.5)+ 
-  geom_vline(xintercept = 0.50, linetype = "dashed", color = "#FB3B1E")+ # Rsquared empirical
-  labs(x= expression("R"^2), y="Density")+  
-  scale_fill_manual(name = "Null Model",  labels = c(expression("M"[1]^P),expression("M"[1]^A),
-                                                     expression("M"[1]^AP)), values = c("#72A323","#A44CD3", "#15B7BC"))+
+  geom_vline(xintercept = -0.00087, linetype = "dashed", color = "#FB3B1E")+ #line R squared empirical
+  labs(x= "Slope", y="Density")+  
+  scale_fill_manual(name = "Models",  labels = c(expression("NM"[1]^P),expression("NM"[1]^A),
+                                                 expression("NM"[1]^AP)), values = c("#72A323","#A44CD3", "#15B7BC"))+
   theme_classic()+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
         panel.spacing = unit(0.5, "cm", data = NULL),
-        axis.text = element_text(size=15, color='black'),
+        axis.text = element_text(size=13, color='black'),
         axis.title = element_text(size=17, color='black'),
         axis.line = element_blank(),
         legend.text.align = 0,
@@ -547,39 +548,40 @@ Panel_A <- rqsuares_M1_all %>%
 Panel_A
 
 #Panel B
-iteration_correlation_interactions <- read.csv("./csvs_nuevo/iteration_correlation_interactions_islands.csv")
+iteration_correlation_interactions <- read.csv("./csvs_nuevo/iteration_correlation_interactions_justislands.csv")
 iteration_correlation_interactions2<-iteration_correlation_interactions %>% mutate(Type = "null_int")
 
-Panel_B<- iteration_correlation_interactions2 %>% ggplot(aes(x = rsquared, fill= Type))+ 
+Panel_B<- iteration_correlation_interactions2 %>% ggplot(aes(x = slope, fill= Type))+ 
   geom_density(alpha = 0.6)+ 
-  geom_vline(xintercept = 0.50, linetype = "dashed", color = "#FB3B1E") + # Rsquared empirical
-  labs(x= expression("R"^2), y="Density")+  
-  scale_fill_manual(name = "Null Model",  label = expression("M"[2]), values= "#E6AB02")+
+  geom_vline(xintercept = -0.00087, linetype = "dashed", color = "#FB3B1E") + #line represting rsquared empirical
+  labs(x= "Slope", y="Density")+  
+  scale_fill_manual(name = "Models",  label = expression("NM"[2]), values= "#E6AB02")+
   theme_classic()+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
         panel.spacing = unit(0.5, "cm", data = NULL),
-        axis.text = element_text(size=15, color='black'),
+        axis.text = element_text(size=13, color='black'),
         axis.title = element_text(size=17, color='black'),
         axis.line = element_blank(),
         legend.text.align = 0,
         legend.title =  element_text(size = 13, color = "black"),
         legend.text = element_text(size = 11))
+Panel_B
 
 #Panel C
-iteration_correlation_classic <- read.csv("./csvs_nuevo/iteration_correlation_classic_islands.csv")
+iteration_correlation_classic <- read.csv("./csvs_nuevo/iteration_correlation_classic_justislands.csv")
 iteration_correlation_classic2<-iteration_correlation_classic %>% mutate(Type = "null_class")
 
-Panel_C<- iteration_correlation_classic2 %>% ggplot(aes(x = rsquared, fill= Type))+ 
+Panel_C<- iteration_correlation_classic2 %>% ggplot(aes(x = slope, fill= Type))+ 
   geom_density(alpha = 0.6)+ 
-  geom_vline(xintercept = 0.50, linetype = "dashed", color = "#FB3B1E") + #rsquared empirical
-  labs(x= expression("R"^2), y="Density")+  
-  scale_fill_manual(name = "Null Model",  label = expression("M"[3]), values= "#FA86F2")+
+  geom_vline(xintercept = -0.00087, linetype = "dashed", color = "#FB3B1E") +
+  labs(x= "Slope", y="Density")+  
+  scale_fill_manual(name = "Models",  label = expression("NM"[3]), values= "#FA86F2")+
   theme_classic()+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
         panel.spacing = unit(0.5, "cm", data = NULL),
-        axis.text = element_text(size=15, color='black'),
+        axis.text = element_text(size=13, color='black'),
         axis.title = element_text(size=17, color='black'),
         axis.line = element_blank(),
         legend.text.align = 0,
