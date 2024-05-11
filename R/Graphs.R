@@ -445,8 +445,8 @@ Panel_A <- jaccard_similarity_layer_empirical_and_null_km %>%
   geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+
   labs(x="Distance (Km)", y="Jaccard Similarity")+  
   scale_y_continuous(breaks=seq(0,0.6,0.1))+
-  scale_color_manual(name = "Null Model",  labels = c("Empirical",expression("M"[1]^AP), expression("M"[1]^P),
-                                                      expression("M"[1]^A)),values = c("#FB3B1E", "#15B7BC", 
+  scale_color_manual(name = "Models",  labels = c("Empirical",expression("NM"[1]^AP), expression("NM"[1]^P),
+                                                      expression("NM"[1]^A)),values = c("#FB3B1E", "#15B7BC", 
                                                                                        "#72A323", "#BE75FA" )) +
   
   theme_classic()+ geom_smooth(method= "lm", se=F) +
@@ -468,7 +468,7 @@ Panel_B<- jaccard_similarity_layer_empirical_and_null_km_M2%>%
   ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
   geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ 
   theme_classic()+ geom_smooth(method= "lm", se=F)+
-  scale_color_manual (name = "Null Model", labels = c("Empirical",expression("M"[2])),
+  scale_color_manual (name = "Models", labels = c("Empirical",expression("NM"[2])),
                       values = c("#FB3B1E",  "#E6AB02" ))+
   scale_y_continuous(breaks=seq(0,0.6,0.1))+
   labs(x="Distance (Km)", y="Jaccard Similarity")+
@@ -490,7 +490,7 @@ jaccard_similarity_layer_empirical_and_null_km_classic_M3 <- read.csv("./csvs_nu
 Panel_C<- jaccard_similarity_layer_empirical_and_null_km_classic_M3 %>% 
   ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
   geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ geom_smooth(method= "lm", se=F)+
-  scale_color_manual (name = "Null Model", labels = c("Empirical",expression("M"[3])),
+  scale_color_manual (name = "Models", labels = c("Empirical",expression("NM"[3])),
                       values = c("#FB3B1E","#FA86F2"))+
   labs(x="Distance (Km)", y="Jaccard Similarity")+ 
   scale_y_continuous(breaks=seq(0,0.6,0.1))+

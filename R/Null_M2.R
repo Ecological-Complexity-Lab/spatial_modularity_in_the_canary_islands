@@ -443,7 +443,7 @@ pdf('./graphs/M2_Modules_DD_Islands.pdf', 10, 6)
 jaccard_similarity_layer_empirical_and_null_km_interactions %>% 
   ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
   geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ geom_smooth(method= "lm", se=F)+
-  scale_color_manual (name = "Null Model", labels = c("E",expression("M"[2])),
+  scale_color_manual (name = "Models", labels = c("Empirical",expression("NM"[2])),
                       values = c("#FB3B1E",  "#E6AB02" ))+
   labs(x="Distance (Km)", y="Jaccard Similarity")+  #stat_cor(aes(label = ..rr.label..))+
   
