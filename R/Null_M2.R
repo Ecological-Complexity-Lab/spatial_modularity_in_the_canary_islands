@@ -465,6 +465,9 @@ null<-jaccard_similarity_layer_empirical_and_null_km_interactions %>% filter(typ
 
 shapiro.test(null$ave)
 
+## modeL
+m_int<-MRM(ave ~ mean_dist_in_km,data=null, nperm =9999 )
+m_int
 
 #---- multiple regression on distances matrices and correlation
 all_edge_list_islands_combine_no_module_shuf_interactions_output <- read.csv("./csvs_nuevo/all_edge_list_justislands_combine_no_module_shuf_interactions.csv")
@@ -494,6 +497,8 @@ for (i in 1:1000){
 
 iteration_correlation_interactions
 #write.csv(iteration_correlation_interactions, "./csvs_nuevo/iteration_correlation_interactions_justislands.csv", row.names = FALSE)
+
+iteration_correlation_interactions<- read.csv("./csvs_nuevo/iteration_correlation_interactions_justislands.csv")
 
 #test 
 greater <- sum(iteration_correlation_interactions$slope >  -0.00087)

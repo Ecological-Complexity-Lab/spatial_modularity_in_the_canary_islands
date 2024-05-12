@@ -765,6 +765,15 @@ shapiro.test(pol$ave)
 shapiro.test(pla$ave)
 shapiro.test(both$ave)
 
+##models
+m_pol<-MRM(ave ~ mean_dist_in_km,data=pol, nperm =9999 )
+m_pol
+m_pla<-MRM(ave ~ mean_dist_in_km,data=pla,nperm=9999 )
+m_pla
+m_both<-MRM(ave ~ mean_dist_in_km,data=both,nperm=9999 )
+m_both
+
+
 
 ##correlation and slope between jaccard and distance for each run ----------------------------------------------------------------------------
 

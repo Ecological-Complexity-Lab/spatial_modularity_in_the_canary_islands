@@ -385,15 +385,16 @@ islands_turnover_with_distnace_empirical <- islands_turnover_with_distnace_empir
 #write.csv(islands_turnover_with_distnace_empirical,  "./csvs_nuevo/justislands_turnover_with_distnace_empirical.csv",  row.names = FALSE)
 
 ## Statistical analysis -----
+
 emp <- read.csv("./csvs_nuevo/justislands_turnover_with_distnace_empirical.csv", sep =",")
 
 shapiro.test(emp$turnover)#normal
 
-emp$scaled_distance_in_km<- scale(emp$distance_in_km) #scale the distance 
-
-m_emp<-MRM(turnover ~ distance_in_km,data=emp,nperm=9999 )
+set.seed(122)
+m_emp<-MRM(turnover ~ distance_in_km,data=emp,nperm=999 )
 m_emp
 
-m_emp2<-MRM(turnover ~ scaled_distance_in_km,data=emp,nperm=9999 )#scaled
-m_emp2
+#emp$scaled_distance_in_km<- scale(emp$distance_in_km) #scale the distance
+#m_emp2<-MRM(turnover ~ scaled_distance_in_km,data=emp,nperm=9999 )#scaled
+#m_emp2
 

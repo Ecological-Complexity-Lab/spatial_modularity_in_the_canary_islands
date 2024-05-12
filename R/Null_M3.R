@@ -381,6 +381,9 @@ null<-jaccard_similarity_layer_empirical_and_null_km_classic %>% filter(type=="n
 
 shapiro.test(null$ave)#normal
 
+## modeL
+m_classic<-MRM(ave ~ mean_dist_in_km,data=null, nperm =9999 )
+m_classic
 
 #----correlation and r sqaured between jaccard and distance for each run
 all_edge_list_islands_combine_no_module_shuf_classic <- read.csv("./csvs_nuevo/all_edge_list_justislands_combine_no_module_shuf_classic.csv")
@@ -410,6 +413,7 @@ for (i in 1:1000){
 iteration_correlation_classic
 #write.csv(iteration_correlation_classic, "./csvs_nuevo/iteration_correlation_classic_justislands.csv", row.names = FALSE)
 
+iteration_correlation_classic<- read.csv("./csvs_nuevo/iteration_correlation_classic_justislands.csv")
 #test 
 greater <- sum(iteration_correlation_classic$slope >  -0.00087)
 less <- sum(iteration_correlation_classic$slope  <  -0.00087)
