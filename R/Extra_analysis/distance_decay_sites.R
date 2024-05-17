@@ -325,7 +325,8 @@ sites_turnover_with_distnace_empirical <- sites_turnover_with_distnace_empirical
 #write.csv(sites_turnover_with_distnace_empirical,  "/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands/R/Extra_analysis/sites_turnover_with_distnace_empirical.csv",  row.names = FALSE)
 
 ## Statistical analysis -----
-
+distances_with_ids_final <- read.csv("/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands/R/Extra_analysis/distances_with_ids_sites_as_layers.csv", sep = ",") 
+  
 emp <- read.csv( "/Users/agustin/Desktop/Papers/Canary_Island_Project/spatial_modularity_in_the_canary_islands/R/Extra_analysis/sites_turnover_with_distnace_empirical.csv", sep =",") %>% 
         select(-number_of_modules,-mean_distance)
 
