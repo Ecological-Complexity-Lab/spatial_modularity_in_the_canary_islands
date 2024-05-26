@@ -359,7 +359,7 @@ pdf('./graphs/M3_Modules_DD_Islands.pdf', 10, 6)
 jaccard_similarity_layer_empirical_and_null_km_classic %>% 
   ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
   geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ geom_smooth(method= "lm", se=F)+
-  scale_color_manual (name = "Models", labels = c("Empirical",expression("NM"[3])),
+  scale_color_manual (name = "Models", labels = c("Empirical",expression("M"[3])),
                       values = c("#FB3B1E","#FA86F2"))+
   labs(x="Distance (Km)", y="Jaccard Similarity")+  #stat_cor(aes(label = ..rr.label..))+
   
@@ -427,7 +427,7 @@ iteration_correlation_classic2 %>% ggplot(aes(x = slope, fill= Type))+
   geom_density(alpha = 0.6)+ 
   geom_vline(xintercept = -0.00087, linetype = "dashed", color = "#FB3B1E") +
   labs(x= "Slope", y="Density")+  
-  scale_fill_manual(name = "Models",  label = expression("NM"[3]), values= "#FA86F2")+
+  scale_fill_manual(name = "Models",  label = expression("M"[3]), values= "#FA86F2")+
   theme_classic()+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),

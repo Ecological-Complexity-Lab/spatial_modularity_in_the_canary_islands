@@ -445,8 +445,8 @@ Panel_A <- jaccard_similarity_layer_empirical_and_null_km %>%
   geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+
   labs(x="Distance (Km)", y="Jaccard Similarity")+  
   scale_y_continuous(breaks=seq(0,0.6,0.1))+
-  scale_color_manual(name = "Models",  labels = c("Empirical",expression("NM"[1]^AP), expression("NM"[1]^P),
-                                                      expression("NM"[1]^A)),values = c("#FB3B1E", "#15B7BC", 
+  scale_color_manual(name = "Models",  labels = c("Empirical",expression("M"[1]^AP), expression("M"[1]^P),
+                                                      expression("M"[1]^A)),values = c("#FB3B1E", "#15B7BC", 
                                                                                        "#72A323", "#BE75FA" )) +
   
   theme_classic()+ geom_smooth(method= "lm", se=F) +
@@ -468,7 +468,7 @@ Panel_B<- jaccard_similarity_layer_empirical_and_null_km_M2%>%
   ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
   geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ 
   theme_classic()+ geom_smooth(method= "lm", se=F)+
-  scale_color_manual (name = "Models", labels = c("Empirical",expression("NM"[2])),
+  scale_color_manual (name = "Models", labels = c("Empirical",expression("M"[2])),
                       values = c("#FB3B1E",  "#E6AB02" ))+
   scale_y_continuous(breaks=seq(0,0.6,0.1))+
   labs(x="Distance (Km)", y="Jaccard Similarity")+
@@ -490,7 +490,7 @@ jaccard_similarity_layer_empirical_and_null_km_classic_M3 <- read.csv("./csvs_nu
 Panel_C<- jaccard_similarity_layer_empirical_and_null_km_classic_M3 %>% 
   ggplot(aes(x= mean_dist_in_km, y= ave, group= type, color= type))+
   geom_point()+ geom_errorbar(aes(ymin= ave-sd, ymax= ave+sd))+ theme_classic()+ geom_smooth(method= "lm", se=F)+
-  scale_color_manual (name = "Models", labels = c("Empirical",expression("NM"[3])),
+  scale_color_manual (name = "Models", labels = c("Empirical",expression("M"[3])),
                       values = c("#FB3B1E","#FA86F2"))+
   labs(x="Distance (Km)", y="Jaccard Similarity")+ 
   scale_y_continuous(breaks=seq(0,0.6,0.1))+
@@ -533,8 +533,8 @@ Panel_A <- NM1 %>%
   geom_density(alpha = 0.5)+ 
   geom_vline(xintercept = -0.00087, linetype = "dashed", color = "#FB3B1E")+ #line R squared empirical
   labs(x= "Slope", y="Density")+  
-  scale_fill_manual(name = "Models",  labels = c(expression("NM"[1]^P),expression("NM"[1]^A),
-                                                 expression("NM"[1]^AP)), values = c("#72A323","#A44CD3", "#15B7BC"))+
+  scale_fill_manual(name = "Models",  labels = c(expression("M"[1]^P),expression("M"[1]^A),
+                                                 expression("M"[1]^AP)), values = c("#72A323","#A44CD3", "#15B7BC"))+
   theme_classic()+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
@@ -555,7 +555,7 @@ Panel_B<- iteration_correlation_interactions2 %>% ggplot(aes(x = slope, fill= Ty
   geom_density(alpha = 0.6)+ 
   geom_vline(xintercept = -0.00087, linetype = "dashed", color = "#FB3B1E") + #line represting rsquared empirical
   labs(x= "Slope", y="Density")+  
-  scale_fill_manual(name = "Models",  label = expression("NM"[2]), values= "#E6AB02")+
+  scale_fill_manual(name = "Models",  label = expression("M"[2]), values= "#E6AB02")+
   theme_classic()+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
@@ -576,7 +576,7 @@ Panel_C<- iteration_correlation_classic2 %>% ggplot(aes(x = slope, fill= Type))+
   geom_density(alpha = 0.6)+ 
   geom_vline(xintercept = -0.00087, linetype = "dashed", color = "#FB3B1E") +
   labs(x= "Slope", y="Density")+  
-  scale_fill_manual(name = "Models",  label = expression("NM"[3]), values= "#FA86F2")+
+  scale_fill_manual(name = "Models",  label = expression("M"[3]), values= "#FA86F2")+
   theme_classic()+
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black",fill = NA,size = 1),
